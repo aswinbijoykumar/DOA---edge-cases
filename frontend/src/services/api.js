@@ -84,7 +84,9 @@ export const api = {
       role: data.role,
       persona_type: data.persona_type || 'FRONTEND_USER',
       designation: data.designation || '',
-      department: data.department || ''
+      department: data.department || '',
+      can_request: data.can_request !== undefined ? data.can_request : true,
+      can_review: data.can_review !== undefined ? data.can_review : false
     });
     return data;
   },
@@ -151,9 +153,19 @@ export const api = {
     return await request(`/doa/${id}/archive`, { method: 'POST' });
   },
 
-  // Change Requests
+  // Change Requests & Unified Workflow
   async getChangeRequests(status) {
     const endpoint = status ? `/change-requests?status=${status}` : '/change-requests';
+    return await request(endpoint);
+  },
+
+  async getMyRequests(status) {
+    const endpoint = status ? `/change-requests/my-requests?status=${status}` : '/change-requests/my-requests';
+    return await request(endpoint);
+  },
+
+  async getReviewerQueue(status) {
+    const endpoint = status ? `/change-requests/review-queue?status=${status}` : '/change-requests/review-queue';
     return await request(endpoint);
   },
 
@@ -169,6 +181,66 @@ export const api = {
     return await request('/change-requests', {
       method: 'POST',
       body: JSON.stringify(data)
+    });
+  },
+
+  async saveDraft(data) {
+    return await request('/change-requests/draft', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async updateChangeRequest(id, data) {
+    return await request(`/change-requests/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data)
+    });
+  },
+
+  async submitDraft(id) {
+    return await request(`/change-requests/${id}/submit`, {
+      method: 'POST'
+    });
+  },
+
+  async deleteDraft(id) {
+    return await request(`/change-requests/${id}/draft`, {
+      method: 'DELETE'
+    });
+  },
+
+  async startReview(id) {
+    return await request(`/change-requests/${id}/start-review`, {
+      method: 'POST'
+    });
+  },
+
+  async requestClarification(id, message, attachments = []) {
+    return await request(`/change-requests/${id}/clarification`, {
+      method: 'POST',
+      body: JSON.stringify({ message, attachments })
+    });
+  },
+
+  async respondClarification(id, message, attachments = []) {
+    return await request(`/change-requests/${id}/respond-clarification`, {
+      method: 'POST',
+      body: JSON.stringify({ message, attachments })
+    });
+  },
+
+  async addReviewerComment(id, comment, operational_comments = '') {
+    return await request(`/change-requests/${id}/comment`, {
+      method: 'POST',
+      body: JSON.stringify({ comment, operational_comments })
+    });
+  },
+
+  async submitReviewerRecommendation(id, recommendation, notes, operational_comments = '') {
+    return await request(`/change-requests/${id}/recommend`, {
+      method: 'POST',
+      body: JSON.stringify({ recommendation, notes, operational_comments })
     });
   },
 
@@ -188,6 +260,17 @@ export const api = {
 
   async publishChangeRequest(id) {
     return await request(`/change-requests/${id}/publish`, {
+      method: 'POST'
+    });
+  },
+
+  // Notifications
+  async getNotifications() {
+    return await request('/change-requests/notifications');
+  },
+
+  async markNotificationRead(id) {
+    return await request(`/change-requests/notifications/${id}/read`, {
       method: 'POST'
     });
   },

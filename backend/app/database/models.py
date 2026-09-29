@@ -22,9 +22,13 @@ class User(Base):
     department = Column(String(100), nullable=True)
     reports_to = Column(String(100), nullable=True)
     is_active = Column(Boolean, default=True)
+    can_request = Column(Boolean, default=True, nullable=False)
+    can_review = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
     change_requests = relationship("ChangeRequest", back_populates="requester", foreign_keys="ChangeRequest.requester_id")
+    assigned_reviews = relationship("ChangeRequest", back_populates="reviewer", foreign_keys="ChangeRequest.reviewer_id")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
 
 class DOARecord(Base):
@@ -115,16 +119,28 @@ class ChangeRequest(Base):
     process = Column(String(255), nullable=True)
     rationale = Column(Text, nullable=True)
     
+    # Financial Limit and SLA Fields
+    currency = Column(String(20), default="USD", nullable=True)
+    current_limit = Column(String(100), nullable=True)
+    proposed_limit = Column(String(100), nullable=True)
+    effective_date = Column(String(50), nullable=True)
+    priority = Column(String(20), default="MEDIUM", nullable=False) # LOW, MEDIUM, HIGH, CRITICAL
+    due_date = Column(String(50), nullable=True)
+    risk_impact = Column(Text, nullable=True)
+
     base_version = Column(Integer, default=1, nullable=False) # Guard for optimistic concurrency / stale check
     current_value = Column(Text, nullable=True) # JSON snapshot of current DOA state
     proposed_value = Column(Text, nullable=False) # JSON snapshot of proposed changes
     
-    status = Column(String(50), default="SUBMITTED", nullable=False) # DRAFT, SUBMITTED, APPROVED, REJECTED, PUBLISHED
+    status = Column(String(50), default="SUBMITTED", nullable=False) # DRAFT, SUBMITTED, UNDER_REVIEW, CLARIFICATION_REQUIRED, APPROVED, REJECTED, PUBLISHED
     
     reviewer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     reviewer_email = Column(String(255), nullable=True)
     reviewed_at = Column(DateTime(timezone=True), nullable=True)
     decision_comment = Column(Text, nullable=True)
+    reviewer_recommendation = Column(String(50), nullable=True) # RECOMMEND_APPROVAL, RECOMMEND_REJECTION, NEEDS_CLARIFICATION
+    reviewer_comments = Column(Text, nullable=True) # Notes, feedback, and review observations
+    operational_comments = Column(Text, nullable=True) # Direct operational notes and feedback
     operational_impact = Column(Text, nullable=True) # Operational impact analysis from Process Owner
     attachments = Column(Text, nullable=True, default="[]") # JSON list of uploaded doc references
     
@@ -133,8 +149,41 @@ class ChangeRequest(Base):
     published_at = Column(DateTime(timezone=True), nullable=True)
 
     requester = relationship("User", foreign_keys=[requester_id], back_populates="change_requests")
-    reviewer = relationship("User", foreign_keys=[reviewer_id])
+    reviewer = relationship("User", foreign_keys=[reviewer_id], back_populates="assigned_reviews")
     doa_record = relationship("DOARecord", back_populates="change_requests")
+    clarifications = relationship("RequestClarification", back_populates="change_request", cascade="all, delete-orphan", order_by="RequestClarification.created_at.asc()")
+
+
+class RequestClarification(Base):
+    __tablename__ = "request_clarifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    change_request_id = Column(String(50), ForeignKey("change_requests.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_email = Column(String(255), nullable=False)
+    user_name = Column(String(255), nullable=False)
+    message_type = Column(String(50), nullable=False, default="INQUIRY") # "INQUIRY" (Reviewer) or "RESPONSE" (Requestor)
+    message = Column(Text, nullable=False)
+    attachments = Column(Text, nullable=True, default="[]") # JSON string list of attachments
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    change_request = relationship("ChangeRequest", back_populates="clarifications")
+    user = relationship("User")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    link = Column(String(255), nullable=True)
+    notification_type = Column(String(50), default="INFO") # INFO, ACTION_REQUIRED, STATUS_UPDATE, CLARIFICATION
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    user = relationship("User", back_populates="notifications")
 
 
 class AuditLog(Base):

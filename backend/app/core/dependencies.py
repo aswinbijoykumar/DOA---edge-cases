@@ -69,3 +69,27 @@ def require_approver_or_admin(current_user: User = Depends(get_current_user)) ->
         detail="Access forbidden: requires Executive Approver or DOA Administrator authorization"
     )
 
+def require_requestor(current_user: User = Depends(get_current_user)) -> User:
+    """Enforces that authenticated user has requestor permissions."""
+    if not getattr(current_user, "can_request", True):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: user does not have Requestor permissions"
+        )
+    return current_user
+
+def require_reviewer(current_user: User = Depends(get_current_user)) -> User:
+    """Enforces that authenticated user has reviewer permissions."""
+    is_reviewer = (
+        getattr(current_user, "can_review", False) or
+        current_user.persona_type in ["REVIEWER", "APPROVER"] or
+        current_user.role in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"]
+    )
+    if not is_reviewer:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: user does not have Reviewer permissions"
+        )
+    return current_user
+
+

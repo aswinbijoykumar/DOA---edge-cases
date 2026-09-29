@@ -7,6 +7,7 @@ import {
 import { api, getStoredUser, setStoredUser, removeStoredToken, getStoredToken } from './services/api';
 import LoginPage from './components/LoginPage';
 import NormalUserDashboard from './components/dashboards/NormalUserDashboard';
+import UnifiedDoaUserDashboard from './components/dashboards/UnifiedDoaUserDashboard';
 import GovernanceTeamDashboard from './components/dashboards/GovernanceTeamDashboard';
 import DoaAdminDashboard from './components/dashboards/DoaAdminDashboard';
 import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
@@ -1491,7 +1492,7 @@ export default function App() {
         {activeTab === 'overview' && (
           <>
             {currentUser.role === 'NORMAL_USER' && (
-              <NormalUserDashboard
+              <UnifiedDoaUserDashboard
                 userStats={userDashboardStats}
                 currentUser={currentUser}
                 kpis={kpis}
@@ -1499,9 +1500,12 @@ export default function App() {
                   setActiveTab(tabId);
                   setSelectedRecord(null);
                 }}
-                onNewRequest={() => {
-                  setActiveTab('request');
-                  setActionMode('Add');
+                onInspectCR={(cr) => handleInspectDiff(cr)}
+                onRefreshData={() => {
+                  loadDoaRecords();
+                  loadChangeRequests();
+                  loadRoleDashboardData();
+                  loadDashboardSummary();
                 }}
               />
             )}

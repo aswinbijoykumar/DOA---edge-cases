@@ -117,6 +117,20 @@ export default function LoginPage({ onLoginSuccess }) {
       duty: 'Search, view, and filter approved DOA records relevant to department or process; raise change proposals.'
     },
     {
+      id: 'dual_role',
+      title: 'Dual-Role (Requestor + Reviewer)',
+      name: 'Morgan Vance-Lee',
+      designation: 'Senior Process & Authority Custodian',
+      dept: 'Finance & Supply Chain Governance',
+      email: 'dual.user@doa.local',
+      password: 'User@123',
+      role: 'NORMAL_USER',
+      persona_type: 'REVIEWER',
+      icon: Layers,
+      color: 'purple',
+      duty: 'Full dual permissions: Create/submit own departmental requests and review incoming proposals from other stakeholders (SoD-enforced).'
+    },
+    {
       id: 'audit_readonly',
       title: 'Internal Audit / Compliance (Read-Only)',
       name: 'Claire Montgomery',

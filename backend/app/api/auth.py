@@ -30,7 +30,9 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
         role=user.role,
         persona_type=getattr(user, "persona_type", "FRONTEND_USER"),
         designation=getattr(user, "designation", ""),
-        department=getattr(user, "department", "")
+        department=getattr(user, "department", ""),
+        can_request=getattr(user, "can_request", True),
+        can_review=getattr(user, "can_review", False)
     )
 
 @router.get("/me", response_model=UserResponse)
