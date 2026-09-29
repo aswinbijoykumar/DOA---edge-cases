@@ -12,7 +12,8 @@ from app.api import (
     normal_user,
     governance_team,
     doa_admin,
-    system_admin
+    system_admin,
+    roles_workflows
 )
 
 # Create database tables
@@ -45,6 +46,7 @@ app.include_router(taxonomy.router, prefix=settings.API_V1_STR)
 
 # Include Role-Dedicated RBAC Routers under /api prefix
 app.include_router(normal_user.router, prefix=settings.API_V1_STR)
+app.include_router(roles_workflows.router, prefix=settings.API_V1_STR)
 app.include_router(governance_team.router, prefix=settings.API_V1_STR)
 app.include_router(doa_admin.router, prefix=settings.API_V1_STR)
 app.include_router(system_admin.router, prefix=settings.API_V1_STR)

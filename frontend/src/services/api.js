@@ -318,5 +318,115 @@ export const api = {
 
   async getSystemTelemetry() {
     return await request('/system-admin/telemetry');
+  },
+
+  // =========================================================================
+  // 7 SPECIFIC USER ROLE BACKEND APIS
+  // =========================================================================
+
+  // 1. Requestor / Business Line Analyst
+  async getRequestorDashboard() {
+    return await request('/requestor/dashboard');
+  },
+  async getRequestorProposals() {
+    return await request('/requestor/proposals');
+  },
+  async submitRequestorProposal(data) {
+    return await request('/requestor/proposals', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async withdrawRequestorProposal(crId) {
+    return await request(`/requestor/proposals/${crId}/withdraw`, {
+      method: 'POST'
+    });
+  },
+
+  // 2. Process Owner (Operational Lead)
+  async getProcessOwnerDashboard() {
+    return await request('/process-owner/dashboard');
+  },
+  async getProcessOwnerQueue() {
+    return await request('/process-owner/queue');
+  },
+  async endorseProcessImpact(crId, operationalImpact) {
+    return await request(`/process-owner/requests/${crId}/endorse`, {
+      method: 'POST',
+      body: JSON.stringify({ operational_impact: operationalImpact })
+    });
+  },
+
+  // 3. Department / Function Owner
+  async getDeptOwnerDashboard() {
+    return await request('/dept-owner/dashboard');
+  },
+  async getDeptOwnerQueue() {
+    return await request('/dept-owner/queue');
+  },
+  async getDepartmentDoas() {
+    return await request('/dept-owner/department-doas');
+  },
+  async deptOwnerSignoff(crId, comment) {
+    return await request(`/dept-owner/requests/${crId}/signoff`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 4. Authority Owner (Charter & Mandates)
+  async getAuthorityOwnerDashboard() {
+    return await request('/authority-owner/dashboard');
+  },
+  async getAuthorityMandatesMatrix() {
+    return await request('/authority-owner/matrix');
+  },
+  async verifyAuthorityMandate(crId, comment) {
+    return await request(`/authority-owner/requests/${crId}/verify-mandate`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 5. Reviewer (2LoD Risk & Policy Review)
+  async getReviewerDashboard() {
+    return await request('/reviewer/dashboard');
+  },
+  async getReviewerQueue() {
+    return await request('/reviewer/queue');
+  },
+  async getReviewerDiff(crId) {
+    return await request(`/reviewer/diff/${crId}`);
+  },
+  async recommendReviewerCR(crId, comment) {
+    return await request(`/reviewer/requests/${crId}/recommend`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 6. Approver (Executive Approver)
+  async getApproverDashboard() {
+    return await request('/approver/dashboard');
+  },
+  async getApproverInbox() {
+    return await request('/approver/inbox');
+  },
+  async makeApproverDecision(crId, action, comment) {
+    return await request(`/approver/requests/${crId}/decision?action=${action}`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 7. Audit Read-Only (Assurance & Compliance)
+  async getAuditReadonlyDashboard() {
+    return await request('/audit-readonly/dashboard');
+  },
+  async getAuditDoaVersions(doaId) {
+    return await request(`/audit-readonly/versions/${doaId}`);
+  },
+  async getAuditLedger(skip = 0, limit = 100) {
+    return await request(`/audit-readonly/ledger?skip=${skip}&limit=${limit}`);
   }
 };

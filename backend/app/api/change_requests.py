@@ -54,7 +54,7 @@ def list_change_requests(
     """
     is_elevated = (
         current_user.role in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"] or
-        current_user.persona_type in ["APPROVER", "REVIEWER", "AUDIT_READONLY"]
+        current_user.persona_type in ["APPROVER", "REVIEWER", "AUDIT_READONLY", "PROCESS_OWNER", "DEPT_OWNER", "AUTHORITY_OWNER"]
     )
     crs = change_request_service.get_change_requests(
         db=db,

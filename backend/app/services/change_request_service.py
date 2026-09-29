@@ -97,7 +97,11 @@ def approve_change_request(
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
         
-    if cr.status not in ["SUBMITTED", "DRAFT"]:
+    allowed_statuses = [
+        "SUBMITTED", "DRAFT", "PENDING_PROCESS_OWNER", 
+        "PENDING_DEPT_OWNER", "PENDING_2LOD_REVIEW", "UNDER_REVIEW"
+    ]
+    if cr.status not in allowed_statuses:
         raise HTTPException(status_code=400, detail=f"Cannot approve change request with status {cr.status}")
         
     old_val = {"status": cr.status}
@@ -135,7 +139,11 @@ def reject_change_request(
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
         
-    if cr.status not in ["SUBMITTED", "DRAFT"]:
+    allowed_statuses = [
+        "SUBMITTED", "DRAFT", "PENDING_PROCESS_OWNER", 
+        "PENDING_DEPT_OWNER", "PENDING_2LOD_REVIEW", "UNDER_REVIEW"
+    ]
+    if cr.status not in allowed_statuses:
         raise HTTPException(status_code=400, detail=f"Cannot reject change request with status {cr.status}")
         
     old_val = {"status": cr.status}

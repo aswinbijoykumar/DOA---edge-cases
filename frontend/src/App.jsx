@@ -167,13 +167,28 @@ export default function App() {
   });
 
   // Role Route Definitions according to requirements:
-  // Login: /login
-  // Normal User: /login/normaluser
-  // Governance Team: /login/governance
-  // DOA Administrator: /login/doa-admin
-  // System Administrator: /login/system-admin
+  // Dedicated routes for all 7 user personas + enterprise admins:
+  // 1. Requestor: /login/requestor
+  // 2. Process Owner: /login/process-owner
+  // 3. Department Owner: /login/dept-owner
+  // 4. Authority Owner: /login/authority-owner
+  // 5. Reviewer: /login/reviewer
+  // 6. Approver: /login/approver
+  // 7. Audit Read-Only: /login/audit
+  // 8. Governance Team: /login/governance
+  // 9. DOA Administrator: /login/doa-admin
+  // 10. System Administrator: /login/system-admin
   const ROLE_ROUTES = {
-    NORMAL_USER: '/login/normaluser',
+    // 7 Personas
+    FRONTEND_USER: '/login/requestor',
+    PROCESS_OWNER: '/login/process-owner',
+    DEPT_OWNER: '/login/dept-owner',
+    AUTHORITY_OWNER: '/login/authority-owner',
+    REVIEWER: '/login/reviewer',
+    APPROVER: '/login/approver',
+    AUDIT_READONLY: '/login/audit',
+    // Fallback role keys
+    NORMAL_USER: '/login/requestor',
     GOVERNANCE_TEAM: '/login/governance',
     DOA_ADMINISTRATOR: '/login/doa-admin',
     SYSTEM_ADMINISTRATOR: '/login/system-admin',
@@ -181,7 +196,14 @@ export default function App() {
   };
 
   const ROUTE_TO_ROLE = {
-    '/login/normaluser': 'NORMAL_USER',
+    '/login/requestor': 'FRONTEND_USER',
+    '/login/process-owner': 'PROCESS_OWNER',
+    '/login/dept-owner': 'DEPT_OWNER',
+    '/login/authority-owner': 'AUTHORITY_OWNER',
+    '/login/reviewer': 'REVIEWER',
+    '/login/approver': 'APPROVER',
+    '/login/audit': 'AUDIT_READONLY',
+    '/login/normaluser': 'FRONTEND_USER',
     '/login/governance': 'GOVERNANCE_TEAM',
     '/login/doa-admin': 'DOA_ADMINISTRATOR',
     '/login/system-admin': 'SYSTEM_ADMINISTRATOR'
@@ -222,8 +244,8 @@ export default function App() {
         navigateTo('/login');
       }
     } else {
-      const userRole = currentUser.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : currentUser.role;
-      const expectedRoute = ROLE_ROUTES[userRole] || '/login/normaluser';
+      const userKey = currentUser.persona_type || (currentUser.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : currentUser.role);
+      const expectedRoute = ROLE_ROUTES[userKey] || (currentUser.role === 'ADMIN' ? '/login/system-admin' : ROLE_ROUTES[currentUser.role] || '/login/requestor');
 
       // If user is at /login or /
       if (currentPath === '/login' || currentPath === '/') {
@@ -233,9 +255,13 @@ export default function App() {
 
       // If user accesses one of the role routes
       const targetRoleForPath = ROUTE_TO_ROLE[currentPath];
-      if (targetRoleForPath && targetRoleForPath !== userRole) {
-        addToast(`Access restricted: Redirected to your authorized ${ROLE_CONFIGS[userRole]?.label || userRole} landing page.`, 'error');
-        navigateTo(expectedRoute);
+      if (targetRoleForPath) {
+        const matchesPersona = currentUser.persona_type && currentUser.persona_type === targetRoleForPath;
+        const matchesRole = currentUser.role === targetRoleForPath || (currentUser.role === 'ADMIN' && targetRoleForPath === 'SYSTEM_ADMINISTRATOR');
+        if (!matchesPersona && !matchesRole) {
+          addToast(`Access restricted: Redirected to your authorized ${ROLE_CONFIGS[currentUser.role]?.label || userKey} landing route (${expectedRoute}).`, 'error');
+          navigateTo(expectedRoute);
+        }
       }
     }
   }, [currentUser, currentPath]);
@@ -266,9 +292,9 @@ export default function App() {
       setActiveTab('overview');
     }
 
-    // Redirect to role-specific landing route
-    const userRole = userObj.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : userObj.role;
-    const targetRoute = ROLE_ROUTES[userRole] || '/login/normaluser';
+    // Redirect to role/persona-specific landing route
+    const userKey = userObj.persona_type || (userObj.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : userObj.role);
+    const targetRoute = ROLE_ROUTES[userKey] || (userObj.role === 'ADMIN' ? '/login/system-admin' : ROLE_ROUTES[userObj.role] || '/login/requestor');
     navigateTo(targetRoute);
   };
 
@@ -535,8 +561,11 @@ export default function App() {
     }
   };
 
-  // Fetch Audit Logs from Backend (Elevated roles only)
-  const isAuditRole = currentUser && ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role);
+  // Fetch Audit Logs from Backend (Elevated roles & Audit Read-Only persona)
+  const isAuditRole = currentUser && (
+    ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) ||
+    currentUser.persona_type === 'AUDIT_READONLY'
+  );
 
   const loadAuditLogs = async () => {
     if (!isAuditRole) return;
@@ -1415,10 +1444,13 @@ export default function App() {
                     id: 'audit', 
                     label: 'Audit Trail', 
                     icon: History, 
-                    roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
+                    roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN', 'NORMAL_USER'] 
                   }
                 ]
-                .filter(tab => tab.roles.includes(currentUser.role))
+                .filter(tab => {
+                  if (tab.id === 'audit' && currentUser.persona_type === 'AUDIT_READONLY') return true;
+                  return tab.roles.includes(currentUser.role);
+                })
                 .map(tab => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -2402,12 +2434,16 @@ export default function App() {
                             </td>
                             <td className="py-3 px-4 text-center">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                                cr.status === 'PENDING_PROCESS_OWNER' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
+                                cr.status === 'PENDING_DEPT_OWNER' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
+                                cr.status === 'PENDING_2LOD_REVIEW' ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' :
+                                cr.status === 'UNDER_REVIEW' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                                 isSubmitted ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                                 isApproved ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                                 isPublished ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                                 'bg-rose-50 text-rose-700 border border-rose-200'
                               }`}>
-                                {cr.status}
+                                {cr.status?.replace(/_/g, ' ')}
                               </span>
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -2422,8 +2458,100 @@ export default function App() {
                                   <Eye className="h-3.5 w-3.5 text-teal-600" /> Diff
                                 </button>
 
+                                {/* Process Owner Endorsement Action */}
+                                {currentUser.persona_type === 'PROCESS_OWNER' && (isSubmitted || cr.status === 'PENDING_PROCESS_OWNER' || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const impact = window.prompt("Enter Operational & Process Impact Assessment comment for " + cr.id + ":", "SOP verified, operational controls in compliance.");
+                                      if (impact) {
+                                        try {
+                                          await api.endorseProcessImpact(cr.id, impact);
+                                          addToast(`Process Owner endorsed operational impact for ${cr.id}, routed to Functional Owner.`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Endorsement failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Endorse Operational Impact & Forward"
+                                    className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Layers className="h-3.5 w-3.5 text-blue-600" /> Endorse
+                                  </button>
+                                )}
+
+                                {/* Dept Owner Supervisory Signoff Action */}
+                                {currentUser.persona_type === 'DEPT_OWNER' && (cr.status === 'PENDING_DEPT_OWNER' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const note = window.prompt("Enter Department Supervisory Signoff remark for " + cr.id + ":", "Departmental signing limits and budget threshold alignment confirmed.");
+                                      if (note) {
+                                        try {
+                                          await api.deptOwnerSignoff(cr.id, note);
+                                          addToast(`Department signoff recorded for ${cr.id}, routed to 2LoD Reviewer.`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Signoff failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Department Supervisory Signoff & Forward"
+                                    className="px-2 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Briefcase className="h-3.5 w-3.5 text-teal-600" /> Signoff
+                                  </button>
+                                )}
+
+                                {/* Authority Owner Charter Verification Action */}
+                                {currentUser.persona_type === 'AUTHORITY_OWNER' && (isSubmitted || cr.status === 'PENDING_DEPT_OWNER' || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const note = window.prompt("Enter Board / Committee Charter Mandate Verification remark for " + cr.id + ":", "Mandate verified against Schedule B of Corporate Governance Charter.");
+                                      if (note) {
+                                        try {
+                                          await api.verifyAuthorityMandate(cr.id, note);
+                                          addToast(`Charter mandate verified for ${cr.id}`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Verification failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Verify Charter Mandate"
+                                    className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" /> Verify
+                                  </button>
+                                )}
+
+                                {/* Reviewer 2LoD Recommendation Action */}
+                                {(currentUser.persona_type === 'REVIEWER' || currentUser.role === 'GOVERNANCE_TEAM') && (cr.status === 'PENDING_2LOD_REVIEW' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const rec = window.prompt("Enter 2LoD Technical Risk Recommendation for " + cr.id + ":", "2LoD technical risk assessment completed with no policy objections.");
+                                      if (rec) {
+                                        try {
+                                          await api.recommendReviewerCR(cr.id, rec);
+                                          addToast(`2LoD recommendation submitted for ${cr.id}, cleared for Executive Approver.`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Recommendation failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Submit 2LoD Risk Recommendation & Clear"
+                                    className="px-2 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5 text-cyan-600" /> Recommend
+                                  </button>
+                                )}
+
                                 {/* Admin / Approver Action Buttons */}
-                                {(['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) || currentUser.persona_type === 'APPROVER') && isSubmitted && (
+                                {(['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) || currentUser.persona_type === 'APPROVER') && (isSubmitted || cr.status === 'UNDER_REVIEW' || cr.status === 'PENDING_2LOD_REVIEW' || cr.status === 'PENDING_DEPT_OWNER') && (
                                   <>
                                     <button
                                       type="button"
@@ -2442,6 +2570,28 @@ export default function App() {
                                       <X className="h-3.5 w-3.5" /> Reject
                                     </button>
                                   </>
+                                )}
+
+                                {/* Requestor Self-Withdrawal Button */}
+                                {currentUser.persona_type === 'FRONTEND_USER' && isSubmitted && cr.requester_email === currentUser.email && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (window.confirm(`Are you sure you want to withdraw your proposal ${cr.id}?`)) {
+                                        try {
+                                          await api.withdrawRequestorProposal(cr.id);
+                                          addToast(`Proposal ${cr.id} withdrawn successfully.`, 'info');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Withdrawal failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Withdraw My Proposal"
+                                    className="px-2 py-1 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 text-slate-500" /> Withdraw
+                                  </button>
                                 )}
 
                                 {['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) && isApproved && (
@@ -2474,8 +2624,8 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 5: AUDIT TRAIL (Governance, DOA Admin, System Admin) */}
-        {activeTab === 'audit' && ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && (
+        {/* TAB 5: AUDIT TRAIL (Governance, DOA Admin, System Admin, Audit Read-Only) */}
+        {activeTab === 'audit' && isAuditRole && (
           <div className="space-y-6 animate-fade-in">
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
