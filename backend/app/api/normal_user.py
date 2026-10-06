@@ -8,6 +8,7 @@ from app.database.models import User, DOARecord, ChangeRequest
 from app.core.dependencies import get_current_user, require_roles
 from app.schemas.schemas import DOARead, ChangeRequestRead, ChangeRequestCreate
 from app.services import doa_service, change_request_service
+from app.services.version_service import record_to_dict
 from app.api.change_requests import format_cr_response
 
 router = APIRouter(prefix="/user", tags=["Normal User Workspace"])

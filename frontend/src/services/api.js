@@ -428,5 +428,11 @@ export const api = {
   },
   async getAuditLedger(skip = 0, limit = 100) {
     return await request(`/audit-readonly/ledger?skip=${skip}&limit=${limit}`);
+  },
+
+  // 8. Persona-specific Management Reports (Functionality 7)
+  async getRoleReport(endpointUrl) {
+    return await request(endpointUrl);
   }
 };
+

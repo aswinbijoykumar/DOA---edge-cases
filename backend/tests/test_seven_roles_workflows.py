@@ -157,3 +157,73 @@ def test_seven_role_end_to_end_workflows(client, setup_db):
     aud_ledger = client.get("/api/audit-readonly/ledger", headers={"Authorization": f"Bearer {aud_token}"})
     assert aud_ledger.status_code == 200
     assert len(aud_ledger.json()) > 0
+
+    # 8. MANAGEMENT REPORTS (Functionality 7) - Verify generation for all 7 User Roles
+    # Requestor reports
+    r_life = client.get("/api/requestor/reports/lifecycle", headers={"Authorization": f"Bearer {req_token}"})
+    assert r_life.status_code == 200
+    assert r_life.json()["report_id"] == "RPT-USR-01"
+    assert "data" in r_life.json()
+
+    r_limits = client.get("/api/requestor/reports/operational-limits", headers={"Authorization": f"Bearer {req_token}"})
+    assert r_limits.status_code == 200
+    assert r_limits.json()["report_id"] == "RPT-USR-02"
+
+    # Process Owner reports
+    po_align = client.get("/api/process-owner/reports/operational-alignment", headers={"Authorization": f"Bearer {po_token}"})
+    assert po_align.status_code == 200
+    assert po_align.json()["report_id"] == "RPT-PO-01"
+
+    po_queue = client.get("/api/process-owner/reports/impact-queue", headers={"Authorization": f"Bearer {po_token}"})
+    assert po_queue.status_code == 200
+    assert po_queue.json()["report_id"] == "RPT-PO-02"
+
+    # Dept Owner reports
+    do_limits = client.get("/api/dept-owner/reports/signing-limits", headers={"Authorization": f"Bearer {do_token}"})
+    assert do_limits.status_code == 200
+    assert do_limits.json()["report_id"] == "RPT-DO-01"
+
+    do_hist = client.get("/api/dept-owner/reports/change-history", headers={"Authorization": f"Bearer {do_token}"})
+    assert do_hist.status_code == 200
+    assert do_hist.json()["report_id"] == "RPT-DO-02"
+
+    # Authority Owner reports
+    ao_charter = client.get("/api/authority-owner/reports/charter-mandates", headers={"Authorization": f"Bearer {ao_token}"})
+    assert ao_charter.status_code == 200
+    assert ao_charter.json()["report_id"] == "RPT-AO-01"
+
+    ao_flows = client.get("/api/authority-owner/reports/chain-flows", headers={"Authorization": f"Bearer {ao_token}"})
+    assert ao_flows.status_code == 200
+    assert ao_flows.json()["report_id"] == "RPT-AO-02"
+
+    # Reviewer reports
+    rev_reg = client.get("/api/reviewer/reports/regulatory-register", headers={"Authorization": f"Bearer {rev_token}"})
+    assert rev_reg.status_code == 200
+    assert rev_reg.json()["report_id"] == "RPT-REV-01"
+
+    rev_diff = client.get("/api/reviewer/reports/technical-diffs", headers={"Authorization": f"Bearer {rev_token}"})
+    assert rev_diff.status_code == 200
+    assert rev_diff.json()["report_id"] == "RPT-REV-02"
+
+    # Approver reports
+    app_port = client.get("/api/approver/reports/executive-portfolio", headers={"Authorization": f"Bearer {app_token}"})
+    assert app_port.status_code == 200
+    assert app_port.json()["report_id"] == "RPT-APP-01"
+
+    app_dec = client.get("/api/approver/reports/binding-decisions", headers={"Authorization": f"Bearer {app_token}"})
+    assert app_dec.status_code == 200
+    assert app_dec.json()["report_id"] == "RPT-APP-02"
+
+    # Audit Read-Only reports
+    aud_dos = client.get("/api/audit-readonly/reports/version-dossier", headers={"Authorization": f"Bearer {aud_token}"})
+    assert aud_dos.status_code == 200
+    assert aud_dos.json()["report_id"] == "RPT-AUD-01"
+
+    aud_ledg = client.get("/api/audit-readonly/reports/immutable-ledger", headers={"Authorization": f"Bearer {aud_token}"})
+    assert aud_ledg.status_code == 200
+    assert aud_ledg.json()["report_id"] == "RPT-AUD-02"
+
+    aud_sod = client.get("/api/audit-readonly/reports/sod-matrix", headers={"Authorization": f"Bearer {aud_token}"})
+    assert aud_sod.status_code == 200
+    assert aud_sod.json()["report_id"] == "RPT-AUD-03"
+

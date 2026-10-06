@@ -180,6 +180,98 @@ IMPLEMENTED & OPERATIONAL INTERCONNECTED WORKFLOW (Multi-Hop Cycle):
 
 ---
 
+## 4.1 Step-by-Step Test Guide: Advancing from `PENDING 2LOD REVIEW` to `PUBLISHED`
+
+When a Change Request (such as `CR-0007`) reaches **`PENDING 2LOD REVIEW`**, follow these exact remaining steps in the UI to complete the review, obtain executive approval, and publish the active rule:
+
+```
+┌─────────────────────────┐
+│   PENDING 2LOD REVIEW   │  ◄── (Current State of CR-0007)
+└───────────┬─────────────┘
+            │
+            ▼  Step 1: Log in as 2LoD Reviewer (Sophia Zhang) ➔ Click "Recommend"
+┌─────────────────────────┐
+│      UNDER REVIEW       │
+└───────────┬─────────────┘
+            │
+            ▼  Step 2: Log in as Executive Approver (Julian Hayes) ➔ Click "Approve"
+┌─────────────────────────┐
+│        APPROVED         │
+└───────────┬─────────────┘
+            │
+            ▼  Step 3: Log in as DOA Admin or Governance Team ➔ Click "Publish"
+┌─────────────────────────┐
+│        PUBLISHED        │  ──► (Rule active in Master Matrix v1 / v2)
+└─────────────────────────┘
+```
+
+---
+
+### Step 1: 2LoD Technical Risk Recommendation (Moves from `PENDING 2LOD REVIEW` ➔ `UNDER REVIEW`)
+
+1. **Log out** of the current user session (click **Logout** in the top-right header).
+2. On the **Login Page**:
+   - Stay on the **Normal Users (7 Personas)** tab.
+   - Click on the **Reviewer** card:
+     * **Name:** Sophia Zhang
+     * **Email:** `reviewer@doa.local`
+     * **Password:** `User@123`
+   - Click **Sign In as Reviewer** (routes automatically to `/login/reviewer`).
+3. Click on the **Change Queue** / **Review Queue** tab in the top navigation bar.
+4. Locate `CR-0007`:
+   - Under the **Governance Action** column, you will now see the cyan **`Recommend`** button (alongside the **`Diff`** button).
+   - *(Optional)* Click **Diff** to review current vs. proposed attributes and field delta.
+   - Click **`Recommend`**.
+   - A prompt modal will appear asking for 2LoD technical risk remarks (e.g., *"2LoD technical risk assessment completed with no policy objections"*).
+   - Click **OK**.
+5. **Result:**
+   - A success toast will confirm: *"2LoD recommendation submitted for CR-0007, cleared for Executive Approver."*
+   - Status badge transitions from **`PENDING 2LOD REVIEW`** ➔ **`UNDER REVIEW`**.
+
+---
+
+### Step 2: Formal Executive Binding Approval (Moves from `UNDER REVIEW` ➔ `APPROVED`)
+
+1. **Log out** of Sophia Zhang's session.
+2. On the **Login Page**:
+   - Under the **Normal Users (7 Personas)** tab, select the **Approver** card:
+     * **Name:** Julian Hayes (VP Finance / Exec Approver)
+     * **Email:** `approver@doa.local`
+     * **Password:** `User@123`
+   - Click **Sign In as Approver** (routes automatically to `/login/approver`).
+3. Click on the **Change Queue** tab in the top navigation bar.
+4. Locate `CR-0007`:
+   - Under the **Governance Action** column, you will now see both green **`Approve`** and red **`Reject`** buttons.
+   - Click **`Approve`**.
+   - An Executive Decision dialog opens requiring mandatory decision rationale remarks.
+   - Enter your executive approval comment (e.g., *"Executive Committee approval granted for asset change"*).
+   - Click **Submit Approval**.
+5. **Result:**
+   - A success toast confirms formal approval.
+   - Status badge transitions from **`UNDER REVIEW`** ➔ **`APPROVED`**.
+
+---
+
+### Step 3: Master Controlled Publication (Moves from `APPROVED` ➔ `PUBLISHED`)
+
+1. **Log out** of Julian Hayes's session.
+2. On the **Login Page**:
+   - Switch to the **Enterprise Administrators** tab.
+   - Select either **DOA Administrator** or **Governance Team**:
+     * **DOA Administrator:** `doaadmin@doa.local` | `DoaAdmin@123`
+     * *(or Governance Team):* `governance@doa.local` | `GovTeam@123`
+   - Click **Sign In**.
+3. Click on the **Change Queue** tab in the top navigation bar.
+4. Locate `CR-0007`:
+   - Under the **Governance Action** column, the green **`Publish`** button with the paper plane icon will now be visible.
+   - Click **`Publish`**.
+5. **Result:**
+   - The backend runs optimistic concurrency validation, archives the prior version if applicable, increments the version snapshot, and writes to the immutable audit log ledger.
+   - Status badge updates to green **`PUBLISHED`** with checkmarks.
+   - Switch to the **Search DoA** tab: the new record / updated rule is now live and searchable in the master DOA repository!
+
+---
+
 ## 5. Active Business Lines in the Codebase
 
 Based on the master repository schema, taxonomy configuration (`backend/app/api/taxonomy.py`), and client data definitions (`frontend/src/data/doaData.js`), the platform manages **17 specialized Business Lines** organized under two primary parent corporate functions: **Finance** and **Risk**.
