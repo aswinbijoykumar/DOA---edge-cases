@@ -433,6 +433,14 @@ export const api = {
   // 8. Persona-specific Management Reports (Functionality 7)
   async getRoleReport(endpointUrl) {
     return await request(endpointUrl);
+  },
+
+  // 9. Governance Assistant Chatbot
+  async queryChatbot(message, context = {}) {
+    return await request('/chatbot/query', {
+      method: 'POST',
+      body: JSON.stringify({ message, context })
+    });
   }
 };
 

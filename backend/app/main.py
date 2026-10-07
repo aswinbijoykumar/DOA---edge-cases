@@ -13,7 +13,8 @@ from app.api import (
     governance_team,
     doa_admin,
     system_admin,
-    roles_workflows
+    roles_workflows,
+    chatbot
 )
 
 # Create database tables
@@ -50,6 +51,7 @@ app.include_router(roles_workflows.router, prefix=settings.API_V1_STR)
 app.include_router(governance_team.router, prefix=settings.API_V1_STR)
 app.include_router(doa_admin.router, prefix=settings.API_V1_STR)
 app.include_router(system_admin.router, prefix=settings.API_V1_STR)
+app.include_router(chatbot.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

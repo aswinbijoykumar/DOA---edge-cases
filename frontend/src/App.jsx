@@ -10,6 +10,7 @@ import NormalUserDashboard from './components/dashboards/NormalUserDashboard';
 import GovernanceTeamDashboard from './components/dashboards/GovernanceTeamDashboard';
 import DoaAdminDashboard from './components/dashboards/DoaAdminDashboard';
 import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
+import ChatbotWidget from './components/ChatbotWidget';
 import { 
   Search, 
   Plus, 
@@ -3379,6 +3380,24 @@ export default function App() {
         </div>
       )}
 
+
+      {/* Floating DOA Governance Policy Assistant Bot */}
+      {currentUser && (
+        <ChatbotWidget
+          userRole={currentUser.role}
+          onNavigate={(target) => {
+            if (target === 'new-proposal') {
+              setIsAddModalOpen(true);
+            } else if (target === 'doa-matrix') {
+              setActiveView && setActiveView('matrix');
+            } else if (target === 'audit-trail') {
+              setActiveView && setActiveView('audit');
+            } else if (target === 'diff-inspector') {
+              setActiveView && setActiveView('requests');
+            }
+          }}
+        />
+      )}
 
       {/* Footer Branding */}
       <footer className="bg-slate-950 text-slate-400 text-xs py-6 border-t border-slate-900 mt-auto">

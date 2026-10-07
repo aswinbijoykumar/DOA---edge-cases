@@ -200,3 +200,30 @@ class GovernanceActionPayload(BaseModel):
     target_committee: Optional[str] = None
     reason: Optional[str] = None
 
+# Chatbot Schemas
+class ChatbotContext(BaseModel):
+    current_route: Optional[str] = None
+    role: Optional[str] = None
+
+class ChatbotQueryRequest(BaseModel):
+    message: str
+    context: Optional[ChatbotContext] = None
+
+class ChatbotSource(BaseModel):
+    id: str
+    title: str
+    function: Optional[str] = None
+    decision_area: Optional[str] = None
+    details: Optional[str] = None
+
+class ChatbotAction(BaseModel):
+    label: str
+    action_type: str # "navigate" or "suggest_prompt"
+    target: str
+
+class ChatbotQueryResponse(BaseModel):
+    response: str
+    sources: List[ChatbotSource] = []
+    suggested_actions: List[ChatbotAction] = []
+    is_guardrail_triggered: bool = False
+
