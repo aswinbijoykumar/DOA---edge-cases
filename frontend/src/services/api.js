@@ -4,7 +4,9 @@
  */
 
 let rawBase = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').trim().replace(/\/+$/, '');
-if (!rawBase.endsWith('/api')) {
+if (rawBase.includes('/api')) {
+  rawBase = rawBase.substring(0, rawBase.indexOf('/api') + 4);
+} else {
   rawBase += '/api';
 }
 const BASE_URL = rawBase;
