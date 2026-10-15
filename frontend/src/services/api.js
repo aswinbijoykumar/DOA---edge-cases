@@ -3,7 +3,11 @@
  * Connects frontend to FastAPI backend running on http://localhost:8000/api
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+let rawBase = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').trim().replace(/\/+$/, '');
+if (!rawBase.endsWith('/api')) {
+  rawBase += '/api';
+}
+const BASE_URL = rawBase;
 
 // Helper for local storage token
 export const getStoredToken = () => localStorage.getItem('doa_access_token');

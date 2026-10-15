@@ -20,6 +20,18 @@ from app.api import (
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Auto-seed if database is empty (ensures test users and DOA records exist on deployment)
+try:
+    from app.database.database import SessionLocal
+    from app.database.models import User
+    from app.seed import seed_database
+    with SessionLocal() as db:
+        if not db.query(User).first():
+            print("Database has no users. Auto-seeding initial data...")
+            seed_database()
+except Exception as e:
+    print(f"Startup seed check warning: {e}")
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Backend REST API for the Delegation of Authority (DOA) Governance Workflow Tool Prototype",
@@ -32,6 +44,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=r"https://.*\.onrender\.com",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
