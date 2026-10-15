@@ -596,44 +596,44 @@ export default function GovernanceTeamDashboard({
                         .filter(cr => cr.status === 'SUBMITTED' || cr.status === 'UNDER_REVIEW')
                         .slice(0, 5)
                         .map(cr => (
-                          <div key={cr.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-bold text-blue-400">#{cr.id}</span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                          <div key={cr.id} className="py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-xs font-bold text-blue-400 shrink-0">#{cr.id}</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase shrink-0 ${
                                   cr.request_type === 'ADD' ? 'bg-emerald-500/20 text-emerald-300' :
                                   cr.request_type === 'MODIFY' ? 'bg-blue-500/20 text-blue-300' :
                                   'bg-rose-500/20 text-rose-300'
                                 }`}>
                                   {cr.request_type}
                                 </span>
-                                <span className="text-xs font-bold text-slate-200 truncate">
+                                <span className="text-xs font-bold text-slate-200 truncate max-w-[280px] sm:max-w-[360px]" title={`${cr.department} • ${cr.process}`}>
                                   {cr.department} &bull; {cr.process}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400 italic line-clamp-1">
+                              <p className="text-xs text-slate-400 italic truncate max-w-full">
                                 "{cr.rationale || 'Rule revision'}"
                               </p>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-2 shrink-0 self-start md:self-center">
                               <button
                                 onClick={() => handleOpenDiff(cr)}
-                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 flex items-center gap-1.5"
+                                className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold border border-slate-700 flex items-center gap-1.5 shrink-0"
                               >
                                 <Eye className="h-3.5 w-3.5 text-blue-400" />
                                 <span>Inspect Diff</span>
                               </button>
                               <button
                                 onClick={() => handleOpenActionModal('comment', cr)}
-                                className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-700 text-xs"
+                                className="p-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl border border-slate-700 text-xs shrink-0"
                                 title="Add Comment"
                               >
                                 <MessageSquare className="h-3.5 w-3.5" />
                               </button>
                               <button
                                 onClick={() => handleOpenActionModal('clarification', cr)}
-                                className="p-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 rounded-xl border border-amber-500/30 text-xs"
+                                className="p-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 rounded-xl border border-amber-500/30 text-xs shrink-0"
                                 title="Request Clarification"
                               >
                                 <AlertTriangle className="h-3.5 w-3.5" />
