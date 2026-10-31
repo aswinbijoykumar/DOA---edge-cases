@@ -32,6 +32,10 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
+import ProposalValidatorModal from '../supplementary/ProposalValidatorModal';
+import ExceptionRequestModal from '../supplementary/ExceptionRequestModal';
+import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
+
 
 export default function NormalUserDashboard({ 
   userStats, 
@@ -53,13 +57,17 @@ export default function NormalUserDashboard({
 
   const initialDesignation = PERSONA_TO_DESIGNATION[currentUser?.persona_type] || 'ceo';
 
-  // Sub-tab view inside Normal User Workspace
-  // 'overview' | 'designations' | 'reports' | 'hr_integration'
   const [activeSubTab, setActiveSubTab] = useState(
     currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'designations' :
     currentUser?.persona_type === 'PROCESS_OWNER' ? 'hr_integration' :
     currentUser?.persona_type === 'AUDIT_READONLY' ? 'reports' : 'overview'
   );
+
+  // Supplementary BRD Modals & Workflow State
+  const [showValidatorModal, setShowValidatorModal] = useState(false);
+  const [showExceptionModal, setShowExceptionModal] = useState(false);
+  const [blockedValidationData, setBlockedValidationData] = useState(null);
+
 
   // Designation Matrix State (Functionality 5)
   const [selectedDesignationKey, setSelectedDesignationKey] = useState(initialDesignation);
@@ -321,6 +329,15 @@ export default function NormalUserDashboard({
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-shrink-0">
             <button
+              onClick={() => setShowValidatorModal(true)}
+              className="px-4 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+              title="Test proposal against VAL-01 to VAL-12 hard-stop rules"
+            >
+              <Sparkles className="h-4 w-4 text-indigo-300" />
+              <span>Validate Proposal (VAL-01..12)</span>
+            </button>
+
+            <button
               onClick={() => onNavigateTab('search')}
               className="px-4 py-3 bg-white/10 hover:bg-white/15 text-white border border-white/20 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
             >
@@ -344,6 +361,7 @@ export default function NormalUserDashboard({
         <div className="mt-8 pt-4 border-t border-white/10 flex flex-wrap gap-2">
           {[
             { id: 'overview', label: 'Persona Workspace', icon: Briefcase },
+            { id: 'exceptions', label: 'Exception Workflows', icon: AlertTriangle, highlight: true },
             { id: 'designations', label: 'Designation-Wise Authorities', icon: Award, highlight: true },
             { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true },
             { id: 'hr_integration', label: 'HR Org & Acting Authorities', icon: Users, highlight: true }
@@ -1091,6 +1109,58 @@ export default function NormalUserDashboard({
           )}
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 5: EXCEPTIONS WORKFLOW INBOX (SECTION 4.3) */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'exceptions' && (
+        <div className="animate-fade-in space-y-4">
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Submit New Exception Request</h3>
+              <p className="text-xs text-slate-500">Need to propose a decision area that deviates from standard DOA rules?</p>
+            </div>
+            <button
+              onClick={() => setShowExceptionModal(true)}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Draft Exception Request</span>
+            </button>
+          </div>
+          <ExceptionWorkflowInbox currentUser={currentUser} />
+        </div>
+      )}
+
+      {/* Supplementary BRD Validator Modal */}
+      <ProposalValidatorModal
+        isOpen={showValidatorModal}
+        onClose={() => setShowValidatorModal(false)}
+        onProceedWithException={(formData, res) => {
+          setShowValidatorModal(false);
+          setBlockedValidationData({
+            decision_area_title: formData.decision_area,
+            entity: formData.entity,
+            deviated_validation_rules: res.hard_stops?.map(h => h.ref) || ['VAL-06'],
+            monetary_amount: formData.monetary_amount,
+            currency: formData.currency
+          });
+          setShowExceptionModal(true);
+        }}
+      />
+
+      {/* Supplementary BRD Exception Modal */}
+      <ExceptionRequestModal
+        isOpen={showExceptionModal}
+        onClose={() => {
+          setShowExceptionModal(false);
+          setBlockedValidationData(null);
+        }}
+        initialData={blockedValidationData || {}}
+        onSuccess={() => {
+          setActiveSubTab('exceptions');
+        }}
+      />
 
     </div>
   );

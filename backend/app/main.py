@@ -14,8 +14,10 @@ from app.api import (
     doa_admin,
     system_admin,
     roles_workflows,
-    chatbot
+    chatbot,
+    supplementary_governance
 )
+from app.database import supplementary_models  # Ensure supplementary tables are registered
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -52,6 +54,7 @@ app.include_router(governance_team.router, prefix=settings.API_V1_STR)
 app.include_router(doa_admin.router, prefix=settings.API_V1_STR)
 app.include_router(system_admin.router, prefix=settings.API_V1_STR)
 app.include_router(chatbot.router, prefix=settings.API_V1_STR)
+app.include_router(supplementary_governance.router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 def root():

@@ -441,6 +441,64 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ message, context })
     });
+  },
+
+  // 10. Supplementary BRD Governance Endpoints
+  async validateDecisionAreaProposal(data) {
+    return await request('/supplementary/validate-proposal', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async getAuthoritativeSources() {
+    return await request('/supplementary/authoritative-sources');
+  },
+  async triggerSourceImpact(sourceId) {
+    return await request(`/supplementary/authoritative-sources/${sourceId}/trigger-impact`, {
+      method: 'POST'
+    });
+  },
+  async getExpenditureLimits() {
+    return await request('/supplementary/expenditure-limits');
+  },
+  async getExceptionRequests() {
+    return await request('/supplementary/exceptions');
+  },
+  async createExceptionRequest(data) {
+    return await request('/supplementary/exceptions', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async actionExceptionRequest(exceptionId, action, rationale, amendments = null) {
+    return await request(`/supplementary/exceptions/${exceptionId}/action`, {
+      method: 'POST',
+      body: JSON.stringify({ action, rationale, amendments })
+    });
+  },
+  async getBahrainKsaAlignmentReport() {
+    return await request('/supplementary/reports/bahrain-ksa-alignment');
+  },
+  async compareCrossGeography(data) {
+    return await request('/supplementary/cross-geography/compare', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async reconstructPointInTime(targetDate, entity = null) {
+    return await request('/supplementary/point-in-time/reconstruct', {
+      method: 'POST',
+      body: JSON.stringify({ target_date: targetDate, entity })
+    });
+  },
+  async getCertifications() {
+    return await request('/supplementary/certifications');
+  },
+  async getTemporaryDelegations() {
+    return await request('/supplementary/temporary-delegations');
+  },
+  async getGovernanceFindings() {
+    return await request('/supplementary/findings');
   }
 };
 

@@ -33,6 +33,10 @@ import {
   BookOpen
 } from 'lucide-react';
 import { api } from '../../services/api';
+import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
+import BahrainKsaAlignmentReportView from '../supplementary/BahrainKsaAlignmentReportView';
+import PointInTimeReconstructionView from '../supplementary/PointInTimeReconstructionView';
+
 
 export default function GovernanceTeamDashboard({
   govStats,
@@ -431,6 +435,9 @@ export default function GovernanceTeamDashboard({
               {[
                 { id: 'dashboard', label: 'Dashboard', icon: Layers, badge: null },
                 { id: 'review_queue', label: 'Review Queue', icon: GitPullRequest, badge: kpis.pendingReview || null },
+                { id: 'exceptions', label: 'Exceptions (Sec 4.3)', icon: AlertTriangle, badge: 'New' },
+                { id: 'bahrain_ksa', label: 'Bahrain–KSA Parity', icon: Scale, badge: null },
+                { id: 'point_in_time', label: 'Point-in-Time Audit', icon: History, badge: null },
                 { id: 'impact', label: 'Impact', icon: ShieldAlert, badge: kpis.highCriticalImpact || null },
                 { id: 'change_monitor', label: 'Change Monitor', icon: BarChart3, badge: null },
                 { id: 'published_doa', label: 'Published DOA', icon: Database, badge: doaRecords.length },
@@ -1113,8 +1120,36 @@ export default function GovernanceTeamDashboard({
             </div>
           )}
 
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 1: EXCEPTIONS WORKFLOW INBOX                      */}
+          {/* ========================================================================= */}
+          {activeNav === 'exceptions' && (
+            <div className="animate-fade-in">
+              <ExceptionWorkflowInbox currentUser={currentUser} onRefreshStats={onRefreshData} />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 2: BAHRAIN–KSA ALIGNMENT RECONCILIATION DOSSIER  */}
+          {/* ========================================================================= */}
+          {activeNav === 'bahrain_ksa' && (
+            <div className="animate-fade-in">
+              <BahrainKsaAlignmentReportView />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 3: POINT-IN-TIME TEMPORAL DOA RECONSTRUCTION      */}
+          {/* ========================================================================= */}
+          {activeNav === 'point_in_time' && (
+            <div className="animate-fade-in">
+              <PointInTimeReconstructionView />
+            </div>
+          )}
+
         </main>
       </div>
+
 
       {/* ========================================================================= */}
       {/* MODAL 1: A17 & A18 CURRENT VS PROPOSED DIFF INSPECTOR (OLD ➔ NEW)         */}

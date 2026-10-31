@@ -39,6 +39,11 @@ import {
   Info
 } from 'lucide-react';
 import { api } from '../../services/api';
+import ProposalValidatorModal from '../supplementary/ProposalValidatorModal';
+import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
+import BahrainKsaAlignmentReportView from '../supplementary/BahrainKsaAlignmentReportView';
+import PointInTimeReconstructionView from '../supplementary/PointInTimeReconstructionView';
+
 
 export default function DoaAdminDashboard({
   adminStats,
@@ -571,6 +576,9 @@ export default function DoaAdminDashboard({
                 { id: 'dashboard', label: 'Dashboard', icon: Layers, badge: null },
                 { id: 'repository', label: 'DOA Repository', icon: Database, badge: kpis.totalDoas },
                 { id: 'decision_areas', label: 'Decision Areas', icon: FolderTree, badge: null },
+                { id: 'exceptions', label: 'Exceptions (Sec 4.3)', icon: AlertCircle, badge: 'New' },
+                { id: 'bahrain_ksa', label: 'Bahrain–KSA Parity', icon: Scale, badge: null },
+                { id: 'point_in_time', label: 'Point-in-Time Audit', icon: History, badge: null },
                 { id: 'queue', label: 'Change Queue', icon: GitPullRequest, badge: kpis.pendingReview || null },
                 { id: 'taxonomy', label: 'Taxonomy', icon: Sliders, badge: null },
                 { id: 'workflows', label: 'Workflows', icon: Sliders, badge: null },
@@ -1653,8 +1661,36 @@ export default function DoaAdminDashboard({
             </div>
           )}
 
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 1: EXCEPTIONS WORKFLOW COCKPIT                   */}
+          {/* ========================================================================= */}
+          {activeNav === 'exceptions' && (
+            <div className="animate-fade-in">
+              <ExceptionWorkflowInbox currentUser={currentUser} onRefreshStats={onRefreshData} />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 2: BAHRAIN–KSA ALIGNMENT RECONCILIATION DOSSIER  */}
+          {/* ========================================================================= */}
+          {activeNav === 'bahrain_ksa' && (
+            <div className="animate-fade-in">
+              <BahrainKsaAlignmentReportView />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 3: POINT-IN-TIME TEMPORAL DOA RECONSTRUCTION      */}
+          {/* ========================================================================= */}
+          {activeNav === 'point_in_time' && (
+            <div className="animate-fade-in">
+              <PointInTimeReconstructionView />
+            </div>
+          )}
+
         </main>
       </div>
+
 
       {/* ========================================================================= */}
       {/* MODAL 1: CREATE / EDIT DOA RECORD (WITH PRE-SUBMISSION VALIDATION)        */}

@@ -99,7 +99,7 @@ def approve_change_request(
         
     allowed_statuses = [
         "SUBMITTED", "DRAFT", "PENDING_PROCESS_OWNER", 
-        "PENDING_DEPT_OWNER", "PENDING_2LOD_REVIEW", "UNDER_REVIEW"
+        "PENDING_DEPT_OWNER", "PENDING_2LOD_REVIEW", "UNDER_REVIEW", "CLARIFICATION_REQUIRED"
     ]
     if cr.status not in allowed_statuses:
         raise HTTPException(status_code=400, detail=f"Cannot approve change request with status {cr.status}")
@@ -141,7 +141,7 @@ def reject_change_request(
         
     allowed_statuses = [
         "SUBMITTED", "DRAFT", "PENDING_PROCESS_OWNER", 
-        "PENDING_DEPT_OWNER", "PENDING_2LOD_REVIEW", "UNDER_REVIEW"
+        "PENDING_DEPT_OWNER", "PENDING_2LOD_REVIEW", "UNDER_REVIEW", "CLARIFICATION_REQUIRED"
     ]
     if cr.status not in allowed_statuses:
         raise HTTPException(status_code=400, detail=f"Cannot reject change request with status {cr.status}")
