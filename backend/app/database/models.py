@@ -70,7 +70,9 @@ class DOARecord(Base):
     process_name = Column(String(255), nullable=True, default="") # e.g. "Procure-to-Pay (P2P)"
     attachments = Column(Text, nullable=True, default="[]") # JSON list of document metadata
     
-    # Versioning and Lifecycle Status
+    # Versioning, Classification, Entity & Lifecycle Status
+    entity_id = Column(String(50), ForeignKey("legal_entities.id"), nullable=True, default="ENT-BH-01") # Entity & Geography scoping
+    classification = Column(String(50), nullable=True, default="Board-level DOA") # Board-level DOA vs Management-level DOA
     current_version = Column(Integer, default=1, nullable=False)
     status = Column(String(50), default="PUBLISHED", nullable=False) # DRAFT, PUBLISHED, ARCHIVED
     effective_date = Column(String(50), nullable=True, default="2026-01-01")
@@ -118,6 +120,11 @@ class ChangeRequest(Base):
     base_version = Column(Integer, default=1, nullable=False) # Guard for optimistic concurrency / stale check
     current_value = Column(Text, nullable=True) # JSON snapshot of current DOA state
     proposed_value = Column(Text, nullable=False) # JSON snapshot of proposed changes
+    
+    # Supplementary BRD fields
+    entity_id = Column(String(50), nullable=True, default="ENT-BH-01")
+    classification = Column(String(50), nullable=True, default="Board-level DOA")
+    exception_id = Column(String(50), nullable=True) # Linked approved exception request
     
     status = Column(String(50), default="SUBMITTED", nullable=False) # DRAFT, SUBMITTED, APPROVED, REJECTED, PUBLISHED
     

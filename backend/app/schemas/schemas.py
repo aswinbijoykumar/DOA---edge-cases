@@ -114,6 +114,12 @@ class ChangeRequestCreate(BaseModel):
     proposed_value: Dict[str, Any] # Contains fields proposed
     operational_impact: Optional[str] = None
     attachments: Optional[List[Dict[str, Any]]] = None
+    # Supplementary BRD fields
+    entity_id: Optional[str] = "ENT-BH-01"
+    classification: Optional[str] = "Board-level DOA"
+    exception_id: Optional[str] = None
+    authoritative_source_ids: Optional[List[str]] = None
+    linked_expenditure_limit_id: Optional[str] = None
 
 class ActionDecision(BaseModel):
     comment: Optional[str] = None
@@ -132,6 +138,9 @@ class ChangeRequestRead(BaseModel):
     current_value: Optional[Dict[str, Any]] = None
     proposed_value: Dict[str, Any]
     status: str # DRAFT, SUBMITTED, APPROVED, REJECTED, PUBLISHED
+    entity_id: Optional[str] = "ENT-BH-01"
+    classification: Optional[str] = "Board-level DOA"
+    exception_id: Optional[str] = None
     reviewer_id: Optional[int] = None
     reviewer_email: Optional[str] = None
     reviewed_at: Optional[datetime] = None

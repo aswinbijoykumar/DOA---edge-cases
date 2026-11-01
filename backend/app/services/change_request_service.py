@@ -33,6 +33,76 @@ def create_change_request(
             base_ver = data.base_version if data.base_version is not None else target_doa.current_version
 
     
+    # -------------------------------------------------------------------------
+    # BRD VAL-01 to VAL-12 Pre-submission Validation Enforcement
+    # -------------------------------------------------------------------------
+    from app.services.decision_area_validation_service import validate_decision_area_proposal
+    from app.schemas.supplementary_schemas import DecisionAreaValidationRequest
+    from app.database.supplementary_models import ExceptionRequest
+
+    prop = data.proposed_value or {}
+    
+    # Check if approved exception is supplied and verified
+    has_approved_exc = False
+    if data.exception_id:
+        exc_rec = db.query(ExceptionRequest).filter(
+            ExceptionRequest.id == data.exception_id,
+            ExceptionRequest.status == "APPROVED"
+        ).first()
+        if exc_rec:
+            has_approved_exc = True
+
+    # Assemble validation request from proposed values
+    decision_area_text = prop.get("decision_area") or data.process or "Proposed Decision Area"
+    parent_func = prop.get("parent_function") or prop.get("function") or data.department or "Finance"
+    b_line = prop.get("business_line") or prop.get("category") or data.process or "General Governance"
+    proposer_val = prop.get("proposer") or current_user.email
+    reviewer_val = prop.get("reviewer") or prop.get("c_level1") or prop.get("mgmt_committees") or "Governance Team"
+    approver_val = prop.get("final_approver") or prop.get("ceo") or prop.get("gceo") or prop.get("board_of_directors") or prop.get("shareholders") or "CEO"
+    
+    # Check existing DOA record for supporting docs/sources if modifying existing record
+    existing_docs = []
+    if target_doa and getattr(target_doa, "attachments", None):
+        try:
+            existing_docs = json.loads(target_doa.attachments) if isinstance(target_doa.attachments, str) else target_doa.attachments
+        except Exception:
+            existing_docs = []
+
+    submitted_docs = data.attachments or (json.loads(data.attachments) if isinstance(data.attachments, str) else [])
+    combined_docs = submitted_docs or existing_docs
+
+    val_req = DecisionAreaValidationRequest(
+        decision_area=decision_area_text,
+        parent_function=parent_func,
+        business_line=b_line,
+        requester_email=current_user.email,
+        proposer=proposer_val,
+        reviewer=reviewer_val,
+        endorser=prop.get("endorser") or prop.get("c_level2"),
+        final_approver=approver_val,
+        rationale=data.rationale or prop.get("rationale") or "Operational requirement",
+        supporting_documentation=combined_docs,
+        entity_or_geography=data.entity_id or "Bahrain",
+        proposed_effective_date=prop.get("effective_date") or "2026-01-01",
+        is_financial=bool(prop.get("monetary_amount") or data.linked_expenditure_limit_id),
+        monetary_amount=float(prop.get("monetary_amount")) if prop.get("monetary_amount") else None,
+        currency=prop.get("currency") or "BHD",
+        linked_expenditure_limit_id=data.linked_expenditure_limit_id,
+        authoritative_source_ids=data.authoritative_source_ids or ([f"SRC-{target_doa.id}"] if target_doa else None),
+        has_approved_exception=has_approved_exc,
+        exception_request_id=data.exception_id
+    )
+
+    val_res = validate_decision_area_proposal(db, val_req, current_user)
+    if not val_res.can_submit and not has_approved_exc:
+        error_details = " | ".join(val_res.hard_stop_errors)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Proposal blocked by BRD Hard-Stop Validation: {error_details}. Please route via Exception Workflow if justified."
+        )
+
+    classification_val = val_res.classification
+
     cr = ChangeRequest(
         id=cr_id,
         request_type=data.request_type.upper(),
@@ -47,7 +117,10 @@ def create_change_request(
         proposed_value=json.dumps(data.proposed_value),
         operational_impact=data.operational_impact,
         attachments=json.dumps(data.attachments) if data.attachments else "[]",
-        status="SUBMITTED", # Immediately submitted for prototype simplicity
+        entity_id=data.entity_id or "ENT-BH-01",
+        classification=classification_val,
+        exception_id=data.exception_id,
+        status="SUBMITTED",
         created_at=datetime.now(timezone.utc),
         submitted_at=datetime.now(timezone.utc)
     )
@@ -234,6 +307,8 @@ def publish_change_request(
             charter_section=proposed_data.get("charter_section") or "Corporate Governance Charter Schedule B",
             regulatory_requirement="Central Bank Regulatory Framework (CBR-Gov §44)" if proposed_data.get("regulatory") == "Y" else "Internal Process Governance",
             attachments=cr.attachments or "[]",
+            entity_id=getattr(cr, "entity_id", "ENT-BH-01"),
+            classification=getattr(cr, "classification", "Board-level DOA"),
             current_version=1,
             status="PUBLISHED",
             effective_date=proposed_data.get("effective_date", "2026-01-01"),

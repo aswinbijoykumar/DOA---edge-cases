@@ -51,6 +51,19 @@ def trigger_source_change_impact(
                 "linked_clause": l.relevant_clause or source.relevant_clause,
                 "flagged_for_impact_review": True
             })
+            
+            # Generate a GovernanceFinding item for compliance tracking
+            finding_id = f"FND-SRC-{doa.id}-{int(datetime.now(timezone.utc).timestamp()) % 10000}"
+            finding = GovernanceFinding(
+                id=finding_id,
+                finding_type="SOURCE_CHANGE_DRIFT",
+                severity="HIGH",
+                doa_id=doa.id,
+                owner_email=admin_user.email,
+                description=f"Authoritative source '{source.name}' ({source.id}) was amended. Decision area requires impact review.",
+                status="OPEN"
+            )
+            db.add(finding)
 
     db.flush()
     log_audit(

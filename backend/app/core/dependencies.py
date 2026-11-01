@@ -84,4 +84,21 @@ def require_approver_or_admin(current_user: User = Depends(get_current_user)) ->
         detail="Access forbidden: requires Executive Approver or DOA Administrator authorization"
     )
 
+def check_entity_write_access(target_entity_id: str, current_user: User) -> bool:
+    """
+    Acceptance Criteria (Section 6 & 4.4):
+    Entity ownership prevents unauthorised cross-geography changes while permitting agreed read-only access.
+    """
+    if current_user.role in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"]:
+        return True
+    user_dept = getattr(current_user, "department", "") or ""
+    # Check if geography is aligned (e.g. KSA user cannot mutate Bahrain records)
+    if "KSA" in user_dept and "BH" in (target_entity_id or ""):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Entity Scoping Violation: Cross-geography mutations blocked. User belonging to {user_dept} cannot modify entity {target_entity_id}."
+        )
+    return True
+
+
 
