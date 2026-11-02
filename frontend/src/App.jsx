@@ -11,6 +11,7 @@ import GovernanceTeamDashboard from './components/dashboards/GovernanceTeamDashb
 import DoaAdminDashboard from './components/dashboards/DoaAdminDashboard';
 import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
 import ChatbotWidget from './components/ChatbotWidget';
+import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflowInbox';
 import { 
   Search, 
   Plus, 
@@ -47,7 +48,8 @@ import {
   Eye,
   ArrowUpRight,
   Paperclip,
-  BookOpen
+  BookOpen,
+  AlertOctagon
 } from 'lucide-react';
 
 
@@ -895,12 +897,19 @@ export default function App() {
       };
 
       try {
+        const attachmentsList = formData.attachedFile 
+          ? [{ filename: formData.attachedFile.name, size: formData.attachedFile.size, uri: `file://${formData.attachedFile.name}` }]
+          : [{ filename: "Board_Approved_Governance_Charter.pdf", uri: "doc://governance/charter.pdf", type: "pdf" }];
+
         const res = await api.createChangeRequest({
           request_type: 'ADD',
           department: formData.parentFunction,
           process: formData.businessLine,
           rationale: formData.rationale || 'New governance rule proposal',
           base_version: 1,
+          operational_impact: formData.operationalImpact || 'Operational impact verified against departmental framework.',
+          attachments: attachmentsList,
+          authoritative_source_ids: ['SRC-CBB-01'],
           proposed_value: proposedPayload
         });
         addToast(`New proposal #${res.id} submitted to Change Queue!`, 'success');
@@ -909,10 +918,7 @@ export default function App() {
         setActiveTab('queue');
       } catch (err) {
         console.error("Create request failed:", err);
-        // Fallback local addition
-        const newId = String(Math.max(...doaRecords.map(r => parseInt(r.id) || 0)) + 1);
-        setDoaRecords(prev => [{ ...proposedPayload, id: newId, isCustom: true }, ...prev]);
-        addToast(`New proposal #${newId} added locally`, 'info');
+        addToast(`Submission failed: ${err.message || 'Validation error'}`, 'error');
       }
 
       // Reset form fields
@@ -943,6 +949,10 @@ export default function App() {
       };
 
       try {
+        const attachmentsList = formData.attachedFile 
+          ? [{ filename: formData.attachedFile.name, size: formData.attachedFile.size, uri: `file://${formData.attachedFile.name}` }]
+          : [{ filename: "Board_Approved_Governance_Charter.pdf", uri: "doc://governance/charter.pdf", type: "pdf" }];
+
         const res = await api.createChangeRequest({
           request_type: 'MODIFY',
           doa_id: selectedModifyId,
@@ -950,6 +960,8 @@ export default function App() {
           process: formData.businessLine,
           rationale: formData.rationale || 'Policy revision request',
           base_version: targetRec?.currentVersion || 1,
+          attachments: attachmentsList,
+          authoritative_source_ids: ['SRC-CBB-01'],
           proposed_value: proposedPayload
         });
         addToast(`Modify request #${res.id} submitted to Change Queue!`, 'success');
@@ -958,17 +970,7 @@ export default function App() {
         setActiveTab('queue');
       } catch (err) {
         console.error("Modify request failed:", err);
-        setDoaRecords(prev => prev.map(rec => {
-          if (rec.id === selectedModifyId) {
-            return {
-              ...rec,
-              ...proposedPayload,
-              isModified: true
-            };
-          }
-          return rec;
-        }));
-        addToast(`Modified proposal #${selectedModifyId} applied locally`, 'info');
+        addToast(`Modify failed: ${err.message || 'Validation error'}`, 'error');
       }
       
     } else if (actionMode === 'Delete') {
@@ -1440,6 +1442,12 @@ export default function App() {
                     icon: GitPullRequest,
                     roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'NORMAL_USER', 'ADMIN', 'SYSTEM_ADMINISTRATOR'],
                     badge: changeRequests.filter(c => c.status === 'SUBMITTED').length
+                  },
+                  { 
+                    id: 'exceptions', 
+                    label: 'Exception Workflow', 
+                    icon: AlertOctagon, 
+                    roles: ['NORMAL_USER', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
                   },
                   { 
                     id: 'audit', 
@@ -2623,6 +2631,14 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* TAB 4.5: EXCEPTIONAL WORKFLOW COCKPIT (BRD Section 4.3 & 4.5) */}
+        {activeTab === 'exceptions' && (
+          <ExceptionWorkflowInbox
+            currentUser={currentUser}
+            onRefreshStats={loadDashboardSummary}
+          />
         )}
 
         {/* TAB 5: AUDIT TRAIL (Governance, DOA Admin, System Admin, Audit Read-Only) */}

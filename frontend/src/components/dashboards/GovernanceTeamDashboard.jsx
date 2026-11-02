@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ShieldAlert, 
   GitPullRequest, 
@@ -48,6 +48,13 @@ export default function GovernanceTeamDashboard({
   onInspectCR,
   onRefreshData
 }) {
+  // Refresh data on mount to ensure latest change requests are loaded
+  useEffect(() => {
+    if (onRefreshData) {
+      onRefreshData();
+    }
+  }, []);
+
   // Navigation: 7 Sidebar Sections
   // 'dashboard' | 'review_queue' | 'impact' | 'change_monitor' | 'published_doa' | 'audit' | 'reports'
   const [activeNav, setActiveNav] = useState('dashboard');

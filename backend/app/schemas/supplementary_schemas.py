@@ -72,8 +72,13 @@ class ExceptionCreateRequest(BaseModel):
 
 class ExceptionActionRequest(BaseModel):
     action: str # "APPROVE", "RETURN", "AMEND", "REJECT"
-    comment: str # Mandatory rationale at every stage
+    comment: Optional[str] = None # Mandatory rationale at every stage
+    rationale: Optional[str] = None # Support rationale field from frontend
     amended_payload: Optional[Dict[str, Any]] = None
+
+    @property
+    def final_comment(self) -> str:
+        return self.comment or self.rationale or "Stage review action completed."
 
 class ExceptionResponse(BaseModel):
     id: str

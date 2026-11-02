@@ -55,9 +55,10 @@ export default function ExceptionWorkflowInbox({
     }
     setActionLoading(true);
     setMsg({ text: '', type: '' });
+    const normalizedAction = action.startsWith('RETURN') ? 'RETURN' : action;
     try {
-      await api.actionExceptionRequest(selectedException.id, action, actionRationale);
-      setMsg({ text: `Exception request successfully updated (${action}).`, type: 'success' });
+      await api.actionExceptionRequest(selectedException.id, normalizedAction, actionRationale);
+      setMsg({ text: `Exception request successfully updated (${normalizedAction}).`, type: 'success' });
       setActionRationale('');
       await loadExceptions();
       if (onRefreshStats) onRefreshStats();
@@ -161,9 +162,9 @@ export default function ExceptionWorkflowInbox({
                         {item.id}
                       </span>
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                        item.status === 'GOVERNANCE_APPROVED' 
+                        item.status === 'APPROVED' || item.status === 'GOVERNANCE_APPROVED'
                           ? 'bg-emerald-100 text-emerald-800' 
-                          : item.status.includes('REJECTED')
+                          : item.status.includes('REJECT')
                           ? 'bg-rose-100 text-rose-800'
                           : 'bg-amber-100 text-amber-800'
                       }`}>
@@ -172,13 +173,13 @@ export default function ExceptionWorkflowInbox({
                     </div>
 
                     <h4 className="text-xs font-bold text-slate-900 line-clamp-1 mb-1">
-                      {item.decision_area_title}
+                      {item.decision_area_title || item.change_request_id || `Exception #${item.id}`}
                     </h4>
 
                     <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                      <span>{item.entity}</span>
+                      <span>{item.entity || item.requester_email}</span>
                       <span>•</span>
-                      <span>Deviated: {item.deviated_validation_rules?.join(', ')}</span>
+                      <span>Deviated: {((item.deviated_principles || item.deviated_validation_rules || [])).join(', ') || 'Custom'}</span>
                     </div>
                   </div>
                 );
@@ -197,16 +198,16 @@ export default function ExceptionWorkflowInbox({
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-mono text-xs font-bold text-indigo-600">{selectedException.id}</span>
                     <span className="text-xs text-slate-400">•</span>
-                    <span className="text-xs font-medium text-slate-600">{selectedException.entity}</span>
+                    <span className="text-xs font-medium text-slate-600">{selectedException.entity || selectedException.requester_email}</span>
                   </div>
                   <h3 className="text-base font-bold text-slate-900">
-                    {selectedException.decision_area_title}
+                    {selectedException.decision_area_title || selectedException.change_request_id || `Exception #${selectedException.id}`}
                   </h3>
                 </div>
 
                 <div className="text-right">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 block">Stage</span>
-                  <span className="text-xs font-bold text-slate-700">{selectedException.status}</span>
+                  <span className="text-xs font-bold text-slate-700">{selectedException.current_stage || selectedException.status}</span>
                 </div>
               </div>
 
@@ -214,11 +215,11 @@ export default function ExceptionWorkflowInbox({
               <div className="bg-amber-50/60 border border-amber-200/80 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
                   <AlertOctagon className="w-4 h-4 text-amber-600" />
-                  <span>Deviated Validation Principles: {selectedException.deviated_validation_rules?.join(', ')}</span>
+                  <span>Deviated Validation Principles: {((selectedException.deviated_principles || selectedException.deviated_validation_rules || [])).join(', ') || 'Policy Variance'}</span>
                 </div>
                 <div className="text-xs text-amber-950 bg-white/80 p-3 rounded-lg border border-amber-200">
                   <p className="font-semibold text-slate-700 mb-1">Mandatory Business / Regulatory Rationale:</p>
-                  <p className="italic">{selectedException.regulatory_or_business_rationale}</p>
+                  <p className="italic">{selectedException.rationale || selectedException.regulatory_or_business_rationale || 'Documented exception rationale.'}</p>
                 </div>
               </div>
 
@@ -229,38 +230,38 @@ export default function ExceptionWorkflowInbox({
                 </h4>
                 <div className="grid grid-cols-3 gap-3 text-xs">
                   <div className={`p-3 rounded-xl border ${
-                    selectedException.reporting_mgr_approval 
+                    selectedException.reporting_mgr_decision === 'APPROVE' || selectedException.reporting_mgr_approval 
                       ? 'bg-emerald-50 border-emerald-200' 
                       : 'bg-slate-50 border-slate-200'
                   }`}>
                     <span className="block text-[10px] uppercase font-bold text-slate-400">Step 1</span>
                     <span className="font-semibold text-slate-800">Reporting Mgr</span>
                     <span className="block text-[10px] text-slate-500 mt-1">
-                      {selectedException.reporting_mgr_approval ? 'Approved' : 'Pending'}
+                      {selectedException.reporting_mgr_decision || (selectedException.reporting_mgr_approval ? 'Approved' : 'Pending')}
                     </span>
                   </div>
 
                   <div className={`p-3 rounded-xl border ${
-                    selectedException.division_head_approval 
+                    selectedException.division_head_decision === 'APPROVE' || selectedException.division_head_approval 
                       ? 'bg-emerald-50 border-emerald-200' 
                       : 'bg-slate-50 border-slate-200'
                   }`}>
                     <span className="block text-[10px] uppercase font-bold text-slate-400">Step 2</span>
                     <span className="font-semibold text-slate-800">Division Head</span>
                     <span className="block text-[10px] text-slate-500 mt-1">
-                      {selectedException.division_head_approval ? 'Approved' : 'Pending'}
+                      {selectedException.division_head_decision || (selectedException.division_head_approval ? 'Approved' : 'Pending')}
                     </span>
                   </div>
 
                   <div className={`p-3 rounded-xl border ${
-                    selectedException.governance_senior_reviewer_approval 
+                    selectedException.governance_decision === 'APPROVE' || selectedException.governance_senior_reviewer_approval 
                       ? 'bg-emerald-50 border-emerald-200' 
                       : 'bg-slate-50 border-slate-200'
                   }`}>
                     <span className="block text-[10px] uppercase font-bold text-slate-400">Step 3</span>
                     <span className="font-semibold text-slate-800">Senior Governance</span>
                     <span className="block text-[10px] text-slate-500 mt-1">
-                      {selectedException.governance_senior_reviewer_approval ? 'Approved' : 'Pending'}
+                      {selectedException.governance_decision || (selectedException.governance_senior_reviewer_approval ? 'Approved' : 'Pending')}
                     </span>
                   </div>
                 </div>

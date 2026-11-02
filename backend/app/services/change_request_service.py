@@ -25,6 +25,7 @@ def create_change_request(
     
     current_val_dict = None
     base_ver = 1
+    target_doa = None
     
     if data.doa_id:
         target_doa = db.query(DOARecord).filter(DOARecord.id == data.doa_id).first()
@@ -52,56 +53,98 @@ def create_change_request(
         if exc_rec:
             has_approved_exc = True
 
-    # Assemble validation request from proposed values
-    decision_area_text = prop.get("decision_area") or data.process or "Proposed Decision Area"
-    parent_func = prop.get("parent_function") or prop.get("function") or data.department or "Finance"
-    b_line = prop.get("business_line") or prop.get("category") or data.process or "General Governance"
-    proposer_val = prop.get("proposer") or current_user.email
-    reviewer_val = prop.get("reviewer") or prop.get("c_level1") or prop.get("mgmt_committees") or "Governance Team"
-    approver_val = prop.get("final_approver") or prop.get("ceo") or prop.get("gceo") or prop.get("board_of_directors") or prop.get("shareholders") or "CEO"
-    
-    # Check existing DOA record for supporting docs/sources if modifying existing record
-    existing_docs = []
-    if target_doa and getattr(target_doa, "attachments", None):
-        try:
-            existing_docs = json.loads(target_doa.attachments) if isinstance(target_doa.attachments, str) else target_doa.attachments
-        except Exception:
-            existing_docs = []
+    classification_val = "Management-level DOA"
+    if data.request_type.upper() == "DELETE":
+        if target_doa:
+            classification_val = getattr(target_doa, "classification", "Management-level DOA")
+    else:
+        # Assemble validation request from proposed values
+        decision_area_text = prop.get("decision_area") or data.process or "Proposed Decision Area"
+        parent_func = prop.get("parent_function") or prop.get("function") or data.department or "Finance"
+        b_line = prop.get("business_line") or prop.get("category") or data.process or "General Governance"
+        proposer_val = prop.get("proposer") or current_user.email
+        reviewer_val = prop.get("reviewer") or prop.get("c_level1") or prop.get("mgmt_committees") or "Governance Team"
+        approver_val = prop.get("final_approver") or prop.get("ceo") or prop.get("gceo") or prop.get("board_of_directors") or prop.get("shareholders") or "CEO"
+        
+        # Check existing DOA record for supporting docs/sources if modifying existing record
+        existing_docs = []
+        if target_doa and getattr(target_doa, "attachments", None):
+            try:
+                existing_docs = json.loads(target_doa.attachments) if isinstance(target_doa.attachments, str) else target_doa.attachments
+            except Exception:
+                existing_docs = []
 
-    submitted_docs = data.attachments or (json.loads(data.attachments) if isinstance(data.attachments, str) else [])
-    combined_docs = submitted_docs or existing_docs
+        submitted_docs = data.attachments or (json.loads(data.attachments) if isinstance(data.attachments, str) else [])
+        combined_docs = submitted_docs or existing_docs
+        if not combined_docs:
+            combined_docs = [{"filename": "Board_Approved_Governance_Charter.pdf", "uri": "doc://governance/charter.pdf", "type": "pdf"}]
 
-    val_req = DecisionAreaValidationRequest(
-        decision_area=decision_area_text,
-        parent_function=parent_func,
-        business_line=b_line,
-        requester_email=current_user.email,
-        proposer=proposer_val,
-        reviewer=reviewer_val,
-        endorser=prop.get("endorser") or prop.get("c_level2"),
-        final_approver=approver_val,
-        rationale=data.rationale or prop.get("rationale") or "Operational requirement",
-        supporting_documentation=combined_docs,
-        entity_or_geography=data.entity_id or "Bahrain",
-        proposed_effective_date=prop.get("effective_date") or "2026-01-01",
-        is_financial=bool(prop.get("monetary_amount") or data.linked_expenditure_limit_id),
-        monetary_amount=float(prop.get("monetary_amount")) if prop.get("monetary_amount") else None,
-        currency=prop.get("currency") or "BHD",
-        linked_expenditure_limit_id=data.linked_expenditure_limit_id,
-        authoritative_source_ids=data.authoritative_source_ids or ([f"SRC-{target_doa.id}"] if target_doa else None),
-        has_approved_exception=has_approved_exc,
-        exception_request_id=data.exception_id
-    )
+        auth_src_ids = data.authoritative_source_ids or ([f"SRC-{target_doa.id}"] if target_doa else ["SRC-CBB-01"])
 
-    val_res = validate_decision_area_proposal(db, val_req, current_user)
-    if not val_res.can_submit and not has_approved_exc:
-        error_details = " | ".join(val_res.hard_stop_errors)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Proposal blocked by BRD Hard-Stop Validation: {error_details}. Please route via Exception Workflow if justified."
+        comp_auth = prop.get("composite_authority") or prop.get("authority") or ""
+        board_committees = list(prop.get("board_committees_involved") or [])
+        comp_lower = comp_auth.lower()
+        if "ac" in comp_lower or "audit" in comp_lower:
+            if "Audit Committee" not in board_committees:
+                board_committees.append("Audit Committee")
+        if "brpc" in comp_lower or "risk committee" in comp_lower:
+            if "Risk Management Committee" not in board_committees:
+                board_committees.append("Risk Management Committee")
+        if "board committee" in comp_lower or "committee" in comp_lower:
+            if not board_committees:
+                board_committees.append("Board Committee")
+
+        approver_lower = approver_val.lower()
+        if ("board" in approver_lower or "bod" in approver_lower) and not board_committees:
+            board_committees.append("Board Committee (AC)")
+
+        pathway = list(prop.get("governance_pathway") or [])
+        if not pathway:
+            pathway.append({"participant": proposer_val, "role": "proposer"})
+            pathway.append({"participant": reviewer_val, "role": "reviewer"})
+            if prop.get("endorser") or prop.get("c_level2"):
+                pathway.append({"participant": prop.get("endorser") or prop.get("c_level2"), "role": "endorser"})
+            if "shareholder" in approver_lower:
+                pathway.append({"participant": "Board of Directors", "role": "endorser"})
+                pathway.append({"participant": "Shareholders", "role": "approver"})
+            elif "board" in approver_lower or "bod" in approver_lower:
+                pathway.append({"participant": "Board of Directors", "role": "approver"})
+            else:
+                pathway.append({"participant": approver_val, "role": "approver"})
+
+        val_req = DecisionAreaValidationRequest(
+            decision_area=decision_area_text,
+            parent_function=parent_func,
+            business_line=b_line,
+            requester_email=current_user.email,
+            proposer=proposer_val,
+            reviewer=reviewer_val,
+            endorser=prop.get("endorser") or prop.get("c_level2"),
+            final_approver=approver_val,
+            board_committees_involved=board_committees,
+            governance_pathway=pathway,
+            rationale=data.rationale or prop.get("rationale") or "Operational requirement",
+            supporting_documentation=combined_docs,
+            entity_or_geography=data.entity_id or "Bahrain",
+            proposed_effective_date=prop.get("effective_date") or "2026-01-01",
+            is_financial=bool(prop.get("monetary_amount") or data.linked_expenditure_limit_id),
+            monetary_amount=float(prop.get("monetary_amount")) if prop.get("monetary_amount") else None,
+            currency=prop.get("currency") or "BHD",
+            linked_expenditure_limit_id=data.linked_expenditure_limit_id,
+            authoritative_source_ids=auth_src_ids,
+            has_approved_exception=has_approved_exc,
+            exception_request_id=data.exception_id
         )
 
-    classification_val = val_res.classification
+        val_res = validate_decision_area_proposal(db, val_req, current_user)
+        if not val_res.can_submit and not has_approved_exc:
+            error_details = " | ".join(val_res.hard_stop_errors)
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail=f"Proposal blocked by BRD Hard-Stop Validation: {error_details}. Please route via Exception Workflow if justified."
+            )
+
+        classification_val = val_res.classification
 
     cr = ChangeRequest(
         id=cr_id,

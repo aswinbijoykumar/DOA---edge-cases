@@ -98,7 +98,8 @@ def process_exception_action(
     if not exc:
         raise HTTPException(status_code=404, detail=f"Exception Request {exception_id} not found")
 
-    if not action_data.comment or not action_data.comment.strip():
+    comment_text = action_data.final_comment
+    if not comment_text or not comment_text.strip():
         raise HTTPException(status_code=400, detail="Mandatory rationale must be recorded at every exception stage.")
 
     history = json.loads(exc.decision_history or "[]")
@@ -109,7 +110,7 @@ def process_exception_action(
         exc.reporting_mgr_id = current_user.id
         exc.reporting_mgr_email = current_user.email
         exc.reporting_mgr_decision = action_data.action
-        exc.reporting_mgr_rationale = action_data.comment
+        exc.reporting_mgr_rationale = comment_text
         exc.reporting_mgr_decided_at = datetime.now(timezone.utc)
 
         if action_data.action == "APPROVE":
@@ -150,7 +151,7 @@ def process_exception_action(
         exc.division_head_id = current_user.id
         exc.division_head_email = current_user.email
         exc.division_head_decision = action_data.action
-        exc.division_head_rationale = action_data.comment
+        exc.division_head_rationale = comment_text
         exc.division_head_decided_at = datetime.now(timezone.utc)
 
         if action_data.action == "APPROVE":
@@ -161,7 +162,7 @@ def process_exception_action(
                 "stage": "DIVISION_HEAD_APPROVED",
                 "actor_email": current_user.email,
                 "action": "APPROVE",
-                "comment": action_data.comment,
+                "comment": comment_text,
                 "timestamp": now_iso
             })
         elif action_data.action == "RETURN":
@@ -171,7 +172,7 @@ def process_exception_action(
                 "stage": "DIVISION_HEAD_RETURNED",
                 "actor_email": current_user.email,
                 "action": "RETURN",
-                "comment": action_data.comment,
+                "comment": comment_text,
                 "timestamp": now_iso
             })
 
@@ -180,7 +181,7 @@ def process_exception_action(
         exc.governance_reviewer_id = current_user.id
         exc.governance_reviewer_email = current_user.email
         exc.governance_decision = action_data.action
-        exc.governance_rationale = action_data.comment
+        exc.governance_rationale = comment_text
         exc.governance_decided_at = datetime.now(timezone.utc)
 
         if action_data.action == "APPROVE":
@@ -190,7 +191,7 @@ def process_exception_action(
                 "stage": "GOVERNANCE_SENIOR_APPROVED",
                 "actor_email": current_user.email,
                 "action": "APPROVE",
-                "comment": action_data.comment,
+                "comment": comment_text,
                 "timestamp": now_iso
             })
 
@@ -210,7 +211,7 @@ def process_exception_action(
                 "stage": "GOVERNANCE_REJECTED",
                 "actor_email": current_user.email,
                 "action": "REJECT",
-                "comment": action_data.comment,
+                "comment": comment_text,
                 "timestamp": now_iso
             })
         elif action_data.action == "RETURN":
@@ -220,7 +221,7 @@ def process_exception_action(
                 "stage": "GOVERNANCE_RETURNED",
                 "actor_email": current_user.email,
                 "action": "RETURN",
-                "comment": action_data.comment,
+                "comment": comment_text,
                 "timestamp": now_iso
             })
     else:

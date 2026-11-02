@@ -5,6 +5,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from app.database.database import Base
+import app.database.supplementary_models  # Ensure supplementary models (legal_entities, etc.) register with Base.metadata
 
 def utcnow():
     return datetime.now(timezone.utc)
