@@ -28,7 +28,11 @@ import {
   RefreshCw,
   Sparkles,
   Paperclip,
-  FileDown
+  FileDown,
+  GitPullRequest,
+  AlertOctagon,
+  History,
+  Edit3
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
@@ -42,7 +46,9 @@ export default function NormalUserDashboard({
   currentUser, 
   onNavigateTab, 
   onNewRequest,
-  kpis
+  kpis,
+  pendingQueueCount = 0,
+  activeTab = 'overview'
 }) {
   // Map persona to their exact designation key
   const PERSONA_TO_DESIGNATION = {
@@ -328,6 +334,7 @@ export default function NormalUserDashboard({
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-shrink-0">
+            {/* Top row actions: Validate Proposal */}
             <button
               onClick={() => setShowValidatorModal(true)}
               className="px-4 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
@@ -336,32 +343,121 @@ export default function NormalUserDashboard({
               <Sparkles className="h-4 w-4 text-indigo-300" />
               <span>Validate Proposal (VAL-01..12)</span>
             </button>
+          </div>
+        </div>
 
+        {/* Dedicated Navigation Button Row for All Normal User Personas */}
+        <div className="mt-6 pt-5 border-t border-white/10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
+            {/* 1. Overview */}
+            <button
+              onClick={() => onNavigateTab('overview')}
+              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'overview'
+                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-indigo-600/30 ring-2 ring-indigo-400/30 font-black'
+                  : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border-indigo-400/30'
+              }`}
+              title="Overview Dashboard"
+            >
+              <Layers className="h-4 w-4 text-indigo-300 shrink-0" />
+              <span className="truncate">Overview</span>
+            </button>
+
+            {/* 2. Search DoA */}
             <button
               onClick={() => onNavigateTab('search')}
-              className="px-4 py-3 bg-white/10 hover:bg-white/15 text-white border border-white/20 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'search'
+                  ? 'bg-blue-600 text-white border-blue-400 shadow-blue-600/30 ring-2 ring-blue-400/30 font-black'
+                  : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 border-blue-400/30'
+              }`}
+              title="Search DOA Matrix"
             >
-              <Search className="h-4 w-4 text-teal-300" />
-              <span>Search DOA Matrix</span>
+              <Search className="h-4 w-4 text-blue-300 shrink-0" />
+              <span className="truncate">Search DoA</span>
             </button>
-            
-            {currentUser?.persona_type !== 'AUDIT_READONLY' && (
+
+            {/* 3. New Request (disabled / styled appropriately for AUDIT_READONLY) */}
+            {currentUser?.persona_type === 'AUDIT_READONLY' ? (
+              <button
+                disabled
+                className="h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
+                title="New Request disabled for Read-Only Assurance Audit"
+              >
+                <Edit3 className="h-4 w-4 text-slate-500 shrink-0" />
+                <span className="truncate">New Request</span>
+              </button>
+            ) : (
               <button
                 onClick={onNewRequest}
-                className="px-5 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5"
+                className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                  activeTab === 'request'
+                    ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-600/30 ring-2 ring-cyan-400/30 font-black'
+                    : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border-cyan-400/30'
+                }`}
+                title="Propose New Request"
               >
-                <Plus className="h-4 w-4" />
-                <span>Propose Change Request</span>
+                <Edit3 className="h-4 w-4 text-cyan-300 shrink-0" />
+                <span className="truncate">New Request</span>
               </button>
             )}
+
+            {/* 4. Change Queue */}
+            <button
+              onClick={() => onNavigateTab('queue')}
+              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'queue'
+                  ? 'bg-teal-600 text-white border-teal-400 shadow-teal-600/30 ring-2 ring-teal-400/30 font-black'
+                  : 'bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border-teal-400/30'
+              }`}
+              title="View Change Queue"
+            >
+              <GitPullRequest className="h-4 w-4 text-teal-300 shrink-0" />
+              <span className="truncate">Change Queue</span>
+              {pendingQueueCount > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.2 bg-teal-500 text-slate-950 font-extrabold rounded-full text-[10px] shrink-0">
+                  {pendingQueueCount}
+                </span>
+              )}
+            </button>
+
+            {/* 5. Exception Workflow */}
+            <button
+              onClick={() => onNavigateTab('exceptions')}
+              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'exceptions'
+                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-600/30 ring-2 ring-emerald-400/30 font-black'
+                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30'
+              }`}
+              title="Exception Workflow"
+            >
+              <AlertOctagon className="h-4 w-4 text-emerald-300 shrink-0" />
+              <span className="truncate">Exception Workflow</span>
+            </button>
+
+            {/* 6. Audit Trail */}
+            <button
+              onClick={() => onNavigateTab('audit')}
+              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'audit'
+                  ? 'bg-teal-400 text-slate-950 border-teal-300 ring-2 ring-teal-400/40 font-black shadow-lg shadow-teal-500/25'
+                  : 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-black border-teal-400 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5'
+              }`}
+              title="Audit Trail Logs"
+            >
+              <History className="h-4 w-4 text-slate-950 shrink-0" />
+              <span className="truncate">Audit Trail</span>
+            </button>
           </div>
         </div>
 
         {/* Feature Sub-Navigation Tabs */}
-        <div className="mt-8 pt-4 border-t border-white/10 flex flex-wrap gap-2">
+        <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-2 items-center">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mr-2">
+            Workspaces:
+          </span>
           {[
             { id: 'overview', label: 'Persona Workspace', icon: Briefcase },
-            { id: 'exceptions', label: 'Exception Workflows', icon: AlertTriangle, highlight: true },
             { id: 'designations', label: 'Designation-Wise Authorities', icon: Award, highlight: true },
             { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true },
             { id: 'hr_integration', label: 'HR Org & Acting Authorities', icon: Users, highlight: true }

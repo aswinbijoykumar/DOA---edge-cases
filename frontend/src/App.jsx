@@ -276,24 +276,8 @@ export default function App() {
     setStoredUser(userObj);
     addToast(`Logged in successfully as ${userObj.full_name} (${userObj.designation || userObj.role})`, 'success');
     
-    // Role & Persona Task-Specific Landing View:
-    // 1. Requestor / Front-End User -> Lands on 'search' (Search/Lookup & Simple Status Tracker)
-    // 2. Reviewer / Risk & Compliance -> Lands on 'queue' (Review Queue & Diff Engine)
-    // 3. Approver / Executive -> Lands on 'queue' (Executive Approval Inbox)
-    // 4. Department / Process Owner / Auditor -> Lands on 'overview' (Persona Dashboard with Reports & Designations)
-    // 5. System Admin -> Lands on 'overview' (System Health & Telemetry)
-    const pType = userObj.persona_type;
-    if (pType === 'FRONTEND_USER') {
-      setActiveTab('search');
-    } else if (pType === 'REVIEWER' || userObj.role === 'GOVERNANCE_TEAM') {
-      setActiveTab('queue');
-    } else if (pType === 'APPROVER' || userObj.role === 'DOA_ADMINISTRATOR') {
-      setActiveTab('queue');
-    } else if (userObj.role === 'SYSTEM_ADMINISTRATOR') {
-      setActiveTab('overview');
-    } else {
-      setActiveTab('overview');
-    }
+    // First landing page on login for all personas must be 'overview'
+    setActiveTab('overview');
 
     // Redirect to role/persona-specific landing route
     const userKey = userObj.persona_type || (userObj.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : userObj.role);
@@ -445,14 +429,8 @@ export default function App() {
       setCurrentUser(userObj);
       addToast(`Switched account to ${userObj.full_name} (${targetConfig.label})`, 'success');
       
-      // Auto-route to role's primary focus tab
-      if (res.role === 'SYSTEM_ADMINISTRATOR') {
-        setActiveTab('overview');
-      } else if (res.role === 'DOA_ADMINISTRATOR' || res.role === 'GOVERNANCE_TEAM') {
-        setActiveTab('queue');
-      } else {
-        setActiveTab('search');
-      }
+      // First landing page on account switch is 'overview'
+      setActiveTab('overview');
 
       // Refresh active datasets with new credentials
       loadDoaRecords();
@@ -1430,63 +1408,62 @@ export default function App() {
 
             {/* Navigation Tabs & Role Switcher */}
             <div className="flex items-center gap-3">
-              <nav className="flex space-x-1 bg-slate-100 p-1 rounded-xl">
-                {[
-                  // Role-tailored dashboards and tabs
-                  { id: 'overview', label: 'Overview', icon: Layers, roles: ['NORMAL_USER', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
-                  { id: 'search', label: 'Search DoA', icon: Search, roles: ['NORMAL_USER', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
-                  { id: 'request', label: 'New Request', icon: Edit3, roles: ['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'] },
-                  { 
-                    id: 'queue', 
-                    label: currentUser.role === 'GOVERNANCE_TEAM' ? 'Review Queue' : 'Change Queue', 
-                    icon: GitPullRequest,
-                    roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'NORMAL_USER', 'ADMIN', 'SYSTEM_ADMINISTRATOR'],
-                    badge: changeRequests.filter(c => c.status === 'SUBMITTED').length
-                  },
-                  { 
-                    id: 'exceptions', 
-                    label: 'Exception Workflow', 
-                    icon: AlertOctagon, 
-                    roles: ['NORMAL_USER', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
-                  },
-                  { 
-                    id: 'audit', 
-                    label: 'Audit Trail', 
-                    icon: History, 
-                    roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN', 'NORMAL_USER'] 
-                  }
-                ]
-                .filter(tab => {
-                  if (tab.id === 'audit' && currentUser.persona_type === 'AUDIT_READONLY') return true;
-                  return tab.roles.includes(currentUser.role);
-                })
-                .map(tab => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        setActiveTab(tab.id);
-                        setSelectedRecord(null);
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-200 relative ${
-                        isActive 
-                          ? 'bg-white text-teal-600 shadow-sm' 
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
-                      {tab.label}
-                      {Boolean(tab.badge) && (
-                        <span className="px-1.5 py-0.2 bg-teal-600 text-white rounded-full text-[10px] font-extrabold shadow-xs">
-                          {tab.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
+              {currentUser?.role !== 'NORMAL_USER' && (
+                <nav className="flex space-x-1 bg-slate-100 p-1 rounded-xl">
+                  {[
+                    // Role-tailored dashboards and tabs
+                    { id: 'overview', label: 'Overview', icon: Layers, roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
+                    { id: 'search', label: 'Search DoA', icon: Search, roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
+                    { id: 'request', label: 'New Request', icon: Edit3, roles: ['DOA_ADMINISTRATOR', 'ADMIN'] },
+                    { 
+                      id: 'queue', 
+                      label: currentUser.role === 'GOVERNANCE_TEAM' ? 'Review Queue' : 'Change Queue', 
+                      icon: GitPullRequest,
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'ADMIN', 'SYSTEM_ADMINISTRATOR'],
+                      badge: changeRequests.filter(c => c.status === 'SUBMITTED').length
+                    },
+                    { 
+                      id: 'exceptions', 
+                      label: 'Exception Workflow', 
+                      icon: AlertOctagon, 
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
+                    },
+                    { 
+                      id: 'audit', 
+                      label: 'Audit Trail', 
+                      icon: History, 
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
+                    }
+                  ]
+                  .filter(tab => tab.roles.includes(currentUser.role))
+                  .map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setSelectedRecord(null);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-200 relative ${
+                          isActive 
+                            ? 'bg-white text-teal-600 shadow-sm' 
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
+                        {tab.label}
+                        {Boolean(tab.badge) && (
+                          <span className="px-1.5 py-0.2 bg-teal-600 text-white rounded-full text-[10px] font-extrabold shadow-xs">
+                            {tab.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              )}
 
               {/* Active User Profile & Logout */}
               <div className="flex items-center gap-2">
@@ -1527,6 +1504,37 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {/* Navigation Breadcrumb / Return to Overview for All 7 Normal User Personas */}
+        {currentUser?.role === 'NORMAL_USER' && activeTab !== 'overview' && (
+          <div className="mb-6 flex items-center justify-between bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl border border-slate-800 shadow-md">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setActiveTab('overview');
+                  setSelectedRecord(null);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all shadow-sm"
+              >
+                <span>&larr; Back to Overview</span>
+              </button>
+              <span className="text-slate-400 text-xs hidden sm:inline">&bull;</span>
+              <span className="text-xs text-slate-300 font-medium">
+                Viewing: <span className="font-bold text-teal-300 capitalize">{activeTab === 'request' ? 'New Change Request' : activeTab === 'queue' ? 'Change Queue' : activeTab === 'search' ? 'Search DoA Matrix' : activeTab === 'exceptions' ? 'Exception Workflow' : 'Audit Trail'}</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setActiveTab('overview');
+                  setSelectedRecord(null);
+                }}
+                className="text-xs text-slate-400 hover:text-white transition-colors"
+              >
+                Home Dashboard
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* TAB 1: OVERVIEW / ROLE-DEDICATED LANDING DASHBOARD */}
         {activeTab === 'overview' && (
@@ -1536,6 +1544,8 @@ export default function App() {
                 userStats={userDashboardStats}
                 currentUser={currentUser}
                 kpis={kpis}
+                activeTab={activeTab}
+                pendingQueueCount={changeRequests.filter(c => c.status === 'SUBMITTED').length}
                 onNavigateTab={(tabId) => {
                   setActiveTab(tabId);
                   setSelectedRecord(null);
