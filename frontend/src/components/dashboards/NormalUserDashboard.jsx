@@ -290,6 +290,19 @@ export default function NormalUserDashboard({
   const roleSpecificReportsList = ROLE_SPECIFIC_REPORTS[personaKey] || [];
   const ALL_ACCESSIBLE_REPORTS = [...roleSpecificReportsList, ...GLOBAL_REPORT_TYPES];
 
+  const canPropose = currentUser?.permissions
+    ? Boolean(currentUser.permissions.can_propose)
+    : ['FRONTEND_USER', 'PROCESS_OWNER', 'DEPT_OWNER', 'AUTHORITY_OWNER'].includes(personaKey);
+
+  const canViewAudit = currentUser?.permissions
+    ? Boolean(currentUser.permissions.can_view_audit_logs)
+    : ['AUDIT_READONLY', 'REVIEWER'].includes(personaKey);
+
+  const scopeDomainsLabel = currentUser?.permissions?.allowed_domains?.length
+    ? currentUser.permissions.allowed_domains.join(' & ')
+    : (currentUser?.allowed_domains || 'Scoped');
+  const scopeEntityLabel = currentUser?.permissions?.entity_id || currentUser?.entity_id || 'ENT-BH-01';
+
   useEffect(() => {
     if (activeSubTab === 'designations') {
       fetchDesignationMatrix(selectedDesignationKey);
@@ -321,6 +334,9 @@ export default function NormalUserDashboard({
               <span className="text-xs text-slate-400 font-mono">
                 {currentUser?.designation || 'Business Stakeholder'} &bull; {currentUser?.department || 'Operations'}
               </span>
+              <span className="px-2.5 py-0.5 bg-teal-500/20 border border-teal-400/30 rounded-full text-[10px] font-bold text-teal-200">
+                Scope: {scopeDomainsLabel} &bull; {scopeEntityLabel}
+              </span>
             </div>
             
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
@@ -334,15 +350,16 @@ export default function NormalUserDashboard({
           </div>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-shrink-0">
-            {/* Top row actions: Validate Proposal */}
-            <button
-              onClick={() => setShowValidatorModal(true)}
-              className="px-4 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
-              title="Test proposal against VAL-01 to VAL-12 hard-stop rules"
-            >
-              <Sparkles className="h-4 w-4 text-indigo-300" />
-              <span>Validate Proposal (VAL-01..12)</span>
-            </button>
+            {canPropose && (
+              <button
+                onClick={() => setShowValidatorModal(true)}
+                className="px-4 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+                title="Test proposal against VAL-01 to VAL-12 hard-stop rules"
+              >
+                <Sparkles className="h-4 w-4 text-indigo-300" />
+                <span>Validate Proposal (VAL-01..12)</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -377,12 +394,12 @@ export default function NormalUserDashboard({
               <span className="truncate">Search DoA</span>
             </button>
 
-            {/* 3. New Request (disabled / styled appropriately for AUDIT_READONLY) */}
-            {currentUser?.persona_type === 'AUDIT_READONLY' ? (
+            {/* 3. New Request (enabled strictly for authorized proposer personas) */}
+            {!canPropose ? (
               <button
                 disabled
                 className="h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
-                title="New Request disabled for Read-Only Assurance Audit"
+                title="Proposal authoring disabled for your role/persona"
               >
                 <Edit3 className="h-4 w-4 text-slate-500 shrink-0" />
                 <span className="truncate">New Request</span>
@@ -435,19 +452,30 @@ export default function NormalUserDashboard({
               <span className="truncate">Exception Workflow</span>
             </button>
 
-            {/* 6. Audit Trail */}
-            <button
-              onClick={() => onNavigateTab('audit')}
-              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
-                activeTab === 'audit'
-                  ? 'bg-teal-400 text-slate-950 border-teal-300 ring-2 ring-teal-400/40 font-black shadow-lg shadow-teal-500/25'
-                  : 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-black border-teal-400 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5'
-              }`}
-              title="Audit Trail Logs"
-            >
-              <History className="h-4 w-4 text-slate-950 shrink-0" />
-              <span className="truncate">Audit Trail</span>
-            </button>
+            {/* 6. Audit Trail (Assurance & 2LoD Review Only) */}
+            {canViewAudit ? (
+              <button
+                onClick={() => onNavigateTab('audit')}
+                className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                  activeTab === 'audit'
+                    ? 'bg-teal-400 text-slate-950 border-teal-300 ring-2 ring-teal-400/40 font-black shadow-lg shadow-teal-500/25'
+                    : 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-black border-teal-400 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5'
+                }`}
+                title="Audit Trail Logs"
+              >
+                <History className="h-4 w-4 text-slate-950 shrink-0" />
+                <span className="truncate">Audit Trail</span>
+              </button>
+            ) : (
+              <button
+                disabled
+                className="h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
+                title="Audit Trail restricted to Internal Audit, 2LoD Governance & Admin roles"
+              >
+                <History className="h-4 w-4 text-slate-500 shrink-0" />
+                <span className="truncate">Audit (Restricted)</span>
+              </button>
+            )}
           </div>
         </div>
 

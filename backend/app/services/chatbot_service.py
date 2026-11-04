@@ -115,11 +115,16 @@ def check_guardrails(query: str) -> Optional[str]:
             return refusal
     return None
 
-def retrieve_relevant_records(db: Session, query: str, limit: int = 4) -> List[DOARecord]:
-    """Search published DOA records matching query terms."""
+def retrieve_relevant_records(db: Session, query: str, limit: int = 4, current_user: Optional[User] = None) -> List[DOARecord]:
+    """Search published DOA records matching query terms within user's authorized domain scope."""
+    from app.core.rbac import apply_doa_read_scope
+    base_q = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED")
+    if current_user is not None:
+        base_q = apply_doa_read_scope(base_q, current_user)
+
     terms = [t.strip() for t in query.split() if len(t.strip()) > 2]
     if not terms:
-        return db.query(DOARecord).filter(DOARecord.status == "PUBLISHED").limit(limit).all()
+        return base_q.limit(limit).all()
 
     conditions = []
     for term in terms[:3]:
@@ -129,8 +134,7 @@ def retrieve_relevant_records(db: Session, query: str, limit: int = 4) -> List[D
         conditions.append(DOARecord.business_line.ilike(f"%{term}%"))
 
     results = (
-        db.query(DOARecord)
-        .filter(DOARecord.status == "PUBLISHED")
+        base_q
         .filter(or_(*conditions))
         .limit(limit)
         .all()

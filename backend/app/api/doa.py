@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.database.models import User, DOAVersion
 from app.core.dependencies import get_current_user, require_admin
+from app.core.rbac import assert_can_read_doa
 from app.schemas.schemas import DOARead, DOACreate, DOAVersionRead
 from app.services import doa_service
 
@@ -17,12 +18,13 @@ def list_doa_records(
     status: Optional[str] = Query("PUBLISHED"),
     search: Optional[str] = Query(None),
     key_non_key: Optional[str] = Query(None),
+    entity_id: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(250, ge=1, le=500),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieve filtered DOA master records. Accessible to both Admin and Normal Users."""
+    """Retrieve filtered DOA master records scoped strictly to current_user's authorized domains."""
     return doa_service.get_doa_records(
         db=db,
         parent_function=parent_function,
@@ -30,6 +32,8 @@ def list_doa_records(
         status=status,
         search=search,
         key_non_key=key_non_key,
+        entity_id=entity_id,
+        current_user=current_user,
         skip=skip,
         limit=limit
     )
@@ -43,6 +47,7 @@ def get_doa_record(
     rec = doa_service.get_doa_by_id(db, record_id)
     if not rec:
         raise HTTPException(status_code=404, detail="DOA record not found")
+    assert_can_read_doa(rec, current_user)
     return rec
 
 @router.get("/{record_id}/versions", response_model=List[DOAVersionRead])
@@ -51,10 +56,11 @@ def get_doa_versions(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieve full version snapshots (historical and current) for a DOA record."""
+    """Retrieve full version snapshots (historical and current) for an authorized DOA record."""
     rec = doa_service.get_doa_by_id(db, record_id)
     if not rec:
         raise HTTPException(status_code=404, detail="DOA record not found")
+    assert_can_read_doa(rec, current_user)
         
     versions = (
         db.query(DOAVersion)
@@ -86,8 +92,8 @@ def create_doa_record(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    """Admin-only direct creation of master DOA record"""
-    return doa_service.create_direct_doa_record(db, payload, admin_user.email)
+    """DOA Administrator direct creation of master DOA record"""
+    return doa_service.create_direct_doa_record(db, payload, admin_user.email, current_user=admin_user)
 
 @router.post("/{record_id}/archive", response_model=DOARead)
 def archive_doa(
@@ -95,8 +101,8 @@ def archive_doa(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_admin)
 ):
-    """Admin-only archiving of published DOA record"""
-    rec = doa_service.archive_doa_record(db, record_id, admin_user.email)
+    """DOA Administrator archiving of published DOA record"""
+    rec = doa_service.archive_doa_record(db, record_id, admin_user.email, current_user=admin_user)
     if not rec:
         raise HTTPException(status_code=404, detail="DOA record not found")
     return rec

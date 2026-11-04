@@ -11,6 +11,14 @@ from app.services.version_service import (
     archive_current_version_as_historical,
     create_published_version_snapshot
 )
+from app.core.rbac import (
+    get_user_permissions,
+    assert_domain_write_access,
+    assert_entity_write_access,
+    assert_sod_not_proposer,
+    filter_change_requests_for_user,
+    normalize_entity_code,
+)
 
 def generate_cr_id(db: Session) -> str:
     count = db.query(ChangeRequest).count() + 1
@@ -21,6 +29,14 @@ def create_change_request(
     data: ChangeRequestCreate,
     current_user: User
 ) -> ChangeRequest:
+    # 1. RBAC CRUD Permission Check (blocks AUDIT_READONLY, SYSTEM_ADMINISTRATOR, GOVERNANCE_TEAM, REVIEWER, APPROVER)
+    perms = get_user_permissions(current_user)
+    if not perms["can_propose"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"CRUD Authorization Error: Role '{current_user.role}' / Persona '{perms['persona_type']}' is not permitted to create, modify, or delete DOA proposals."
+        )
+
     cr_id = generate_cr_id(db)
     
     current_val_dict = None
@@ -33,6 +49,25 @@ def create_change_request(
             current_val_dict = record_to_dict(target_doa)
             base_ver = data.base_version if data.base_version is not None else target_doa.current_version
 
+    prop = data.proposed_value or {}
+
+    # 2. Domain & Entity Write Boundary Enforcement (Section 4.4 & Section 6 Acceptance Criteria)
+    target_domain = (
+        (target_doa.parent_function if target_doa else None)
+        or prop.get("parent_function")
+        or prop.get("function")
+        or data.department
+    )
+    assert_domain_write_access(target_domain, current_user)
+
+    effective_entity_id = normalize_entity_code(
+        data.entity_id
+        if (data.entity_id and data.entity_id != "ENT-BH-01")
+        else (getattr(target_doa, "entity_id", None) or data.entity_id or perms["entity_id"])
+    )
+    if effective_entity_id == "ALL":
+        effective_entity_id = "ENT-BH-01"
+    assert_entity_write_access(effective_entity_id, current_user)
     
     # -------------------------------------------------------------------------
     # BRD VAL-01 to VAL-12 Pre-submission Validation Enforcement
@@ -40,8 +75,6 @@ def create_change_request(
     from app.services.decision_area_validation_service import validate_decision_area_proposal
     from app.schemas.supplementary_schemas import DecisionAreaValidationRequest
     from app.database.supplementary_models import ExceptionRequest
-
-    prop = data.proposed_value or {}
     
     # Check if approved exception is supplied and verified
     has_approved_exc = False
@@ -54,14 +87,14 @@ def create_change_request(
             has_approved_exc = True
 
     classification_val = "Management-level DOA"
-    if data.request_type.upper() == "DELETE":
+    if data.request_type.upper() in ["DELETE", "RETIRE"]:
         if target_doa:
             classification_val = getattr(target_doa, "classification", "Management-level DOA")
     else:
         # Assemble validation request from proposed values
-        decision_area_text = prop.get("decision_area") or data.process or "Proposed Decision Area"
-        parent_func = prop.get("parent_function") or prop.get("function") or data.department or "Finance"
-        b_line = prop.get("business_line") or prop.get("category") or data.process or "General Governance"
+        decision_area_text = prop.get("decision_area") or (target_doa.decision_area if target_doa else None) or data.process or "Proposed Decision Area"
+        parent_func = prop.get("parent_function") or prop.get("function") or (target_doa.parent_function if target_doa else None) or data.department or "Finance"
+        b_line = prop.get("business_line") or prop.get("category") or (target_doa.business_line if target_doa else None) or data.process or "General Governance"
         proposer_val = prop.get("proposer") or current_user.email
         reviewer_val = prop.get("reviewer") or prop.get("c_level1") or prop.get("mgmt_committees") or "Governance Team"
         approver_val = prop.get("final_approver") or prop.get("ceo") or prop.get("gceo") or prop.get("board_of_directors") or prop.get("shareholders") or "CEO"
@@ -125,7 +158,7 @@ def create_change_request(
             governance_pathway=pathway,
             rationale=data.rationale or prop.get("rationale") or "Operational requirement",
             supporting_documentation=combined_docs,
-            entity_or_geography=data.entity_id or "Bahrain",
+            entity_or_geography=effective_entity_id,
             proposed_effective_date=prop.get("effective_date") or "2026-01-01",
             is_financial=bool(prop.get("monetary_amount") or data.linked_expenditure_limit_id),
             monetary_amount=float(prop.get("monetary_amount")) if prop.get("monetary_amount") else None,
@@ -152,7 +185,7 @@ def create_change_request(
         doa_id=data.doa_id,
         requester_id=current_user.id,
         requester_email=current_user.email,
-        department=data.department or current_user.department or "Governance",
+        department=data.department or (target_doa.parent_function if target_doa else None) or current_user.department or "Governance",
         process=data.process,
         rationale=data.rationale,
         base_version=base_ver,
@@ -160,7 +193,7 @@ def create_change_request(
         proposed_value=json.dumps(data.proposed_value),
         operational_impact=data.operational_impact,
         attachments=json.dumps(data.attachments) if data.attachments else "[]",
-        entity_id=data.entity_id or "ENT-BH-01",
+        entity_id=effective_entity_id,
         classification=classification_val,
         exception_id=data.exception_id,
         status="SUBMITTED",
@@ -178,7 +211,7 @@ def create_change_request(
         action="SUBMIT_CHANGE",
         entity="CHANGE_REQUEST",
         record_id=cr.id,
-        new_value={"id": cr.id, "type": cr.request_type, "proposed": data.proposed_value},
+        new_value={"id": cr.id, "type": cr.request_type, "entity_id": effective_entity_id, "proposed": data.proposed_value},
         comment=f"Change Request {cr.id} submitted for {cr.request_type}"
     )
     db.commit()
@@ -189,14 +222,19 @@ def get_change_requests(
     db: Session,
     status_filter: Optional[str] = None,
     user_id: Optional[int] = None,
-    is_admin: bool = False
+    is_admin: bool = False,
+    current_user: Optional[User] = None
 ) -> List[ChangeRequest]:
     query = db.query(ChangeRequest)
-    if not is_admin and user_id is not None:
-        query = query.filter(ChangeRequest.requester_id == user_id)
-        
     if status_filter:
         query = query.filter(ChangeRequest.status == status_filter)
+
+    if current_user is not None and not is_admin:
+        all_crs = query.order_by(ChangeRequest.created_at.desc()).all()
+        return filter_change_requests_for_user(db, all_crs, current_user)
+
+    if not is_admin and user_id is not None:
+        query = query.filter(ChangeRequest.requester_id == user_id)
         
     return query.order_by(ChangeRequest.created_at.desc()).all()
 
@@ -212,6 +250,14 @@ def approve_change_request(
     cr = get_change_request_by_id(db, cr_id)
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
+
+    perms = get_user_permissions(admin_user)
+    if not perms["can_approve"]:
+        raise HTTPException(status_code=403, detail="Access forbidden: User is not authorized to issue binding approvals.")
+
+    # VAL-06 Segregation of Duties: Proposer cannot approve their own request
+    assert_sod_not_proposer(db, cr, admin_user, "APPROVE")
+    assert_entity_write_access(getattr(cr, "entity_id", "ENT-BH-01"), admin_user)
         
     allowed_statuses = [
         "SUBMITTED", "DRAFT", "PENDING_PROCESS_OWNER", 
@@ -233,13 +279,13 @@ def approve_change_request(
         db=db,
         user_id=admin_user.id,
         user_email=admin_user.email,
-        role="ADMIN",
+        role=admin_user.role,
         action="APPROVE_CHANGE",
         entity="CHANGE_REQUEST",
         record_id=cr.id,
         old_value=old_val,
         new_value={"status": cr.status, "decision_comment": decision.comment},
-        comment=f"Change request {cr.id} approved by Admin"
+        comment=f"Change request {cr.id} approved by {admin_user.email}"
     )
     db.commit()
     db.refresh(cr)
@@ -254,6 +300,12 @@ def reject_change_request(
     cr = get_change_request_by_id(db, cr_id)
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
+
+    perms = get_user_permissions(admin_user)
+    if not perms["can_approve"]:
+        raise HTTPException(status_code=403, detail="Access forbidden: User is not authorized to reject proposals.")
+
+    assert_sod_not_proposer(db, cr, admin_user, "REJECT")
         
     allowed_statuses = [
         "SUBMITTED", "DRAFT", "PENDING_PROCESS_OWNER", 
@@ -275,13 +327,13 @@ def reject_change_request(
         db=db,
         user_id=admin_user.id,
         user_email=admin_user.email,
-        role="ADMIN",
+        role=admin_user.role,
         action="REJECT_CHANGE",
         entity="CHANGE_REQUEST",
         record_id=cr.id,
         old_value=old_val,
         new_value={"status": cr.status, "decision_comment": decision.comment},
-        comment=f"Change request {cr.id} rejected by Admin"
+        comment=f"Change request {cr.id} rejected by {admin_user.email}"
     )
     db.commit()
     db.refresh(cr)
@@ -295,6 +347,14 @@ def publish_change_request(
     cr = get_change_request_by_id(db, cr_id)
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
+
+    perms = get_user_permissions(admin_user)
+    if not perms["can_publish"]:
+        raise HTTPException(status_code=403, detail="Access forbidden: Only authorized Publication Owners (DOA Admin / Governance Team) can publish master versions.")
+
+    # VAL-06 Segregation of Duties: Proposer cannot publish their own request
+    assert_sod_not_proposer(db, cr, admin_user, "PUBLISH")
+    assert_entity_write_access(getattr(cr, "entity_id", "ENT-BH-01"), admin_user)
         
     if cr.status != "APPROVED":
         raise HTTPException(status_code=400, detail="Only APPROVED change requests can be published")
@@ -373,7 +433,7 @@ def publish_change_request(
             db=db,
             user_id=admin_user.id,
             user_email=admin_user.email,
-            role="ADMIN",
+            role=admin_user.role,
             action="PUBLISH_CHANGE",
             entity="DOA_RECORD",
             record_id=new_record.id,
@@ -420,7 +480,7 @@ def publish_change_request(
             db=db,
             user_id=admin_user.id,
             user_email=admin_user.email,
-            role="ADMIN",
+            role=admin_user.role,
             action="PUBLISH_CHANGE",
             entity="DOA_RECORD",
             record_id=target_doa.id,
@@ -449,7 +509,7 @@ def publish_change_request(
             db=db,
             user_id=admin_user.id,
             user_email=admin_user.email,
-            role="ADMIN",
+            role=admin_user.role,
             action="ARCHIVE_DOA",
             entity="DOA_RECORD",
             record_id=target_doa.id,

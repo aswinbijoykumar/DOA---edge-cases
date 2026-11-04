@@ -1,10 +1,11 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-from app.database.models import DOARecord, DOAVersion
+from app.database.models import DOARecord, DOAVersion, User
 from app.schemas.schemas import DOACreate
 from app.services.audit_service import log_audit
 from app.services.version_service import create_published_version_snapshot, record_to_dict
+from app.core.rbac import apply_doa_read_scope, assert_domain_write_access, assert_entity_write_access
 
 def get_doa_records(
     db: Session,
@@ -13,13 +14,22 @@ def get_doa_records(
     status: Optional[str] = None,
     search: Optional[str] = None,
     key_non_key: Optional[str] = None,
+    entity_id: Optional[str] = None,
+    current_user: Optional[User] = None,
     skip: int = 0,
     limit: int = 200
 ) -> List[DOARecord]:
     query = db.query(DOARecord)
+
+    # Enforce user RBAC/ABAC domain visibility boundary
+    if current_user is not None:
+        query = apply_doa_read_scope(query, current_user)
     
     if status:
         query = query.filter(DOARecord.status == status)
+
+    if entity_id and entity_id != "All":
+        query = query.filter(DOARecord.entity_id == entity_id)
         
     if parent_function and parent_function != "All":
         query = query.filter(
@@ -57,8 +67,12 @@ def get_doa_records(
 def get_doa_by_id(db: Session, record_id: str) -> Optional[DOARecord]:
     return db.query(DOARecord).filter(DOARecord.id == record_id).first()
 
-def create_direct_doa_record(db: Session, data: DOACreate, user_email: str) -> DOARecord:
+def create_direct_doa_record(db: Session, data: DOACreate, user_email: str, current_user: Optional[User] = None) -> DOARecord:
     """Admin-only direct creation helper if needed"""
+    if current_user is not None:
+        assert_domain_write_access(data.parent_function or data.function, current_user)
+        assert_entity_write_access(data.entity_id, current_user)
+
     rec = DOARecord(
         id=data.id,
         parent_function=data.parent_function,
@@ -67,6 +81,8 @@ def create_direct_doa_record(db: Session, data: DOACreate, user_email: str) -> D
         category=data.category,
         key_non_key=data.key_non_key,
         decision_area=data.decision_area,
+        entity_id=data.entity_id or "ENT-BH-01",
+        classification=data.classification or "Board-level DOA",
         shareholders=data.shareholders,
         board_of_directors=data.board_of_directors,
         subsidiary_board=data.subsidiary_board,
@@ -101,7 +117,7 @@ def create_direct_doa_record(db: Session, data: DOACreate, user_email: str) -> D
     log_audit(
         db=db,
         user_email=user_email,
-        role="ADMIN",
+        role=current_user.role if current_user else "ADMIN",
         action="CREATE_DOA",
         entity="DOA_RECORD",
         record_id=rec.id,
@@ -112,10 +128,14 @@ def create_direct_doa_record(db: Session, data: DOACreate, user_email: str) -> D
     db.refresh(rec)
     return rec
 
-def archive_doa_record(db: Session, record_id: str, user_email: str) -> Optional[DOARecord]:
+def archive_doa_record(db: Session, record_id: str, user_email: str, current_user: Optional[User] = None) -> Optional[DOARecord]:
     rec = get_doa_by_id(db, record_id)
     if not rec:
         return None
+
+    if current_user is not None:
+        assert_domain_write_access(rec.parent_function or rec.function, current_user)
+        assert_entity_write_access(rec.entity_id, current_user)
     
     old_val = record_to_dict(rec)
     rec.status = "ARCHIVED"
@@ -125,7 +145,7 @@ def archive_doa_record(db: Session, record_id: str, user_email: str) -> Optional
     log_audit(
         db=db,
         user_email=user_email,
-        role="ADMIN",
+        role=current_user.role if current_user else "ADMIN",
         action="ARCHIVE_DOA",
         entity="DOA_RECORD",
         record_id=rec.id,

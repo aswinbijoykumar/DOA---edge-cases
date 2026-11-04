@@ -17,6 +17,11 @@ from app.database.supplementary_models import (
     TemporaryDelegation
 )
 from app.core.dependencies import get_current_user, require_roles
+from app.core.rbac import (
+    assert_domain_write_access,
+    can_user_read_doa,
+    get_user_permissions,
+)
 from app.schemas.supplementary_schemas import (
     DecisionAreaValidationRequest,
     DecisionAreaValidationResponse,
@@ -43,8 +48,31 @@ router = APIRouter(prefix="/supplementary", tags=["Supplementary BRD Governance 
 
 # Role guards
 require_any_authenticated = get_current_user
-require_gov_or_admin = require_roles(["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"])
 require_senior_governance = require_roles(["ADMIN", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"])
+
+
+def _can_user_view_exception(db: Session, exc: ExceptionRequest, user: User) -> bool:
+    """Permission-controlled visibility for Exceptional Decision Areas (BRD Section 4.5)."""
+    if exc.requester_id == user.id or (exc.requester_email or "").lower() == (user.email or "").lower():
+        return True
+    if user.role in ["ADMIN", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"]:
+        return True
+    persona = getattr(user, "persona_type", None) or "FRONTEND_USER"
+    if persona in ["AUDIT_READONLY", "REVIEWER", "APPROVER", "AUTHORITY_OWNER"]:
+        return True
+    user_email_lower = (user.email or "").lower()
+    if exc.reporting_mgr_email and exc.reporting_mgr_email.lower() == user_email_lower:
+        return True
+    if exc.division_head_email and exc.division_head_email.lower() == user_email_lower:
+        return True
+    if persona == "DEPT_OWNER":
+        if exc.doa_id:
+            doa = db.query(DOARecord).filter(DOARecord.id == exc.doa_id).first()
+            if doa:
+                return can_user_read_doa(doa, user)
+        return True
+    return False
+
 
 # =============================================================================
 # 1. VAL-01 to VAL-12: Decision Area Submission & Pre-Flight Validation
@@ -57,14 +85,15 @@ def validate_proposal(
 ):
     """
     VAL-01 to VAL-12: Comprehensive validation engine.
-    Checks supporting documentation, P-R-E-A sequence, Audit Committee position,
-    Board/Shareholder governance, SoD conflict, financial limits, and classification.
+    Enforces that only authorized proposers may validate proposals within their domain scope.
     """
+    assert_domain_write_access(payload.parent_function, current_user)
     return decision_area_validation_service.validate_decision_area_proposal(
         db=db,
         req=payload,
         current_user=current_user
     )
+
 
 # =============================================================================
 # 2. Section 4.3: Exception Workflow (Reporting Mgr -> Div Head -> Governance)
@@ -86,6 +115,7 @@ def raise_exception_request(
     )
     return exception_workflow_service.format_exception_response(exc)
 
+
 @router.get("/exceptions", response_model=List[ExceptionResponse])
 def list_exception_requests(
     stage_filter: Optional[str] = Query(None, description="PENDING_REPORTING_MGR, PENDING_DIVISION_HEAD, PENDING_GOVERNANCE, APPROVED"),
@@ -101,17 +131,11 @@ def list_exception_requests(
         query = query.filter(ExceptionRequest.current_stage == stage_filter)
     if status_filter:
         query = query.filter(ExceptionRequest.status == status_filter)
-    
-    # Non-admin users see exceptions they raised or where they are designated reviewer
-    if current_user.role not in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"]:
-        query = query.filter(
-            (ExceptionRequest.requester_id == current_user.id) |
-            (ExceptionRequest.reporting_mgr_email == current_user.email) |
-            (ExceptionRequest.division_head_email == current_user.email)
-        )
 
-    exceptions = query.order_by(ExceptionRequest.created_at.desc()).all()
-    return [exception_workflow_service.format_exception_response(e) for e in exceptions]
+    all_excs = query.order_by(ExceptionRequest.created_at.desc()).all()
+    visible = [e for e in all_excs if _can_user_view_exception(db, e, current_user)]
+    return [exception_workflow_service.format_exception_response(e) for e in visible]
+
 
 @router.get("/exceptions/{exception_id}", response_model=ExceptionResponse)
 def get_exception_details(
@@ -123,7 +147,10 @@ def get_exception_details(
     exc = db.query(ExceptionRequest).filter(ExceptionRequest.id == exception_id).first()
     if not exc:
         raise HTTPException(status_code=404, detail="Exception request not found")
+    if not _can_user_view_exception(db, exc, current_user):
+        raise HTTPException(status_code=403, detail="Access forbidden: Not authorized to view this exception request.")
     return exception_workflow_service.format_exception_response(exc)
+
 
 @router.post("/exceptions/{exception_id}/action", response_model=ExceptionResponse)
 def action_exception_request(
@@ -146,6 +173,7 @@ def action_exception_request(
     )
     return exception_workflow_service.format_exception_response(exc)
 
+
 # =============================================================================
 # 3. VAL-01: Authoritative Sources & Impact Assessment
 # =============================================================================
@@ -157,13 +185,14 @@ def list_authoritative_sources(
     """List structured authoritative sources (policies, charters, resolutions, laws)."""
     return db.query(AuthoritativeSource).filter(AuthoritativeSource.status == "ACTIVE").all()
 
+
 @router.post("/authoritative-sources")
 def create_authoritative_source(
     payload: AuthoritativeSourceCreate,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(require_gov_or_admin)
+    admin_user: User = Depends(require_senior_governance)
 ):
-    """Create a new authoritative source link."""
+    """Create a new authoritative source link (restricted to Governance Team & DOA Administrator)."""
     count = db.query(AuthoritativeSource).count() + 1
     src_id = f"SRC-{payload.source_type[:3].upper()}-{count:03d}"
     src = AuthoritativeSource(
@@ -184,11 +213,12 @@ def create_authoritative_source(
     db.refresh(src)
     return src
 
+
 @router.post("/authoritative-sources/{source_id}/trigger-impact", response_model=SourceImpactAssessmentResponse)
 def trigger_source_impact_assessment(
     source_id: str,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(require_gov_or_admin)
+    admin_user: User = Depends(require_senior_governance)
 ):
     """
     VAL-01: A source change shall flag linked decision areas for impact review
@@ -206,6 +236,7 @@ def trigger_source_impact_assessment(
         impacted_decision_areas=res["impacted_decision_areas"]
     )
 
+
 # =============================================================================
 # 4. VAL-11: Controlled Expenditure Limits List
 # =============================================================================
@@ -221,6 +252,7 @@ def list_controlled_expenditure_limits(
         q = q.filter(ControlledExpenditureLimit.category == category_filter)
     return q.all()
 
+
 # =============================================================================
 # 5. Section 4.4 & Acceptance Criteria: Cross-Geography Comparison & Alignment
 # =============================================================================
@@ -234,12 +266,20 @@ def compare_cross_geography(
     Acceptance Criteria: Compare related decision areas across geographies
     (Bahrain vs KSA), returning match status, mismatch reasons, and required outcome.
     """
+    perms = get_user_permissions(current_user)
+    if not perms["can_view_alignment_report"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Cross-geography comparison is restricted to Governance, Audit, Department Heads, and Executive Oversight roles."
+        )
     return supplementary_governance_service.compare_cross_geography_decision_areas(
         db=db,
         decision_area_code=payload.decision_area_code,
         source_entity_id=payload.source_entity_id,
-        target_entity_id=payload.target_entity_id
+        target_entity_id=payload.target_entity_id,
+        current_user=current_user,
     )
+
 
 @router.get("/reports/bahrain-ksa-alignment", response_model=BahrainKsaAlignmentReportResponse)
 def get_bahrain_ksa_alignment_report(
@@ -251,7 +291,17 @@ def get_bahrain_ksa_alignment_report(
     separating complete matches from mismatches, identifying every applicable mismatch reason,
     and recording required alignment outcome for each mismatched item.
     """
-    return supplementary_governance_service.generate_bahrain_ksa_alignment_report(db=db)
+    perms = get_user_permissions(current_user)
+    if not perms["can_view_alignment_report"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Bahrain–KSA Alignment Report is restricted to Governance, Audit, Department Heads, and Executive Oversight roles."
+        )
+    return supplementary_governance_service.generate_bahrain_ksa_alignment_report(
+        db=db,
+        current_user=current_user,
+    )
+
 
 # =============================================================================
 # 6. Section 5: Point-in-Time Reconstruction of DOA
@@ -266,11 +316,20 @@ def point_in_time_reconstruction(
     Section 5: Select a historical date and reconstruct the exact decision area,
     authority holders, limits, conditions, entity, and version that was effective on that date.
     """
+    perms = get_user_permissions(current_user)
+    if not perms["can_reconstruct_pit"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Point-in-Time DOA Reconstruction is restricted to Governance, Audit, Department Heads, and Oversight roles."
+        )
     return supplementary_governance_service.reconstruct_point_in_time_doa(
         db=db,
         doa_id=payload.doa_id,
-        target_date=payload.target_date
+        target_date=payload.target_date,
+        entity_filter=payload.entity or payload.entity_code,
+        current_user=current_user,
     )
+
 
 # =============================================================================
 # 7. Section 5: Periodic Certification
@@ -281,11 +340,28 @@ def list_certifications(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_any_authenticated)
 ):
-    """Section 5: View periodic certification cycle status and overdue records."""
+    """Section 5: View periodic certification cycle status and overdue records within user scope."""
     q = db.query(PeriodicCertification)
     if status_filter:
         q = q.filter(PeriodicCertification.status == status_filter)
-    return q.all()
+    all_certs = q.all()
+
+    if current_user.role in ["ADMIN", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"]:
+        return all_certs
+    persona = getattr(current_user, "persona_type", None) or "FRONTEND_USER"
+    if persona in ["AUDIT_READONLY", "REVIEWER", "APPROVER", "AUTHORITY_OWNER"]:
+        return all_certs
+
+    visible = []
+    for c in all_certs:
+        if c.designated_owner_email and c.designated_owner_email.lower() == (current_user.email or "").lower():
+            visible.append(c)
+        elif persona == "DEPT_OWNER" and c.doa_id:
+            doa = db.query(DOARecord).filter(DOARecord.id == c.doa_id).first()
+            if doa and can_user_read_doa(doa, current_user):
+                visible.append(c)
+    return visible
+
 
 @router.post("/certifications/{certification_id}/action")
 def action_certification(
@@ -303,6 +379,7 @@ def action_certification(
         current_user=current_user
     )
 
+
 # =============================================================================
 # 8. Section 4.4: Temporary / Acting Delegations
 # =============================================================================
@@ -318,6 +395,7 @@ def list_temporary_delegations(
         q = q.filter(TemporaryDelegation.is_active == True)
     return q.all()
 
+
 @router.post("/temporary-delegations")
 def create_temporary_delegation(
     payload: TemporaryDelegationCreate,
@@ -326,8 +404,24 @@ def create_temporary_delegation(
 ):
     """
     Section 4.4: Create a temporary delegation with defined start date, end date,
-    scope, authority ceiling, reason, and approval record.
+    scope, authority ceiling, reason, and independent approval record.
     """
+    perms = get_user_permissions(current_user)
+    is_authorized_creator = (
+        current_user.role in ["ADMIN", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"]
+        or (current_user.role == "NORMAL_USER" and current_user.persona_type in ["DEPT_OWNER", "APPROVER", "AUTHORITY_OWNER"])
+    )
+    if perms["is_read_only"] or not is_authorized_creator:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Only Department Heads, Executive Approvers, Authority Owners, or DOA Governance may register Temporary Delegations."
+        )
+    if payload.delegator_email.strip().lower() == payload.recipient_email.strip().lower():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Delegation: Delegator and Recipient cannot be the same individual."
+        )
+
     count = db.query(TemporaryDelegation).count() + 1
     del_id = f"DEL-{count:04d}"
     delegation = TemporaryDelegation(
@@ -346,9 +440,21 @@ def create_temporary_delegation(
         is_active=True
     )
     db.add(delegation)
+    log_audit(
+        db=db,
+        user_id=current_user.id,
+        user_email=current_user.email,
+        role=current_user.role,
+        action="CREATE_TEMPORARY_DELEGATION",
+        entity="TEMPORARY_DELEGATION",
+        record_id=del_id,
+        new_value={"delegator": payload.delegator_email, "recipient": payload.recipient_email, "scope": payload.scope},
+        comment=payload.reason,
+    )
     db.commit()
     db.refresh(delegation)
     return delegation
+
 
 # =============================================================================
 # 9. Section 5: Configurable Governance Findings
@@ -357,12 +463,18 @@ def create_temporary_delegation(
 def list_governance_findings(
     status_filter: Optional[str] = "OPEN",
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_gov_or_admin)
+    current_user: User = Depends(require_any_authenticated)
 ):
     """
     Section 5: Configurable validation checks for duplicate/overlapping decision areas,
     conflicting authority limits, missing final approvers, and expired sources.
     """
+    perms = get_user_permissions(current_user)
+    if not perms["can_view_findings"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access forbidden: Governance Findings register is restricted to Governance Team, DOA Administrators, 2LoD Reviewers, and Internal Audit."
+        )
     q = db.query(GovernanceFinding)
     if status_filter:
         q = q.filter(GovernanceFinding.status == status_filter)

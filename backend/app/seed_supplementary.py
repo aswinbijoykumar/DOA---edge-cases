@@ -12,6 +12,7 @@ from app.database.supplementary_models import (
     DecisionAreaSourceLink
 )
 
+
 def seed_supplementary_data(db_session: Session = None):
     """
     Bootstrap initial master data for BRD supplementary requirements:
@@ -163,15 +164,46 @@ def seed_supplementary_data(db_session: Session = None):
 
         db.flush()
 
+        # Seed a dedicated KSA Subsidiary DOA Record so Bahrain vs KSA entity ownership is demonstrable
+        ksa_doa_id = "KSA-225"
+        ksa_doa = db.query(DOARecord).filter(DOARecord.id == ksa_doa_id).first()
+        if not ksa_doa:
+            ksa_doa = DOARecord(
+                id=ksa_doa_id,
+                parent_function="Finance",
+                function="Finance",
+                business_line="Bank Capital and Capital Management",
+                category="Bank Capital and Capital Management",
+                key_non_key="Key",
+                decision_area="KSA Subsidiary: Approve local capital expenditure & branch procurement up to SAR 500,000",
+                subsidiary_board="A",
+                ceo="E",
+                c_level1="R",
+                composite_authority="Subsidiary Board (A) ➔ KSA CEO (E) ➔ KSA Finance Head (R)",
+                regulatory="Y",
+                policy_reference="SAMA Governance Principles §2.1",
+                charter_section="KSA Subsidiary Charter Article 4",
+                regulatory_requirement="SAMA-GOV-2023 Principle 5",
+                process_name="KSA Capital Expenditures",
+                entity_id="ENT-KSA-01",
+                classification="Board-level DOA",
+                current_version=1,
+                status="PUBLISHED",
+                effective_date="2026-01-01",
+                review_date="2027-01-01",
+                created_by="admin@doa.local"
+            )
+            db.add(ksa_doa)
+            db.flush()
+
         # 4. Cross-Geography Alignment Mappings (Bahrain vs KSA Acceptance Criteria)
-        # Link existing DOA records if present
-        first_doa = db.query(DOARecord).first()
+        first_doa = db.query(DOARecord).filter(DOARecord.id != ksa_doa_id).first()
         first_id = first_doa.id if first_doa else "225"
-        
-        second_doa = db.query(DOARecord).offset(1).first()
+
+        second_doa = db.query(DOARecord).filter(DOARecord.id != ksa_doa_id).offset(1).first()
         second_id = second_doa.id if second_doa else "226"
 
-        third_doa = db.query(DOARecord).offset(2).first()
+        third_doa = db.query(DOARecord).filter(DOARecord.id != ksa_doa_id).offset(2).first()
         third_id = third_doa.id if third_doa else "227"
 
         mappings = [
@@ -190,7 +222,7 @@ def seed_supplementary_data(db_session: Session = None):
                 "source_entity_id": "ENT-BH-01",
                 "source_doa_id": second_id,
                 "target_entity_id": "ENT-KSA-01",
-                "target_doa_id": second_id,
+                "target_doa_id": ksa_doa_id,
                 "match_status": "MISMATCH",
                 "mismatch_reasons": '["AUTHORITY_TIER_DIFF", "THRESHOLD_DIFF"]',
                 "required_alignment_outcome": "Harmonize threshold: Bahrain uses BHD 50k (BoD), KSA requires SAR 500k with local Subsidiary Board signoff."
@@ -215,6 +247,11 @@ def seed_supplementary_data(db_session: Session = None):
             ).first()
             if not existing_m:
                 db.add(CrossGeographyMapping(**m))
+            else:
+                existing_m.target_doa_id = m["target_doa_id"]
+                existing_m.match_status = m["match_status"]
+                existing_m.mismatch_reasons = m["mismatch_reasons"]
+                existing_m.required_alignment_outcome = m["required_alignment_outcome"]
 
         # 5. Link Source to First DOA
         if first_doa:
@@ -268,6 +305,7 @@ def seed_supplementary_data(db_session: Session = None):
     finally:
         if should_close:
             db.close()
+
 
 if __name__ == "__main__":
     seed_supplementary_data()

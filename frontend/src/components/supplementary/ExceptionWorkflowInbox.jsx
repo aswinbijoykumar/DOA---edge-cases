@@ -13,7 +13,8 @@ import {
   AlertTriangle,
   Send,
   Building2,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -38,14 +39,74 @@ export default function ExceptionWorkflowInbox({
     try {
       const data = await api.getExceptionRequests();
       setExceptions(data || []);
-      if (data?.length > 0 && !selectedException) {
-        setSelectedException(data[0]);
+      if (data?.length > 0) {
+        const updatedSelection = selectedException
+          ? data.find(d => d.id === selectedException.id) || data[0]
+          : data[0];
+        setSelectedException(updatedSelection);
+      } else {
+        setSelectedException(null);
       }
     } catch (err) {
       console.error('Failed to load exceptions:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Determine if currentUser is authorized to action the selectedException at its current stage
+  const getStageAuthorization = (exc) => {
+    if (!exc || !currentUser) return { canAction: false, reason: 'No exception selected.' };
+    if (['APPROVED', 'REJECTED'].includes(exc.status) || exc.current_stage === 'COMPLETED') {
+      return { canAction: false, reason: `This exception workflow is finalized (${exc.status}).` };
+    }
+
+    const userEmail = (currentUser.email || '').toLowerCase();
+    const role = currentUser.role || 'NORMAL_USER';
+    const persona = currentUser.persona_type || 'FRONTEND_USER';
+
+    if (role === 'SYSTEM_ADMINISTRATOR' || (role === 'NORMAL_USER' && persona === 'AUDIT_READONLY')) {
+      return { canAction: false, reason: 'Read-only assurance / IT role: cannot approve, return, or reject exception workflows.' };
+    }
+
+    if ((exc.requester_email || '').toLowerCase() === userEmail) {
+      return { canAction: false, reason: 'VAL-06 Segregation of Duties: As the requester of this exception, you cannot approve or action your own submission.' };
+    }
+
+    const stage = exc.current_stage || 'PENDING_REPORTING_MGR';
+    if (stage === 'RETURNED_TO_PROPOSER') {
+      return { canAction: false, reason: 'Returned to proposer for revision prior to re-routing.' };
+    }
+
+    if (stage === 'PENDING_REPORTING_MGR') {
+      const isDesignatedMgr = exc.reporting_mgr_email && exc.reporting_mgr_email.toLowerCase() === userEmail;
+      const isDeptOwnerOrAdmin = ['ADMIN', 'DOA_ADMINISTRATOR'].includes(role) || (role === 'NORMAL_USER' && persona === 'DEPT_OWNER');
+      if (isDesignatedMgr || isDeptOwnerOrAdmin) {
+        return { canAction: true, reason: '' };
+      }
+      return { canAction: false, reason: 'Awaiting Step 1: Reporting Manager / Department Owner review.' };
+    }
+
+    if (stage === 'PENDING_DIVISION_HEAD') {
+      if (exc.reporting_mgr_email && exc.reporting_mgr_email.toLowerCase() === userEmail && !['ADMIN', 'DOA_ADMINISTRATOR'].includes(role)) {
+        return { canAction: false, reason: 'Segregation of Duties: Step 2 Division Head must differ from Step 1 Reporting Manager.' };
+      }
+      const isDesignatedDiv = exc.division_head_email && exc.division_head_email.toLowerCase() === userEmail;
+      const isApproverOrAdmin = ['ADMIN', 'DOA_ADMINISTRATOR'].includes(role) || (role === 'NORMAL_USER' && persona === 'APPROVER');
+      if (isDesignatedDiv || isApproverOrAdmin) {
+        return { canAction: true, reason: '' };
+      }
+      return { canAction: false, reason: 'Awaiting Step 2: Division Head / Executive Approver endorsement.' };
+    }
+
+    if (stage === 'PENDING_GOVERNANCE') {
+      if (['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(role)) {
+        return { canAction: true, reason: '' };
+      }
+      return { canAction: false, reason: 'Awaiting Step 3: Senior DOA Governance final review.' };
+    }
+
+    return { canAction: false, reason: 'Not authorized for current exception workflow stage.' };
   };
 
   const handleAction = async (action) => {
@@ -71,8 +132,11 @@ export default function ExceptionWorkflowInbox({
 
   const filtered = exceptions.filter(e => {
     if (statusFilter === 'ALL') return true;
+    if (statusFilter === 'GOVERNANCE_REVIEW') return e.current_stage === 'PENDING_GOVERNANCE';
     return e.status === statusFilter;
   });
+
+  const stageAuth = getStageAuthorization(selectedException);
 
   return (
     <div className="space-y-6">
@@ -82,12 +146,12 @@ export default function ExceptionWorkflowInbox({
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-              BRD Section 4.3 & 4.5
+              BRD Section 4.3 &amp; 4.5
             </span>
-            <span className="text-xs text-slate-400">4-Stage Approval Route</span>
+            <span className="text-xs text-slate-400">Multi-Stage Permission-Controlled Route</span>
           </div>
           <h2 className="text-xl font-bold text-slate-100">
-            Exceptional Decision Areas & Workflow Cockpit
+            Exceptional Decision Areas &amp; Workflow Cockpit
           </h2>
           <p className="text-xs text-slate-400 max-w-2xl mt-1">
             Permission-controlled routing for justified deviations from standard DOA principles. Captures mandatory rationales, amendments, returns, and decision history.
@@ -145,7 +209,7 @@ export default function ExceptionWorkflowInbox({
             {loading ? (
               <div className="p-8 text-center text-xs text-slate-400">Loading exception requests...</div>
             ) : filtered.length === 0 ? (
-              <div className="p-8 text-center text-xs text-slate-400">No exception requests found.</div>
+              <div className="p-8 text-center text-xs text-slate-400">No exception requests in your authorized scope.</div>
             ) : (
               filtered.map(item => {
                 const isSelected = selectedException?.id === item.id;
@@ -267,48 +331,55 @@ export default function ExceptionWorkflowInbox({
                 </div>
               </div>
 
-              {/* Decision Action Form */}
-              <div className="pt-4 border-t border-slate-200 space-y-3">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Record Action Rationale (Mandatory for Approval/Return) *
-                </label>
-                <textarea
-                  rows={3}
-                  value={actionRationale}
-                  onChange={e => setActionRationale(e.target.value)}
-                  placeholder="Enter explicit rationale, comments, or required revisions..."
-                  className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+              {/* Stage-Scoped Decision Action Form vs Read-Only Banner */}
+              {stageAuth.canAction ? (
+                <div className="pt-4 border-t border-slate-200 space-y-3">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Record Action Rationale (Mandatory for Approval/Return) *
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={actionRationale}
+                    onChange={e => setActionRationale(e.target.value)}
+                    placeholder="Enter explicit rationale, comments, or required revisions..."
+                    className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
 
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    onClick={() => handleAction('RETURN_FOR_COMMENTS')}
-                    disabled={actionLoading}
-                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Return with Comments</span>
-                  </button>
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      onClick={() => handleAction('RETURN_FOR_COMMENTS')}
+                      disabled={actionLoading}
+                      className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Return with Comments</span>
+                    </button>
 
-                  <button
-                    onClick={() => handleAction('REJECT')}
-                    disabled={actionLoading}
-                    className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                  >
-                    <XCircle className="w-3.5 h-3.5" />
-                    <span>Reject Exception</span>
-                  </button>
+                    <button
+                      onClick={() => handleAction('REJECT')}
+                      disabled={actionLoading}
+                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    >
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Reject Exception</span>
+                    </button>
 
-                  <button
-                    onClick={() => handleAction('APPROVE')}
-                    disabled={actionLoading}
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5" />
-                    <span>Approve Exception</span>
-                  </button>
+                    <button
+                      onClick={() => handleAction('APPROVE')}
+                      disabled={actionLoading}
+                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-50"
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>Approve Exception</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3 text-xs text-slate-600">
+                  <Lock className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>{stageAuth.reason}</span>
+                </div>
+              )}
 
             </div>
           ) : (

@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 # Auth Schemas
 class LoginRequest(BaseModel):
@@ -18,6 +18,9 @@ class Token(BaseModel):
     persona_type: Optional[str] = "FRONTEND_USER"
     designation: Optional[str] = None
     department: Optional[str] = None
+    entity_id: Optional[str] = "ENT-BH-01"
+    allowed_domains: Optional[str] = None
+    permissions: Optional[Dict[str, Any]] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -28,6 +31,9 @@ class UserResponse(BaseModel):
     designation: Optional[str] = None
     department: Optional[str] = None
     reports_to: Optional[str] = None
+    entity_id: Optional[str] = "ENT-BH-01"
+    allowed_domains: Optional[str] = None
+    permissions: Optional[Dict[str, Any]] = None
     is_active: bool
 
     class Config:
@@ -42,6 +48,8 @@ class DOABase(BaseModel):
     category: str
     key_non_key: str = "Key"
     decision_area: str
+    entity_id: Optional[str] = "ENT-BH-01"
+    classification: Optional[str] = "Board-level DOA"
     shareholders: Optional[str] = ""
     board_of_directors: Optional[str] = ""
     subsidiary_board: Optional[str] = ""
@@ -111,7 +119,7 @@ class ChangeRequestCreate(BaseModel):
     process: Optional[str] = None
     rationale: Optional[str] = None
     base_version: int = 1
-    proposed_value: Dict[str, Any] # Contains fields proposed
+    proposed_value: Dict[str, Any] = Field(default_factory=dict) # Contains fields proposed
     operational_impact: Optional[str] = None
     attachments: Optional[List[Dict[str, Any]]] = None
     # Supplementary BRD fields
@@ -235,4 +243,3 @@ class ChatbotQueryResponse(BaseModel):
     sources: List[ChatbotSource] = []
     suggested_actions: List[ChatbotAction] = []
     is_guardrail_triggered: bool = False
-

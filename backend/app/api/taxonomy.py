@@ -89,7 +89,9 @@ WORKFLOW_ROUTING_RULES = [
 
 @router.get("/functions", response_model=Dict[str, List[str]])
 def get_functions_taxonomy(current_user: User = Depends(get_current_user)):
-    return FUNCTION_TAXONOMY
+    from app.core.rbac import get_allowed_domains
+    allowed = get_allowed_domains(current_user)
+    return {k: v for k, v in FUNCTION_TAXONOMY.items() if k in allowed}
 
 @router.get("/departments", response_model=List[str])
 def get_departments(current_user: User = Depends(get_current_user)):

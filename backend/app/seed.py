@@ -7,16 +7,16 @@ from app.database.models import User, DOARecord, DOAVersion, AuditLog
 from app.core.security import get_password_hash
 from app.services.version_service import create_published_version_snapshot
 
+
 def seed_database():
     print("Initializing SQLite Database tables...")
     Base.metadata.create_all(bind=engine)
-    
+
     db: Session = SessionLocal()
     try:
-        # 1. Seed Users
-        # 1. Seed Users - 7 Normal User Personas + Core Admins
+        # 1. Seed Users - 7 Normal User Personas + Domain/Entity Scoped Owners + Core Admins
         seed_users_data = [
-            # 1. Department / Function Owner
+            # 1. Department / Function Owner (Finance - Bahrain)
             {
                 "email": "dept.owner@doa.local",
                 "password": "User@123",
@@ -25,9 +25,37 @@ def seed_database():
                 "persona_type": "DEPT_OWNER",
                 "designation": "Head of Finance & Treasury",
                 "department": "Finance",
-                "reports_to": "Chief Financial Officer"
+                "entity_id": "ENT-BH-01",
+                "allowed_domains": "Finance",
+                "reports_to": "approver@doa.local"
             },
-            # 2. Process Owner
+            # 1b. Department / Function Owner (Risk - Bahrain)
+            {
+                "email": "risk.owner@doa.local",
+                "password": "User@123",
+                "full_name": "Nadia Al-Khalifa",
+                "role": "NORMAL_USER",
+                "persona_type": "DEPT_OWNER",
+                "designation": "Head of Enterprise Credit & Risk",
+                "department": "Risk Management",
+                "entity_id": "ENT-BH-01",
+                "allowed_domains": "Risk",
+                "reports_to": "approver@doa.local"
+            },
+            # 1c. Department / Function Owner (Finance - KSA Subsidiary)
+            {
+                "email": "ksa.owner@doa.local",
+                "password": "User@123",
+                "full_name": "Faisal Al-Saud",
+                "role": "NORMAL_USER",
+                "persona_type": "DEPT_OWNER",
+                "designation": "Head of Finance (KSA Subsidiary)",
+                "department": "Finance (KSA)",
+                "entity_id": "ENT-KSA-01",
+                "allowed_domains": "Finance",
+                "reports_to": "approver@doa.local"
+            },
+            # 2. Process Owner (Finance / P2P Operational Domain - Bahrain)
             {
                 "email": "process.owner@doa.local",
                 "password": "User@123",
@@ -36,9 +64,11 @@ def seed_database():
                 "persona_type": "PROCESS_OWNER",
                 "designation": "P2P & Procurement Process Lead",
                 "department": "Supply Chain & Operations",
-                "reports_to": "Head of Operations"
+                "entity_id": "ENT-BH-01",
+                "allowed_domains": "Finance",
+                "reports_to": "dept.owner@doa.local"
             },
-            # 3. Authority Owner
+            # 3. Authority Owner (Cross-Domain Governance Body Charter Custodian)
             {
                 "email": "authority.owner@doa.local",
                 "password": "User@123",
@@ -47,9 +77,11 @@ def seed_database():
                 "persona_type": "AUTHORITY_OWNER",
                 "designation": "Board Secretariat / Governance Counsel",
                 "department": "Legal & Corporate Governance",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "Company Secretary"
             },
-            # 4. Reviewer
+            # 4. Reviewer (2LoD Risk & Policy Review Analyst - Cross-Domain Review, Non-Proposer)
             {
                 "email": "reviewer@doa.local",
                 "password": "User@123",
@@ -58,9 +90,11 @@ def seed_database():
                 "persona_type": "REVIEWER",
                 "designation": "Senior Risk & Governance Reviewer",
                 "department": "Enterprise Risk Management",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "Chief Risk Officer"
             },
-            # 5. Approver
+            # 5. Approver (Executive Committee Approver - Cross-Domain Binding Decision, Non-Proposer)
             {
                 "email": "approver@doa.local",
                 "password": "User@123",
@@ -69,9 +103,11 @@ def seed_database():
                 "persona_type": "APPROVER",
                 "designation": "Executive Committee Approver (VP Finance)",
                 "department": "Executive Management",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "GCEO"
             },
-            # 6. Front-End User
+            # 6. Front-End User (Commercial / Finance Business Line Analyst - Bahrain)
             {
                 "email": "user@doa.local",
                 "password": "User@123",
@@ -80,7 +116,9 @@ def seed_database():
                 "persona_type": "FRONTEND_USER",
                 "designation": "Business Line Analyst",
                 "department": "Commercial Operations",
-                "reports_to": "Marcus Vance"
+                "entity_id": "ENT-BH-01",
+                "allowed_domains": "Finance",
+                "reports_to": "dept.owner@doa.local"
             },
             # 7. Internal Audit / Compliance Read-Only User
             {
@@ -91,6 +129,8 @@ def seed_database():
                 "persona_type": "AUDIT_READONLY",
                 "designation": "Senior Internal Auditor",
                 "department": "Internal Audit & Assurance",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "Audit Committee Chair"
             },
             # Enterprise Roles
@@ -102,6 +142,8 @@ def seed_database():
                 "persona_type": "REVIEWER",
                 "designation": "2LoD Governance Officer",
                 "department": "Enterprise Governance & Compliance",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "Chief Compliance Officer"
             },
             {
@@ -112,6 +154,8 @@ def seed_database():
                 "persona_type": "APPROVER",
                 "designation": "DOA Governance Lead",
                 "department": "Executive Office / DOA Governance",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "GCEO"
             },
             {
@@ -122,6 +166,8 @@ def seed_database():
                 "persona_type": "APPROVER",
                 "designation": "Global Admin",
                 "department": "Executive Office",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "BoD"
             },
             {
@@ -132,10 +178,13 @@ def seed_database():
                 "persona_type": "AUDIT_READONLY",
                 "designation": "Platform Architect",
                 "department": "Information Technology / Systems",
+                "entity_id": "ALL",
+                "allowed_domains": "ALL",
                 "reports_to": "CIO"
             }
         ]
 
+        user_map = {}
         for u in seed_users_data:
             existing_user = db.query(User).filter(User.email == u["email"]).first()
             if not existing_user:
@@ -147,21 +196,28 @@ def seed_database():
                     persona_type=u.get("persona_type", "FRONTEND_USER"),
                     designation=u.get("designation", ""),
                     department=u.get("department", ""),
+                    entity_id=u.get("entity_id", "ENT-BH-01"),
+                    allowed_domains=u.get("allowed_domains"),
                     reports_to=u.get("reports_to", ""),
                     is_active=True
                 )
                 db.add(db_user)
-                print(f"[+] Created user: {u['email']} ({u.get('persona_type')})")
+                db.flush()
+                user_map[u["email"]] = db_user
+                print(f"[+] Created user: {u['email']} ({u.get('persona_type')} | {u.get('allowed_domains')} | {u.get('entity_id')})")
             else:
                 existing_user.role = u["role"]
                 existing_user.full_name = u["full_name"]
                 existing_user.persona_type = u.get("persona_type", "FRONTEND_USER")
                 existing_user.designation = u.get("designation", "")
                 existing_user.department = u.get("department", "")
+                existing_user.entity_id = u.get("entity_id", "ENT-BH-01")
+                existing_user.allowed_domains = u.get("allowed_domains")
                 existing_user.reports_to = u.get("reports_to", "")
+                db.flush()
+                user_map[u["email"]] = existing_user
 
         db.commit()
-
 
         # 2. Seed Master DOA Records from seed_doa_data.json
         json_path = Path(__file__).parent / "seed_doa_data.json"
@@ -216,6 +272,7 @@ def seed_database():
                                 "type": "Policy Document"
                             }
                         ]),
+                        entity_id="ENT-BH-01",
                         current_version=1,
                         status="PUBLISHED",
                         effective_date="2026-01-01",
@@ -224,9 +281,10 @@ def seed_database():
                     )
                     db.add(rec)
                     db.flush()
-                    # Create corresponding initial Version 1 snapshot
                     create_published_version_snapshot(db, rec, "admin@doa.local")
                     count += 1
+                elif not getattr(existing, "entity_id", None):
+                    existing.entity_id = "ENT-BH-01"
 
             db.commit()
             print(f"[+] Successfully seeded {count} published DOA master records with v1 snapshots.")
@@ -299,11 +357,11 @@ def seed_database():
                 "designation": "Head of Enterprise Credit Risk",
                 "doa_designation_key": "c_level2",
                 "department": "Risk Management",
-                "reporting_to_name": "Sophia Zhang (Acting Head)",
-                "reporting_to_email": "reviewer@doa.local",
+                "reporting_to_name": "Nadia Al-Khalifa (Risk Dept Head)",
+                "reporting_to_email": "risk.owner@doa.local",
                 "is_vacant": True,
-                "acting_authority_name": "Sophia Zhang (Senior Risk Reviewer)",
-                "acting_authority_email": "reviewer@doa.local",
+                "acting_authority_name": "Nadia Al-Khalifa (Head of Enterprise Credit & Risk)",
+                "acting_authority_email": "risk.owner@doa.local",
                 "acting_valid_until": "2026-12-31"
             }
         ]
@@ -317,16 +375,22 @@ def seed_database():
                 for k, v in item.items():
                     setattr(existing_emp, k, v)
 
-        # 4. Seed Realistic Enterprise Change Requests for Stakeholder Demonstration
+        # 4. Seed Realistic Enterprise Change Requests with exact User IDs & Domain Ownership
         from app.database.models import ChangeRequest
+
+        def uid(email: str) -> int:
+            u = user_map.get(email) or db.query(User).filter(User.email == email).first()
+            return u.id if u else 1
+
         seed_crs = [
             {
                 "id": "CR-2026-001",
                 "request_type": "MODIFY",
                 "doa_id": "225",
-                "requester_id": 6,
+                "requester_id": uid("dept.owner@doa.local"),
                 "requester_email": "dept.owner@doa.local",
                 "department": "Finance",
+                "entity_id": "ENT-BH-01",
                 "process": "Capital Expenditures & Treasury Operations",
                 "rationale": "Department Owner proposal: Aligning Capex expenditure thresholds with updated FY2026 Board Budgetary Delegation and escalating inflation index. Requires Executive Committee sign-off prior to master publication.",
                 "base_version": 1,
@@ -373,11 +437,12 @@ def seed_database():
                 "id": "CR-2026-002",
                 "request_type": "MODIFY",
                 "doa_id": "233",
-                "requester_id": 7,
-                "requester_email": "process.owner@doa.local",
-                "department": "Supply Chain & Operations",
-                "process": "Procure-to-Pay (P2P) & Operational Procurement",
-                "rationale": "Process Owner proposal: Modifying vendor engagement threshold matrix in P2P workflow to eradicate SLA processing bottlenecks in Oracle ERP while maintaining segregation of duties.",
+                "requester_id": uid("risk.owner@doa.local"),
+                "requester_email": "risk.owner@doa.local",
+                "department": "Risk Management",
+                "entity_id": "ENT-BH-01",
+                "process": "Enterprise Credit Risk & Underwriting",
+                "rationale": "Risk Department Owner proposal: Modifying single obligor underwriting limit extensions in Risk matrix to align with Group Credit Risk Committee charter.",
                 "base_version": 1,
                 "current_value": json.dumps({
                     "id": "233",
@@ -402,13 +467,13 @@ def seed_database():
                     "comments": "Includes mandatory Group Credit Risk Committee endorsement per CBR §12."
                 }),
                 "status": "SUBMITTED",
-                "operational_impact": "Procurement cycle streamlined by 4.5 days. 3-way matching automated in SAP Ariba with dual buyer sign-off intact.",
+                "operational_impact": "Enforces Group Credit Risk Committee pre-endorsement prior to Board Risk Committee review.",
                 "attachments": json.dumps([
                     {
-                        "name": "P2P_Operational_Bottleneck_Analysis.pdf",
+                        "name": "Credit_Risk_Obligor_Limit_Study.pdf",
                         "size": "850 KB",
                         "uploaded_at": "2026-02-14",
-                        "type": "Process Flow Diagram"
+                        "type": "Risk Assessment Document"
                     }
                 ])
             },
@@ -416,9 +481,10 @@ def seed_database():
                 "id": "CR-2026-003",
                 "request_type": "ADD",
                 "doa_id": None,
-                "requester_id": 8,
+                "requester_id": uid("authority.owner@doa.local"),
                 "requester_email": "authority.owner@doa.local",
                 "department": "Legal & Corporate Governance",
+                "entity_id": "ENT-BH-01",
                 "process": "Board Governance & Committee Mandates",
                 "rationale": "Authority Owner proposal: Formally instituting a new Board Risk & Compliance Committee (BRPC) fast-track delegated authority mandate for emergency risk responses.",
                 "base_version": 1,
@@ -448,11 +514,12 @@ def seed_database():
                 "id": "CR-2026-004",
                 "request_type": "MODIFY",
                 "doa_id": "240",
-                "requester_id": 9,
-                "requester_email": "reviewer@doa.local",
-                "department": "Enterprise Risk Management",
-                "process": "Regulatory Capital & Credit Review",
-                "rationale": "Reviewer Technical Assessment: Reviewed and recommended threshold adjustments for Tier-1 credit facility covenants under Basel IV requirements.",
+                "requester_id": uid("process.owner@doa.local"),
+                "requester_email": "process.owner@doa.local",
+                "department": "Supply Chain & Operations",
+                "entity_id": "ENT-BH-01",
+                "process": "Statutory Accounting & P2P Tax Settlement",
+                "rationale": "Process Owner proposal: Streamlining minor statutory tax assessment settlements below $25k via GCFO delegation.",
                 "base_version": 1,
                 "current_value": json.dumps({
                     "id": "240",
@@ -471,7 +538,7 @@ def seed_database():
                     "comments": "Board sub-delegated to GCFO for statutory assessments under $25k."
                 }),
                 "status": "APPROVED",
-                "reviewer_id": 10,
+                "reviewer_id": uid("approver@doa.local"),
                 "reviewer_email": "approver@doa.local",
                 "decision_comment": "Approved in Executive Committee Session #04/2026. Meets statutory threshold guidelines and 4-eye criteria.",
                 "operational_impact": "Reduces minor dispute resolution cycle from 6 weeks to 3 business days.",
@@ -481,9 +548,10 @@ def seed_database():
                 "id": "CR-2026-005",
                 "request_type": "MODIFY",
                 "doa_id": "248",
-                "requester_id": 4,
+                "requester_id": uid("user@doa.local"),
                 "requester_email": "user@doa.local",
                 "department": "Commercial Operations",
+                "entity_id": "ENT-BH-01",
                 "process": "Commercial Line Operations",
                 "rationale": "Front-End User request: Adjust commercial operational discount cap for corporate account executives from 5% to 8% to match regional benchmark.",
                 "base_version": 1,
@@ -541,6 +609,7 @@ def seed_database():
         raise e
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_database()

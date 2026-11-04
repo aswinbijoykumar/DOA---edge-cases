@@ -34,17 +34,48 @@ export default function LoginPage({ onLoginSuccess }) {
   const NORMAL_USER_PERSONAS = [
     {
       id: 'dept_owner',
-      title: 'Department / Function Owner',
+      title: 'Department / Function Owner (Finance - Bahrain)',
       name: 'Marcus Vance',
       designation: 'Head of Finance & Treasury',
       dept: 'Finance & Treasury',
+      scope: 'Finance Only • ENT-BH-01',
       email: 'dept.owner@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'DEPT_OWNER',
       icon: Briefcase,
       color: 'teal',
-      duty: 'Review authorities relevant to Finance/Treasury; propose strategic revisions and departmental signing thresholds.'
+      duty: 'View & propose authorities strictly within Finance domain (Bahrain HQ); supervisory sign-off on Finance proposals.'
+    },
+    {
+      id: 'risk_owner',
+      title: 'Department / Function Owner (Risk - Bahrain)',
+      name: 'Tariq Al-Mansoor',
+      designation: 'Head of Enterprise Credit & Risk',
+      dept: 'Risk Management',
+      scope: 'Risk Only • ENT-BH-01',
+      email: 'risk.owner@doa.local',
+      password: 'User@123',
+      role: 'NORMAL_USER',
+      persona_type: 'DEPT_OWNER',
+      icon: ShieldAlert,
+      color: 'teal',
+      duty: 'View & propose authorities strictly within Risk domain (Bahrain HQ); supervisory sign-off on Risk proposals.'
+    },
+    {
+      id: 'ksa_owner',
+      title: 'Department / Function Owner (Finance - KSA)',
+      name: 'Nadia Al-Qahtani',
+      designation: 'Head of Finance (KSA Subsidiary)',
+      dept: 'Finance (KSA)',
+      scope: 'Finance Only • ENT-KSA-01',
+      email: 'ksa.owner@doa.local',
+      password: 'User@123',
+      role: 'NORMAL_USER',
+      persona_type: 'DEPT_OWNER',
+      icon: Building,
+      color: 'teal',
+      duty: 'View Finance DOAs and mutate ONLY KSA Subsidiary (ENT-KSA-01) Finance delegations; read-only on Bahrain HQ.'
     },
     {
       id: 'process_owner',
@@ -52,13 +83,14 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Elena Rostova',
       designation: 'P2P & Procurement Lead',
       dept: 'Supply Chain Operations',
+      scope: 'Finance Only • ENT-BH-01',
       email: 'process.owner@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'PROCESS_OWNER',
       icon: Layers,
       color: 'blue',
-      duty: 'Review authorities linked to operational processes (P2P/Capex) and provide operational impact assessments.'
+      duty: 'Review Finance operational processes (P2P/Capex), propose Finance updates, and endorse operational impact.'
     },
     {
       id: 'authority_owner',
@@ -66,41 +98,44 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'David Sterling',
       designation: 'Governance Counsel',
       dept: 'Legal & Board Secretariat',
+      scope: 'Finance & Risk • ENT-BH-01',
       email: 'authority.owner@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'AUTHORITY_OWNER',
       icon: ShieldCheck,
       color: 'indigo',
-      duty: 'Review proposed changes to authorities assigned to specific executive roles, governance bodies or Board committees.'
+      duty: 'Cross-domain charter oversight; propose and verify authorities assigned to executive roles or Board committees.'
     },
     {
       id: 'reviewer',
-      title: 'Reviewer',
+      title: 'Reviewer (2LoD Risk — Non-Proposer)',
       name: 'Sophia Zhang',
       designation: 'Senior Risk Reviewer',
       dept: 'Enterprise Risk Management',
+      scope: 'Cross-Domain Review • No Propose CRUD',
       email: 'reviewer@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'REVIEWER',
       icon: CheckSquare,
       color: 'cyan',
-      duty: 'Review proposed Additions, Modifications, and Deletions; provide recommendations and clarification requests.'
+      duty: 'Review proposed Additions, Modifications, and Deletions; issue 2LoD recommendations (cannot author proposals).'
     },
     {
       id: 'approver',
-      title: 'Approver',
+      title: 'Approver (Executive — Non-Proposer)',
       name: 'Julian Hayes',
       designation: 'VP Finance (Exec Approver)',
       dept: 'Executive Management',
+      scope: 'Cross-Domain Approval • No Propose CRUD',
       email: 'approver@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'APPROVER',
       icon: UserCheck,
       color: 'emerald',
-      duty: 'Approve or reject proposed DOA changes in strict accordance with configured organizational workflow rules.'
+      duty: 'Approve or reject proposed DOA changes and Stage 2 exceptions (cannot author proposals or publish master).'
     },
     {
       id: 'frontend_user',
@@ -108,13 +143,14 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Aiden Cole',
       designation: 'Commercial Analyst',
       dept: 'Commercial Operations',
+      scope: 'Finance Only • Own CRs Only',
       email: 'user@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'FRONTEND_USER',
       icon: Search,
       color: 'amber',
-      duty: 'Search, view, and filter approved DOA records relevant to department or process; raise change proposals.'
+      duty: 'Search Finance DOA records, raise Finance change proposals, and view/withdraw ONLY own submitted requests.'
     },
     {
       id: 'audit_readonly',
@@ -122,13 +158,14 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Claire Montgomery',
       designation: 'Senior Internal Auditor',
       dept: 'Internal Audit & Assurance',
+      scope: 'All Domains • Strictly Read-Only',
       email: 'audit.readonly@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
       persona_type: 'AUDIT_READONLY',
       icon: Eye,
       color: 'violet',
-      duty: 'Independent read-only access to approved records, historical snapshots, change workflows, and audit trail.'
+      duty: 'Independent read-only access to approved records, historical snapshots, change workflows, findings, and audit trail.'
     }
   ];
 
@@ -139,13 +176,14 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Risk & Governance Reviewer',
       designation: '2LoD Governance Officer',
       dept: 'Enterprise Governance & Compliance',
+      scope: 'All Domains • Review & Publish (No Propose)',
       email: 'governance@doa.local',
       password: 'GovTeam@123',
       role: 'GOVERNANCE_TEAM',
       persona_type: 'REVIEWER',
       icon: ShieldAlert,
       color: 'rose',
-      duty: 'Manage review queues, diff inspection, committee routing, and 2LoD compliance governance.'
+      duty: 'Manage review queues, diff inspection, committee routing, Stage 3 exception approvals, and controlled publication.'
     },
     {
       id: 'doa_admin',
@@ -153,13 +191,14 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Chief Delegation Officer',
       designation: 'DOA Administrator',
       dept: 'Executive Office / DOA Governance',
+      scope: 'All Domains & Entities • VAL-06 SoD Enforced',
       email: 'doaadmin@doa.local',
       password: 'DoaAdmin@123',
       role: 'DOA_ADMINISTRATOR',
       persona_type: 'APPROVER',
       icon: Sparkles,
       color: 'teal',
-      duty: 'Executive approval, publish master versions (v1 ➔ v2), archive obsolete rules, optimistic lock oversight.'
+      duty: 'Executive approval, publish master versions (v1 ➔ v2), archive obsolete rules, subject to 4-eye SoD rules.'
     },
     {
       id: 'sysadmin',
@@ -167,13 +206,14 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'IT & System Administrator',
       designation: 'Platform Architect',
       dept: 'Information Technology / Systems',
+      scope: 'IT Telemetry & Audit • Read-Only Business DOA',
       email: 'sysadmin@doa.local',
       password: 'SysAdmin@123',
       role: 'SYSTEM_ADMINISTRATOR',
       persona_type: 'AUDIT_READONLY',
       icon: Database,
       color: 'purple',
-      duty: 'System telemetry, ETL database maintenance, security controls, and full tamper-evident audit logs.'
+      duty: 'System telemetry, ETL database maintenance, security controls, and audit logs (cannot mutate or approve DOAs).'
     }
   ];
 
@@ -201,7 +241,10 @@ export default function LoginPage({ onLoginSuccess }) {
           role: data.role,
           persona_type: data.persona_type,
           designation: data.designation,
-          department: data.department
+          department: data.department,
+          entity_id: data.entity_id,
+          allowed_domains: data.allowed_domains,
+          permissions: data.permissions
         });
       }
     } catch (err) {
@@ -232,7 +275,7 @@ export default function LoginPage({ onLoginSuccess }) {
           Delegation of Authority (DOA) Governance Portal
         </h1>
         <p className="mt-1.5 text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto">
-          Two Lines of Defense (2LoD) Governance Matrix with Role-Based Access Control, Regulatory &amp; Policy Citations, and Designation Hierarchy.
+          Two Lines of Defense (2LoD) Governance Matrix with Role-Based Access Control, Domain &amp; Entity Ownership, and Segregation of Duties.
         </p>
       </div>
 
@@ -255,11 +298,11 @@ export default function LoginPage({ onLoginSuccess }) {
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
-                <span>Normal User Personas (7 Roles)</span>
+                <span>Normal User Personas ({NORMAL_USER_PERSONAS.length} Users)</span>
                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold ${
                   activeTab === 'normal_users' ? 'bg-teal-700 text-white' : 'bg-slate-200 text-slate-700'
                 }`}>
-                  7
+                  {NORMAL_USER_PERSONAS.length}
                 </span>
               </button>
 
@@ -302,7 +345,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     {activeTab === 'normal_users'
-                      ? 'Demonstrating distinct operational & compliance authorities configured for business stakeholders.'
+                      ? 'Scoped by functional domain (Finance vs Risk), legal entity (Bahrain vs KSA), and CRUD authority.'
                       : 'Executive, Reviewer, and System Administrator privileges for 2LoD governance.'}
                   </p>
                 </div>
@@ -337,6 +380,11 @@ export default function LoginPage({ onLoginSuccess }) {
                             <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-semibold text-slate-700">
                               {p.name}
                             </span>
+                            {p.scope && (
+                              <span className="px-2 py-0.5 bg-teal-50 border border-teal-200 rounded text-[9px] font-extrabold text-teal-800 uppercase">
+                                {p.scope}
+                              </span>
+                            )}
                           </div>
 
                           <div className="text-[11px] text-teal-700 font-medium mt-0.5">
@@ -350,7 +398,7 @@ export default function LoginPage({ onLoginSuccess }) {
                           <div className="text-[10px] font-mono text-slate-400 mt-1.5 flex items-center justify-between">
                             <span>{p.email}</span>
                             <span className="text-[9px] font-sans font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                              Pass: User@123
+                              Pass: {p.password}
                             </span>
                           </div>
                         </div>
@@ -452,24 +500,24 @@ export default function LoginPage({ onLoginSuccess }) {
                 {/* Key Points Checklist Feature Preview */}
                 <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2 mt-4">
                   <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-teal-600" /> Key Built-in Capabilities
+                    <ShieldCheck className="h-3.5 w-3.5 text-teal-600" /> Enforced RBAC &amp; BRD Guardrails
                   </h4>
                   <ul className="text-[11px] text-slate-600 space-y-1.5 font-medium">
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>Designation Matrix:</strong> View CEO, BoD, C-Level authorities in 1 tab</span>
+                      <span><strong>Domain Scoping:</strong> Finance vs Risk visibility strictly isolated</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>Regulatory Linkages:</strong> Policy, Charter, &amp; CBR citations</span>
+                      <span><strong>Entity Ownership:</strong> Cross-entity mutations blocked (BH vs KSA)</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>Management Reports:</strong> Active by Dept, Pending, Modified</span>
+                      <span><strong>VAL-06 SoD:</strong> Proposers cannot endorse, approve, or publish own CRs</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>HR System Live Sync:</strong> Acting authorities &amp; vacancy alerts</span>
+                      <span><strong>CRUD Authority:</strong> Read-only Audit, Reviewer &amp; Approver cannot draft</span>
                     </li>
                   </ul>
                 </div>
@@ -491,4 +539,3 @@ export default function LoginPage({ onLoginSuccess }) {
     </div>
   );
 }
-

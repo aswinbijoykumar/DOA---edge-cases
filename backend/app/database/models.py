@@ -22,6 +22,8 @@ class User(Base):
     designation = Column(String(100), nullable=True) # e.g. "Head of Finance", "P2P Process Owner", "Chief Risk Officer"
     department = Column(String(100), nullable=True)
     reports_to = Column(String(100), nullable=True)
+    entity_id = Column(String(50), nullable=True, default="ENT-BH-01") # Entity & Geography scoping (ENT-BH-01, ENT-KSA-01, ALL)
+    allowed_domains = Column(String(255), nullable=True, default=None) # Comma-separated domain scope (Finance, Risk, ALL)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
@@ -178,4 +180,3 @@ class HREmployee(Base):
     acting_authority_email = Column(String(255), nullable=True)
     acting_valid_until = Column(String(50), nullable=True)
     last_synced_at = Column(DateTime(timezone=True), default=utcnow)
-

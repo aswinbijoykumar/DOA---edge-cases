@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.database.models import User, DOARecord
-from app.core.dependencies import get_current_user, require_admin, require_approver_or_admin
+from app.core.dependencies import get_current_user, require_publisher, require_approver_or_admin
+from app.core.rbac import assert_can_view_change_request
 from app.schemas.schemas import (
     ChangeRequestCreate,
     ChangeRequestRead,
@@ -51,19 +52,17 @@ def list_change_requests(
     current_user: User = Depends(get_current_user)
 ):
     """
-    List change requests.
-    Admin sees all change requests.
-    Normal User sees only their submitted requests.
+    List change requests scoped strictly to current_user's role, persona, and domain:
+    - Oversight / Governance / Audit / Reviewer / Approver / Authority Owner: authorized domains
+    - Dept Owner / Process Owner: own requests + requests in their department/domain
+    - Front-End User: strictly own submitted requests
     """
-    is_elevated = (
-        current_user.role in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"] or
-        current_user.persona_type in ["APPROVER", "REVIEWER", "AUDIT_READONLY", "PROCESS_OWNER", "DEPT_OWNER", "AUTHORITY_OWNER"]
-    )
     crs = change_request_service.get_change_requests(
         db=db,
         status_filter=status_filter,
         user_id=current_user.id,
-        is_admin=is_elevated
+        is_admin=False,
+        current_user=current_user
     )
     return [format_cr_response(cr) for cr in crs]
 
@@ -77,13 +76,7 @@ def get_change_request(
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
         
-    is_elevated = (
-        current_user.role in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"] or
-        current_user.persona_type in ["APPROVER", "REVIEWER", "AUDIT_READONLY"]
-    )
-    if not is_elevated and cr.requester_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-        
+    assert_can_view_change_request(db, cr, current_user)
     return format_cr_response(cr)
 
 
@@ -102,13 +95,7 @@ def get_change_request_diff(
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
         
-    is_elevated = (
-        current_user.role in ["ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR", "GOVERNANCE_TEAM"] or
-        current_user.persona_type in ["APPROVER", "REVIEWER", "AUDIT_READONLY"]
-    )
-    if not is_elevated and cr.requester_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Forbidden")
-
+    assert_can_view_change_request(db, cr, current_user)
 
     current_val = json.loads(cr.current_value) if cr.current_value else {}
     proposed_val = json.loads(cr.proposed_value) if cr.proposed_value else {}
@@ -141,7 +128,7 @@ def create_change_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Create and submit a new Change Request (ADD, MODIFY, DELETE)."""
+    """Create and submit a new Change Request (ADD, MODIFY, DELETE) subject to RBAC & entity scoping."""
     cr = change_request_service.create_change_request(db, payload, current_user)
     return format_cr_response(cr)
 
@@ -152,7 +139,7 @@ def approve_change_request(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_approver_or_admin)
 ):
-    """Executive Approver and Admin approval of a Change Request."""
+    """Executive Approver and DOA Admin approval of a Change Request (subject to VAL-06 SoD)."""
     cr = change_request_service.approve_change_request(db, cr_id, decision, admin_user)
     return format_cr_response(cr)
 
@@ -163,7 +150,7 @@ def reject_change_request(
     db: Session = Depends(get_db),
     admin_user: User = Depends(require_approver_or_admin)
 ):
-    """Executive Approver and Admin rejection of a Change Request."""
+    """Executive Approver and DOA Admin rejection of a Change Request (subject to VAL-06 SoD)."""
     cr = change_request_service.reject_change_request(db, cr_id, decision, admin_user)
     return format_cr_response(cr)
 
@@ -171,12 +158,11 @@ def reject_change_request(
 def publish_change_request(
     cr_id: str,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(require_admin)
+    admin_user: User = Depends(require_publisher)
 ):
     """
-    Admin-only publishing of an APPROVED Change Request.
-    Enforces optimistic concurrency (409 Conflict if stale version).
-    Creates v(n+1) master version, sets v(n) to HISTORICAL.
+    Controlled publishing of an APPROVED Change Request by Publication Owner (DOA Admin / Governance Team).
+    Enforces VAL-06 SoD and optimistic concurrency (409 Conflict if stale version).
     """
     cr = change_request_service.publish_change_request(db, cr_id, admin_user)
     return format_cr_response(cr)

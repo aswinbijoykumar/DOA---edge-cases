@@ -305,8 +305,8 @@ export default function App() {
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const [backendError, setBackendError] = useState(null);
 
-  // Data State
-  const [doaRecords, setDoaRecords] = useState(initialDoaData);
+  // Data State (populated strictly from RBAC-scoped backend API)
+  const [doaRecords, setDoaRecords] = useState([]);
   const [backendSummary, setBackendSummary] = useState(null);
   const [userDashboardStats, setUserDashboardStats] = useState(null);
   const [govDashboardStats, setGovDashboardStats] = useState(null);
@@ -424,7 +424,10 @@ export default function App() {
         role: res.role,
         persona_type: res.persona_type || 'FRONTEND_USER',
         designation: res.designation || '',
-        department: res.department || ''
+        department: res.department || '',
+        entity_id: res.entity_id || 'ENT-BH-01',
+        allowed_domains: res.allowed_domains || '',
+        permissions: res.permissions || null
       };
       setCurrentUser(userObj);
       addToast(`Switched account to ${userObj.full_name} (${targetConfig.label})`, 'success');
@@ -436,7 +439,10 @@ export default function App() {
       loadDoaRecords();
       loadDashboardSummary();
       loadChangeRequests();
-      if (['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(userObj.role)) {
+      if (
+        ['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(userObj.role) ||
+        ['AUDIT_READONLY', 'REVIEWER'].includes(userObj.persona_type)
+      ) {
         loadAuditLogs();
       }
     } catch (err) {
@@ -463,7 +469,10 @@ export default function App() {
             role: profile.role,
             persona_type: profile.persona_type || storedUser.persona_type || 'FRONTEND_USER',
             designation: profile.designation || storedUser.designation || '',
-            department: profile.department || storedUser.department || ''
+            department: profile.department || storedUser.department || '',
+            entity_id: profile.entity_id || storedUser.entity_id || 'ENT-BH-01',
+            allowed_domains: profile.allowed_domains || storedUser.allowed_domains || '',
+            permissions: profile.permissions || storedUser.permissions || null
           });
         } catch (e) {
           console.warn("Session expired or invalid token:", e);
@@ -481,7 +490,7 @@ export default function App() {
     setIsLoadingDoa(true);
     try {
       const records = await api.getDoaRecords({ status: 'PUBLISHED' });
-      if (records && records.length > 0) {
+      if (Array.isArray(records)) {
         // Map backend snake_case to frontend camelCase while preserving all UI fields
         const mapped = records.map(r => ({
           ...r,
@@ -542,11 +551,60 @@ export default function App() {
     }
   };
 
-  // Fetch Audit Logs from Backend (Elevated roles & Audit Read-Only persona)
-  const isAuditRole = currentUser && (
+  // Fetch Audit Logs from Backend (Elevated roles, Audit Read-Only, & 2LoD Reviewer)
+  const isAuditRole = Boolean(currentUser && (
     ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) ||
-    currentUser.persona_type === 'AUDIT_READONLY'
+    ['AUDIT_READONLY', 'REVIEWER'].includes(currentUser.persona_type)
+  ));
+
+  // Centralized Frontend RBAC & ABAC Authority Helpers
+  const allowedDomains = useMemo(() => {
+    if (currentUser?.permissions?.allowed_domains?.length) {
+      return currentUser.permissions.allowed_domains;
+    }
+    const raw = (currentUser?.allowed_domains || '').trim();
+    if (raw && raw.toUpperCase() !== 'ALL') {
+      return raw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return ['Finance', 'Risk'];
+  }, [currentUser]);
+
+  const userEntityId = currentUser?.permissions?.entity_id || currentUser?.entity_id || 'ENT-BH-01';
+
+  const canPropose = Boolean(
+    currentUser && (
+      currentUser.permissions
+        ? currentUser.permissions.can_propose
+        : (
+          ['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser.role) ||
+          (currentUser.role === 'NORMAL_USER' && ['FRONTEND_USER', 'PROCESS_OWNER', 'DEPT_OWNER', 'AUTHORITY_OWNER'].includes(currentUser.persona_type))
+        )
+    )
   );
+
+  const canMutateRecord = (rec) => {
+    if (!canPropose || !rec) return false;
+    const recDomain = rec.parentFunction || rec.parent_function || rec.function || 'Finance';
+    if (!allowedDomains.some(d => recDomain.toLowerCase().includes(d.toLowerCase()))) {
+      return false;
+    }
+    const canWriteAll = Boolean(
+      currentUser?.permissions?.can_write_all_entities ||
+      ['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser?.role) ||
+      userEntityId === 'ALL'
+    );
+    if (canWriteAll) return true;
+    const recEntity = (rec.entity_id || 'ENT-BH-01').toUpperCase();
+    return recEntity === userEntityId.toUpperCase();
+  };
+
+  const isOwnChangeRequest = (cr) => {
+    if (!cr || !currentUser) return false;
+    return (
+      (cr.requester_email && currentUser.email && cr.requester_email.toLowerCase() === currentUser.email.toLowerCase()) ||
+      (cr.requester_id && currentUser.id && cr.requester_id === currentUser.id)
+    );
+  };
 
   const loadAuditLogs = async () => {
     if (!isAuditRole) return;
@@ -586,11 +644,22 @@ export default function App() {
   // Refresh active datasets on mount and role change
   useEffect(() => {
     if (currentUser) {
+      const defaultDomain = allowedDomains.length === 1 ? allowedDomains[0] : 'All';
+      setFilterParentFunction(defaultDomain);
+      const formDomain = allowedDomains[0] || 'Finance';
+      setFormData(prev => ({
+        ...prev,
+        parentFunction: formDomain,
+        businessLine: (functionTaxonomy[formDomain] || [])[0] || prev.businessLine
+      }));
       loadDoaRecords();
       loadDashboardSummary();
       loadRoleDashboardData();
       loadChangeRequests();
-      if (['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role)) {
+      if (
+        ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) ||
+        ['AUDIT_READONLY', 'REVIEWER'].includes(currentUser.persona_type)
+      ) {
         loadAuditLogs();
       }
     }
@@ -781,12 +850,12 @@ export default function App() {
     return groups;
   }, [filteredRecords]);
 
-  // Clear all filters
+  // Clear all filters within user's authorized domain scope
   const handleClearFilters = () => {
-    setFilterParentFunction('All');
+    setFilterParentFunction(allowedDomains.length === 1 ? allowedDomains[0] : 'All');
     setFilterChildBusinessLine('');
     setSearchQuery('');
-    addToast('Filters reset to show all records', 'info');
+    addToast('Filters reset to authorized scope', 'info');
   };
 
   // Handle Modify Select change
@@ -817,8 +886,9 @@ export default function App() {
       const res = await api.createChangeRequest({
         request_type: 'DELETE',
         doa_id: recordId,
-        department: target?.parentFunction || 'Risk',
+        department: target?.parentFunction || allowedDomains[0] || 'Finance',
         process: target?.businessLine || 'Governance Process',
+        entity_id: target?.entity_id || (userEntityId === 'ALL' ? 'ENT-BH-01' : userEntityId),
         rationale: 'Formal retirement request submitted via DoA governance matrix',
         base_version: target?.currentVersion || 1,
         proposed_value: {
@@ -827,14 +897,12 @@ export default function App() {
           comments: 'Scheduled for retirement'
         }
       });
-      addToast(`Deletion proposal #${res.id} submitted for Admin review & approval`, 'success');
+      addToast(`Deletion proposal #${res.id} submitted for review & approval`, 'success');
       loadChangeRequests();
       loadDashboardSummary();
     } catch (err) {
       console.error("Delete request error:", err);
-      // Fallback local update
-      setDoaRecords(prev => prev.filter(rec => rec.id !== recordId));
-      addToast(`Proposal to delete rule #${recordId} registered locally`, 'info');
+      addToast(`Delete proposal blocked: ${err.message || 'Unauthorized operation'}`, 'error');
     }
     if (selectedRecord && selectedRecord.id === recordId) {
       setSelectedRecord(null);
@@ -883,6 +951,7 @@ export default function App() {
           request_type: 'ADD',
           department: formData.parentFunction,
           process: formData.businessLine,
+          entity_id: userEntityId === 'ALL' ? 'ENT-BH-01' : userEntityId,
           rationale: formData.rationale || 'New governance rule proposal',
           base_version: 1,
           operational_impact: formData.operationalImpact || 'Operational impact verified against departmental framework.',
@@ -936,6 +1005,7 @@ export default function App() {
           doa_id: selectedModifyId,
           department: formData.parentFunction,
           process: formData.businessLine,
+          entity_id: targetRec?.entity_id || (userEntityId === 'ALL' ? 'ENT-BH-01' : userEntityId),
           rationale: formData.rationale || 'Policy revision request',
           base_version: targetRec?.currentVersion || 1,
           attachments: attachmentsList,
@@ -1266,33 +1336,41 @@ export default function App() {
                     Close
                   </button>
 
-                  {activeDiffCR.status === 'SUBMITTED' && (
+                  {isOwnChangeRequest(activeDiffCR) ? (
+                    <span className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
+                      VAL-06 SoD: Authored by You (Independent Approval Required)
+                    </span>
+                  ) : (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => handleRejectCR(activeDiffCR.id)}
-                        className="px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1"
-                      >
-                        <X className="h-3.5 w-3.5" /> Reject
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApproveCR(activeDiffCR.id)}
-                        className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-                      >
-                        <Check className="h-3.5 w-3.5" /> Approve
-                      </button>
-                    </>
-                  )}
+                      {activeDiffCR.status === 'SUBMITTED' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleRejectCR(activeDiffCR.id)}
+                            className="px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <X className="h-3.5 w-3.5" /> Reject
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApproveCR(activeDiffCR.id)}
+                            className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                          >
+                            <Check className="h-3.5 w-3.5" /> Approve
+                          </button>
+                        </>
+                      )}
 
-                  {activeDiffCR.status === 'APPROVED' && (
-                    <button
-                      type="button"
-                      onClick={() => handlePublishCR(activeDiffCR.id)}
-                      className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-                    >
-                      <Send className="h-3.5 w-3.5" /> Publish New Version
-                    </button>
+                      {activeDiffCR.status === 'APPROVED' && (
+                        <button
+                          type="button"
+                          onClick={() => handlePublishCR(activeDiffCR.id)}
+                          className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                        >
+                          <Send className="h-3.5 w-3.5" /> Publish New Version
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1617,7 +1695,7 @@ export default function App() {
                 <span className="text-xs bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full font-medium">
                   Showing <span className="font-bold text-teal-600">{filteredRecords.length}</span> of {doaRecords.length} records
                 </span>
-                {['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'].includes(currentUser.role) && (
+                {canPropose && (
                   <button
                     onClick={() => {
                       setActiveTab('request');
@@ -1694,9 +1772,9 @@ export default function App() {
                     }}
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700"
                   >
-                    <option value="All">All Functions</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Risk">Risk</option>
+                    {allowedDomains.length > 1 && <option value="All">All Functions</option>}
+                    {allowedDomains.includes('Finance') && <option value="Finance">Finance</option>}
+                    {allowedDomains.includes('Risk') && <option value="Risk">Risk</option>}
                   </select>
                 </div>
 
@@ -1830,6 +1908,11 @@ export default function App() {
                                       </span>
                                       
                                       <div className="flex items-center gap-2 mt-1">
+                                        {record.entity_id && record.entity_id !== 'ENT-BH-01' && (
+                                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-indigo-700 uppercase bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">
+                                            {record.entity_id}
+                                          </span>
+                                        )}
                                         {isReg && (
                                           <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-rose-600 uppercase bg-rose-50 border border-rose-200/40 px-1.5 py-0.2 rounded">
                                             Regulatory Mandated
@@ -1862,7 +1945,7 @@ export default function App() {
                                   {/* Actions: Role-based Operations */}
                                   <td className="py-3 px-4 text-center">
                                     <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                      {['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'].includes(currentUser.role) ? (
+                                      {canMutateRecord(record) ? (
                                         <>
                                           <button
                                             title="Propose Rule Modification"
@@ -1886,11 +1969,11 @@ export default function App() {
                                         </>
                                       ) : (
                                         <button
-                                          title="Inspect Governance Rule"
+                                          title="Read-Only Access (Inspect Governance Rule)"
                                           onClick={() => setSelectedRecord(record)}
-                                          className="p-1.5 rounded-lg text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-colors"
+                                          className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500 bg-slate-100 hover:text-teal-700 hover:bg-teal-50 transition-colors flex items-center gap-1"
                                         >
-                                          <Eye className="h-4 w-4" />
+                                          <Eye className="h-3.5 w-3.5" /> View
                                         </button>
                                       )}
                                     </div>
@@ -1909,8 +1992,8 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: NEW REQUEST (Formerly Request Change) */}
-        {activeTab === 'request' && (
+        {/* TAB 3: NEW REQUEST (Authorized Proposers Only) */}
+        {activeTab === 'request' && canPropose && (
           <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
             {/* Title Section */}
             <div className="flex items-center justify-between">
@@ -1942,9 +2025,10 @@ export default function App() {
                       setActionMode(mode.id);
                       setSelectedModifyId('');
                       if (mode.id === 'Add') {
+                        const defFunc = allowedDomains[0] || 'Finance';
                         setFormData({
-                          parentFunction: 'Finance',
-                          businessLine: 'Bank Capital and Capital Management',
+                          parentFunction: defFunc,
+                          businessLine: (functionTaxonomy[defFunc] || [])[0] || 'Bank Capital and Capital Management',
                           decisionArea: '',
                           keyNonKey: 'Key',
                           regulatory: 'N',
@@ -1984,9 +2068,9 @@ export default function App() {
                       className="w-full text-sm border border-slate-300 rounded-lg p-3 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium"
                     >
                       <option value="">-- Choose an existing decision row from DoA store --</option>
-                      {doaRecords.map(rec => (
+                      {doaRecords.filter(rec => canMutateRecord(rec)).map(rec => (
                         <option key={rec.id} value={rec.id}>
-                          #{rec.id} [{rec.parentFunction || rec.function}] [{rec.category || rec.businessLine}] - {rec.decisionArea.substring(0, 65)}...
+                          #{rec.id} [{rec.entity_id || 'ENT-BH-01'}] [{rec.parentFunction || rec.function}] - {(rec.decisionArea || '').substring(0, 60)}...
                         </option>
                       ))}
                     </select>
@@ -2045,8 +2129,8 @@ export default function App() {
                           required
                           className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                         >
-                          <option value="Risk">Risk</option>
-                          <option value="Finance">Finance</option>
+                          {allowedDomains.includes('Finance') && <option value="Finance">Finance</option>}
+                          {allowedDomains.includes('Risk') && <option value="Risk">Risk</option>}
                         </select>
                       </div>
 
@@ -2405,15 +2489,17 @@ export default function App() {
                           <div className="flex flex-col items-center justify-center gap-2">
                             <GitPullRequest className="h-8 w-8 text-slate-300" />
                             <span>No change requests submitted yet.</span>
-                            <button
-                              onClick={() => {
-                                setActiveTab('request');
-                                setActionMode('Add');
-                              }}
-                              className="text-xs text-teal-600 hover:text-teal-700 font-semibold underline mt-2"
-                            >
-                              Create a new change request
-                            </button>
+                            {canPropose && (
+                              <button
+                                onClick={() => {
+                                  setActiveTab('request');
+                                  setActionMode('Add');
+                                }}
+                                className="text-xs text-teal-600 hover:text-teal-700 font-semibold underline mt-2"
+                              >
+                                Create a new change request
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -2423,6 +2509,7 @@ export default function App() {
                         const isApproved = cr.status === 'APPROVED';
                         const isPublished = cr.status === 'PUBLISHED';
                         const isRejected = cr.status === 'REJECTED';
+                        const isOwnCR = isOwnChangeRequest(cr);
 
                         return (
                           <tr key={cr.id} className="hover:bg-slate-50/80 transition-colors">
@@ -2478,7 +2565,7 @@ export default function App() {
                                 </button>
 
                                 {/* Process Owner Endorsement Action */}
-                                {currentUser.persona_type === 'PROCESS_OWNER' && (isSubmitted || cr.status === 'PENDING_PROCESS_OWNER' || cr.status === 'UNDER_REVIEW') && (
+                                {!isOwnCR && currentUser.persona_type === 'PROCESS_OWNER' && (isSubmitted || cr.status === 'PENDING_PROCESS_OWNER' || cr.status === 'UNDER_REVIEW') && (
                                   <button
                                     type="button"
                                     onClick={async () => {
@@ -2501,7 +2588,7 @@ export default function App() {
                                 )}
 
                                 {/* Dept Owner Supervisory Signoff Action */}
-                                {currentUser.persona_type === 'DEPT_OWNER' && (cr.status === 'PENDING_DEPT_OWNER' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
+                                {!isOwnCR && currentUser.persona_type === 'DEPT_OWNER' && (cr.status === 'PENDING_DEPT_OWNER' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
                                   <button
                                     type="button"
                                     onClick={async () => {
@@ -2524,7 +2611,7 @@ export default function App() {
                                 )}
 
                                 {/* Authority Owner Charter Verification Action */}
-                                {currentUser.persona_type === 'AUTHORITY_OWNER' && (isSubmitted || cr.status === 'PENDING_DEPT_OWNER' || cr.status === 'UNDER_REVIEW') && (
+                                {!isOwnCR && currentUser.persona_type === 'AUTHORITY_OWNER' && (isSubmitted || cr.status === 'PENDING_DEPT_OWNER' || cr.status === 'UNDER_REVIEW') && (
                                   <button
                                     type="button"
                                     onClick={async () => {
@@ -2547,7 +2634,7 @@ export default function App() {
                                 )}
 
                                 {/* Reviewer 2LoD Recommendation Action */}
-                                {(currentUser.persona_type === 'REVIEWER' || currentUser.role === 'GOVERNANCE_TEAM') && (cr.status === 'PENDING_2LOD_REVIEW' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
+                                {!isOwnCR && (currentUser.persona_type === 'REVIEWER' || currentUser.role === 'GOVERNANCE_TEAM') && (cr.status === 'PENDING_2LOD_REVIEW' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
                                   <button
                                     type="button"
                                     onClick={async () => {
@@ -2570,7 +2657,7 @@ export default function App() {
                                 )}
 
                                 {/* Admin / Approver Action Buttons */}
-                                {(['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) || currentUser.persona_type === 'APPROVER') && (isSubmitted || cr.status === 'UNDER_REVIEW' || cr.status === 'PENDING_2LOD_REVIEW' || cr.status === 'PENDING_DEPT_OWNER') && (
+                                {!isOwnCR && (['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser.role) || (currentUser.role === 'NORMAL_USER' && currentUser.persona_type === 'APPROVER')) && (isSubmitted || cr.status === 'UNDER_REVIEW' || cr.status === 'PENDING_2LOD_REVIEW' || cr.status === 'PENDING_DEPT_OWNER') && (
                                   <>
                                     <button
                                       type="button"
@@ -2591,8 +2678,8 @@ export default function App() {
                                   </>
                                 )}
 
-                                {/* Requestor Self-Withdrawal Button */}
-                                {currentUser.persona_type === 'FRONTEND_USER' && isSubmitted && cr.requester_email === currentUser.email && (
+                                {/* Proposer Self-Withdrawal Button */}
+                                {canPropose && isSubmitted && isOwnCR && (
                                   <button
                                     type="button"
                                     onClick={async () => {
@@ -2613,7 +2700,7 @@ export default function App() {
                                   </button>
                                 )}
 
-                                {['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) && isApproved && (
+                                {!isOwnCR && ['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && isApproved && (
                                   <button
                                     type="button"
                                     onClick={() => handlePublishCR(cr.id)}
@@ -2622,6 +2709,12 @@ export default function App() {
                                   >
                                     <Send className="h-3 w-3" /> Publish
                                   </button>
+                                )}
+
+                                {isOwnCR && !isPublished && !isRejected && (
+                                  <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-800 text-[10px] font-bold" title="VAL-06 Segregation of Duties: Proposers cannot endorse, approve, or publish their own Change Request">
+                                    SoD: Own CR
+                                  </span>
                                 )}
 
 
@@ -2967,7 +3060,7 @@ export default function App() {
 
               {/* Footer with Role-based Actions */}
               <div className="p-4 border-t border-slate-100 flex gap-3 bg-slate-50">
-                {['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'].includes(currentUser.role) ? (
+                {canMutateRecord(selectedRecord) ? (
                   <>
                     <button
                       onClick={() => {
@@ -3281,7 +3374,7 @@ export default function App() {
                   Close
                 </button>
 
-                {(['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) || currentUser.persona_type === 'APPROVER') && activeDiffCR.status === 'SUBMITTED' && (
+                {!isOwnChangeRequest(activeDiffCR) && (['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser.role) || (currentUser.role === 'NORMAL_USER' && currentUser.persona_type === 'APPROVER')) && activeDiffCR.status === 'SUBMITTED' && (
                   <>
                     <button
                       type="button"
@@ -3300,7 +3393,7 @@ export default function App() {
                   </>
                 )}
 
-                {['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) && activeDiffCR.status === 'APPROVED' && (
+                {!isOwnChangeRequest(activeDiffCR) && ['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && activeDiffCR.status === 'APPROVED' && (
                   <button
                     type="button"
                     onClick={() => handlePublishCR(activeDiffCR.id)}

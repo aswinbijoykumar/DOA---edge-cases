@@ -311,7 +311,7 @@ export default function DoaAdminDashboard({
       };
 
       if (recordModalMode === 'create') {
-        const res = await api.createChangeRequest({
+        await api.createChangeRequest({
           request_type: 'ADD',
           department: recordForm.parent_function,
           process: recordForm.business_line,
@@ -319,10 +319,8 @@ export default function DoaAdminDashboard({
           base_version: 1,
           proposed_value: proposedPayload
         });
-        // Auto approve if DOA Admin
-        await api.approveChangeRequest(res.id, 'Executive pre-approved by DOA Administrator');
       } else {
-        const res = await api.createChangeRequest({
+        await api.createChangeRequest({
           request_type: 'MODIFY',
           doa_id: recordForm.id,
           department: recordForm.parent_function,
@@ -331,7 +329,6 @@ export default function DoaAdminDashboard({
           base_version: 1,
           proposed_value: proposedPayload
         });
-        await api.approveChangeRequest(res.id, 'Executive pre-approved by DOA Administrator');
       }
 
       setShowRecordModal(false);
@@ -349,16 +346,17 @@ export default function DoaAdminDashboard({
       return;
     }
     try {
-      const res = await api.createChangeRequest({
+      const targetRec = doaRecords.find(r => r.id === recordId);
+      await api.createChangeRequest({
         request_type: 'DELETE',
         doa_id: recordId,
-        department: 'Governance',
-        process: 'Record Retirement',
+        department: targetRec?.parentFunction || targetRec?.parent_function || 'Finance',
+        process: targetRec?.businessLine || targetRec?.business_line || 'Record Retirement',
+        entity_id: targetRec?.entity_id || 'ENT-BH-01',
         rationale: 'Retired and archived by DOA Administrator',
-        base_version: 1,
+        base_version: targetRec?.currentVersion || targetRec?.current_version || 1,
         proposed_value: { id: recordId, status: 'ARCHIVED', comments: 'Administrative retirement' }
       });
-      await api.approveChangeRequest(res.id, 'Administrative retirement approval');
       if (onRefreshData) onRefreshData();
     } catch (err) {
       alert(`Retire action failed: ${err.message}`);
@@ -1274,40 +1272,48 @@ export default function DoaAdminDashboard({
                             <span>Side-by-Side Diff</span>
                           </button>
 
-                          {cr.status === 'SUBMITTED' && (
+                          {(cr.requester_email || '').toLowerCase() === (currentUser?.email || '').toLowerCase() ? (
+                            <span className="px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[11px] font-bold">
+                              VAL-06 SoD: Own Proposal (Requires 2nd Approver)
+                            </span>
+                          ) : (
                             <>
-                              <button
-                                onClick={() => setClarificationModal({ open: true, crId: cr.id, comment: '' })}
-                                className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-                              >
-                                <HelpCircle className="h-3.5 w-3.5" />
-                                <span>Clarification</span>
-                              </button>
-                              <button
-                                onClick={() => onApproveCR(cr.id)}
-                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/20"
-                              >
-                                <Check className="h-3.5 w-3.5" />
-                                <span>Approve</span>
-                              </button>
-                              <button
-                                onClick={() => onRejectCR(cr.id)}
-                                className="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                                <span>Reject</span>
-                              </button>
-                            </>
-                          )}
+                              {cr.status === 'SUBMITTED' && (
+                                <>
+                                  <button
+                                    onClick={() => setClarificationModal({ open: true, crId: cr.id, comment: '' })}
+                                    className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                                  >
+                                    <HelpCircle className="h-3.5 w-3.5" />
+                                    <span>Clarification</span>
+                                  </button>
+                                  <button
+                                    onClick={() => onApproveCR(cr.id)}
+                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+                                  >
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Approve</span>
+                                  </button>
+                                  <button
+                                    onClick={() => onRejectCR(cr.id)}
+                                    className="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              )}
 
-                          {cr.status === 'APPROVED' && (
-                            <button
-                              onClick={() => onPublishCR(cr.id)}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              <span>Publish Master (v1 ➔ v2)</span>
-                            </button>
+                              {cr.status === 'APPROVED' && (
+                                <button
+                                  onClick={() => onPublishCR(cr.id)}
+                                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                                >
+                                  <Send className="h-3.5 w-3.5" />
+                                  <span>Publish Master (v1 ➔ v2)</span>
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -1513,13 +1519,19 @@ export default function DoaAdminDashboard({
                             >
                               Review Diff
                             </button>
-                            <button
-                              onClick={() => onPublishCR(cr.id)}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              <span>Publish New Version</span>
-                            </button>
+                            {(cr.requester_email || '').toLowerCase() === (currentUser?.email || '').toLowerCase() ? (
+                              <span className="px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[11px] font-bold">
+                                VAL-06 SoD: Requires Independent Publisher
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => onPublishCR(cr.id)}
+                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                <span>Publish New Version</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
