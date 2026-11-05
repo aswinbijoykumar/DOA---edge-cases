@@ -107,7 +107,7 @@ def seed_database():
                 "allowed_domains": "ALL",
                 "reports_to": "GCEO"
             },
-            # 6. Front-End User (Commercial / Finance Business Line Analyst - Bahrain)
+            # 6. Requester (Commercial / Finance Business Line Analyst - Bahrain)
             {
                 "email": "user@doa.local",
                 "password": "User@123",
@@ -553,7 +553,7 @@ def seed_database():
                 "department": "Commercial Operations",
                 "entity_id": "ENT-BH-01",
                 "process": "Commercial Line Operations",
-                "rationale": "Front-End User request: Adjust commercial operational discount cap for corporate account executives from 5% to 8% to match regional benchmark.",
+                "rationale": "Requester request: Adjust commercial operational discount cap for corporate account executives from 5% to 8% to match regional benchmark.",
                 "base_version": 1,
                 "current_value": json.dumps({
                     "id": "248",

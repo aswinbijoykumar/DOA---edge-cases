@@ -36,9 +36,10 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
-import ProposalValidatorModal from '../supplementary/ProposalValidatorModal';
+
 import ExceptionRequestModal from '../supplementary/ExceptionRequestModal';
 import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
+import GovernanceKpiCardsView from './GovernanceKpiCardsView';
 
 
 export default function NormalUserDashboard({ 
@@ -63,7 +64,10 @@ export default function NormalUserDashboard({
 
   const initialDesignation = PERSONA_TO_DESIGNATION[currentUser?.persona_type] || 'ceo';
 
+  const isFrontendUser = currentUser?.persona_type === 'FRONTEND_USER';
+
   const [activeSubTab, setActiveSubTab] = useState(
+    isFrontendUser ? 'designations' :
     currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'designations' :
     currentUser?.persona_type === 'PROCESS_OWNER' ? 'hr_integration' :
     currentUser?.persona_type === 'AUDIT_READONLY' ? 'reports' : 'overview'
@@ -75,8 +79,19 @@ export default function NormalUserDashboard({
   const [blockedValidationData, setBlockedValidationData] = useState(null);
 
 
-  // Designation Matrix State (Functionality 5)
+  // Designation Matrix & Interactive Governance KPI Cards State
   const [selectedDesignationKey, setSelectedDesignationKey] = useState(initialDesignation);
+  const [activeGovernanceCategory, setActiveGovernanceCategory] = useState(
+    currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'board_committee' :
+    currentUser?.persona_type === 'DEPT_OWNER' ? 'function' : 'c_level'
+  );
+  const [selectedGovernanceOptions, setSelectedGovernanceOptions] = useState({
+    function: { id: 'ops_logistics', label: 'Operations & Logistics', badge: '96% Compliant' },
+    board_committee: { id: 'all_committees', label: 'All Standing Committees', badge: '6 Standing' },
+    shareholder: { id: 'all_shareholders', label: 'All Shareholder Mandates', badge: '100% Voting' },
+    c_level: { id: 'exec_committee_all', label: 'Exec Committee (All Portfolios)', badge: '7 Officers' },
+    group_wide: { id: 'matrix_4_2', label: 'Matrix 4.2 Core Delegations', badge: 'Master Live' }
+  });
   const [designationMatrixData, setDesignationMatrixData] = useState(null);
   const [isLoadingDesignation, setIsLoadingDesignation] = useState(false);
 
@@ -160,9 +175,9 @@ export default function NormalUserDashboard({
       ]
     },
     FRONTEND_USER: {
-      badge: 'Front-End User',
+      badge: 'Requester',
       color: 'border-amber-500/30 bg-amber-500/20 text-amber-300',
-      greeting: 'Business Line Analyst',
+      greeting: 'Business Line Requester',
       description: 'Search, filter, and inspect approved DOA rules relevant to your department or business line, and raise change proposals where necessary.',
       responsibilities: [
         'Search and filter approved DOA master rules by department, function, and keyword',
@@ -188,17 +203,29 @@ export default function NormalUserDashboard({
   const personaKey = currentUser?.persona_type || 'FRONTEND_USER';
   const currentPersona = PERSONA_CONFIGS[personaKey] || PERSONA_CONFIGS.FRONTEND_USER;
 
-  // Load Designation Matrix
-  const fetchDesignationMatrix = async (key) => {
+  // Load Designation Matrix & Governance KPI Cards
+  const fetchDesignationMatrix = async (params) => {
     setIsLoadingDesignation(true);
     try {
-      const res = await api.getDesignationMatrix(key);
+      const res = await api.getDesignationMatrix(params);
       setDesignationMatrixData(res);
     } catch (err) {
       console.error('Failed to load designation matrix:', err);
     } finally {
       setIsLoadingDesignation(false);
     }
+  };
+
+  const handleSelectGovernanceCategory = (categoryId, option) => {
+    setActiveGovernanceCategory(categoryId);
+    setSelectedGovernanceOptions(prev => ({
+      ...prev,
+      [categoryId]: option
+    }));
+    fetchDesignationMatrix({
+      category_id: categoryId,
+      option_id: option.id
+    });
   };
 
   // Load Management Report (Functionality 7)
@@ -305,7 +332,11 @@ export default function NormalUserDashboard({
 
   useEffect(() => {
     if (activeSubTab === 'designations') {
-      fetchDesignationMatrix(selectedDesignationKey);
+      const currentOpt = selectedGovernanceOptions[activeGovernanceCategory];
+      fetchDesignationMatrix({
+        category_id: activeGovernanceCategory,
+        option_id: currentOpt?.id || 'all'
+      });
     } else if (activeSubTab === 'reports') {
       const activeReportObj = ALL_ACCESSIBLE_REPORTS.find(r => r.key === selectedReportType) || ALL_ACCESSIBLE_REPORTS[0];
       if (activeReportObj) {
@@ -327,40 +358,17 @@ export default function NormalUserDashboard({
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`px-3 py-1 border rounded-full text-[10px] font-extrabold tracking-widest uppercase ${currentPersona.color}`}>
-                {currentPersona.badge}
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {currentUser?.designation || 'Business Stakeholder'} &bull; {currentUser?.department || 'Operations'}
-              </span>
-              <span className="px-2.5 py-0.5 bg-teal-500/20 border border-teal-400/30 rounded-full text-[10px] font-bold text-teal-200">
-                Scope: {scopeDomainsLabel} &bull; {scopeEntityLabel}
-              </span>
-            </div>
-            
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
               <span>Welcome back, {currentUser?.full_name || 'Stakeholder'}</span>
               <Sparkles className="h-5 w-5 text-teal-400" />
             </h2>
             
             <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
-              {currentPersona.description}
+              What would you like to get started with?
             </p>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-shrink-0">
-            {canPropose && (
-              <button
-                onClick={() => setShowValidatorModal(true)}
-                className="px-4 py-3 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
-                title="Test proposal against VAL-01 to VAL-12 hard-stop rules"
-              >
-                <Sparkles className="h-4 w-4 text-indigo-300" />
-                <span>Validate Proposal (VAL-01..12)</span>
-              </button>
-            )}
-          </div>
+
         </div>
 
         {/* Dedicated Navigation Button Row for All Normal User Personas */}
@@ -485,8 +493,8 @@ export default function NormalUserDashboard({
             Workspaces:
           </span>
           {[
-            { id: 'overview', label: 'Persona Workspace', icon: Briefcase },
-            { id: 'designations', label: 'Designation-Wise Authorities', icon: Award, highlight: true },
+            ...(!isFrontendUser ? [{ id: 'overview', label: 'Persona Workspace', icon: Briefcase }] : []),
+            { id: 'designations', label: 'Designation View', icon: Award, highlight: true },
             { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true },
             { id: 'hr_integration', label: 'HR Org & Acting Authorities', icon: Users, highlight: true }
           ].map((tab) => {
@@ -516,7 +524,7 @@ export default function NormalUserDashboard({
       {/* ========================================================================= */}
       {/* SUB-VIEW 1: OVERVIEW & PERSONAL STATS */}
       {/* ========================================================================= */}
-      {activeSubTab === 'overview' && (
+      {!isFrontendUser && activeSubTab === 'overview' && (
         <div className="space-y-7">
           {/* Key KPI Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -714,190 +722,18 @@ export default function NormalUserDashboard({
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-VIEW 2: FUNCTIONALITY 5 - DESIGNATION-WISE AUTHORITIES UNDER ONE TAB */}
+      {/* SUB-VIEW 2: DESIGNATION VIEW - INTERACTIVE GOVERNANCE KPI CARDS & DROPDOWNS */}
       {/* ========================================================================= */}
       {activeSubTab === 'designations' && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 rounded text-[10px] font-extrabold uppercase">
-                  Functionality 5
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  Designation-Wise Authorities Matrix
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                View all authorities for a specific executive designation or governance body under one consolidated table, highlighting whether they Approve (A), Endorse (E), Recommend (R), or Receive Notification (N).
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-xl text-xs">
-                <Award className="h-4 w-4 text-teal-700" />
-                <span className="text-slate-600">Your Incumbent Role:</span>
-                <strong className="text-teal-900 font-extrabold">{currentUser?.designation || 'Stakeholder'}</strong>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
-                  View Designation:
-                </label>
-                <select
-                  value={selectedDesignationKey}
-                  onChange={(e) => setSelectedDesignationKey(e.target.value)}
-                  className="px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer shadow-2xs"
-                >
-                  {DESIGNATIONS_LIST.map(d => (
-                    <option key={d.key} value={d.key}>
-                      {d.label} {d.key === initialDesignation ? '(Your Role)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Persona-Specific Authority Banner */}
-          {selectedDesignationKey === initialDesignation && (
-            <div className="p-4 bg-teal-900 text-white rounded-2xl flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-teal-500/30 rounded-xl">
-                  <Award className="h-5 w-5 text-teal-300" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs tracking-wider uppercase text-teal-300">
-                    Showing authorities specifically delegated to YOUR designation
-                  </h4>
-                  <p className="text-xs text-slate-200 mt-0.5">
-                    These are the rules where you possess explicit signing, endorsement, or approval powers.
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-teal-800 border border-teal-700 rounded-xl text-xs font-mono font-bold text-teal-200">
-                Incumbent: {currentUser?.full_name}
-              </span>
-            </div>
-          )}
-
-          {/* Action Code Legend */}
-          <div className="flex flex-wrap items-center gap-4 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-            <span className="font-extrabold text-slate-500 uppercase text-[10px]">Action Legend:</span>
-            <span className="flex items-center gap-1.5 font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-600" />
-              Approve (A / A1 / A2)
-            </span>
-            <span className="flex items-center gap-1.5 font-bold text-blue-800 bg-blue-100/70 border border-blue-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-blue-600" />
-              Endorse (E / E1 / E2)
-            </span>
-            <span className="flex items-center gap-1.5 font-bold text-amber-800 bg-amber-100/70 border border-amber-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-amber-600" />
-              Recommend (R / R1)
-            </span>
-            <span className="flex items-center gap-1.5 font-bold text-purple-800 bg-purple-100/70 border border-purple-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-purple-600" />
-              Notification (N)
-            </span>
-          </div>
-
-          {/* Designation Authorities Table */}
-          {isLoadingDesignation ? (
-            <div className="py-16 text-center text-slate-400">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal-600 mb-2" />
-              <p className="text-xs font-semibold">Filtering designation authorities...</p>
-            </div>
-          ) : !designationMatrixData || designationMatrixData.authorities.length === 0 ? (
-            <div className="py-16 text-center text-slate-400">
-              <Award className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-              <p className="text-xs font-semibold">No direct authorities mapped to this designation.</p>
-            </div>
-          ) : (
-            <div className="border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
-              <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between text-xs">
-                <span className="font-extrabold text-slate-700">
-                  Total Active Authorities for {DESIGNATIONS_LIST.find(d => d.key === selectedDesignationKey)?.label}: <span className="text-teal-700">{designationMatrixData.total_authorities}</span>
-                </span>
-                <span className="text-slate-400 text-[11px]">Live Database &bull; Active Version 1</span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
-                    <tr>
-                      <th className="py-3 px-4">Ref #</th>
-                      <th className="py-3 px-4">Function &bull; Business Line</th>
-                      <th className="py-3 px-6">Decision Area / Authority Mandate</th>
-                      <th className="py-3 px-4 text-center">Specific Action</th>
-                      <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
-                      <th className="py-3 px-4">Composite Flow</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {designationMatrixData.authorities.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                          #{item.id}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                            item.function === 'Risk' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-teal-50 text-teal-700 border border-teal-200'
-                          }`}>
-                            {item.function}
-                          </span>
-                          <div className="text-[11px] text-slate-600 font-semibold mt-1 truncate max-w-[180px]">
-                            {item.business_line}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-6">
-                          <p className="font-bold text-slate-800 leading-snug">
-                            {item.decision_area}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-[10px] font-semibold px-2 py-0.2 rounded ${
-                              item.key_non_key === 'Key' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-600'
-                            }`}>
-                              {item.key_non_key} Decision
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-block px-3 py-1 rounded-lg font-black text-xs border ${
-                            item.action_type === 'APPROVE' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
-                            item.action_type === 'ENDORSE' ? 'bg-blue-100 text-blue-900 border-blue-300' :
-                            item.action_type === 'RECOMMEND' ? 'bg-amber-100 text-amber-900 border-amber-300' :
-                            'bg-purple-100 text-purple-900 border-purple-300'
-                          }`}>
-                            {item.authority_code} ({item.action_type})
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="space-y-1">
-                            {item.policy_reference && (
-                              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">
-                                <BookOpen className="h-3 w-3 text-teal-600" />
-                                <span className="truncate max-w-[200px]">{item.policy_reference}</span>
-                              </div>
-                            )}
-                            {item.regulatory_requirement && (
-                              <div className="flex items-center gap-1.5 text-[10px] text-rose-700 font-medium">
-                                <ShieldCheck className="h-3 w-3 text-rose-500" />
-                                <span className="truncate max-w-[200px]">{item.regulatory_requirement}</span>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-teal-900 font-bold bg-teal-50/40 rounded">
-                          {item.composite_authority}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+        <div className="space-y-6 animate-fade-in">
+          <GovernanceKpiCardsView
+            currentUser={currentUser}
+            activeCategoryId={activeGovernanceCategory}
+            selectedOptionsMap={selectedGovernanceOptions}
+            onSelectCategory={handleSelectGovernanceCategory}
+            matrixData={designationMatrixData}
+            isLoading={isLoadingDesignation}
+          />
         </div>
       )}
 
@@ -1256,22 +1092,7 @@ export default function NormalUserDashboard({
         </div>
       )}
 
-      {/* Supplementary BRD Validator Modal */}
-      <ProposalValidatorModal
-        isOpen={showValidatorModal}
-        onClose={() => setShowValidatorModal(false)}
-        onProceedWithException={(formData, res) => {
-          setShowValidatorModal(false);
-          setBlockedValidationData({
-            decision_area_title: formData.decision_area,
-            entity: formData.entity,
-            deviated_validation_rules: res.hard_stops?.map(h => h.ref) || ['VAL-06'],
-            monetary_amount: formData.monetary_amount,
-            currency: formData.currency
-          });
-          setShowExceptionModal(true);
-        }}
-      />
+
 
       {/* Supplementary BRD Exception Modal */}
       <ExceptionRequestModal

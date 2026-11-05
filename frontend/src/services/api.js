@@ -97,9 +97,17 @@ export const api = {
     removeStoredToken();
   },
 
-  // Functionality 5: Designation-wise authorities
-  async getDesignationMatrix(designationKey = 'ceo') {
-    return await request(`/user/designation-matrix?designation_key=${encodeURIComponent(designationKey)}`);
+  // Functionality 5: Designation-wise authorities & Governance KPI Categories
+  async getDesignationMatrix(params = 'ceo') {
+    if (typeof params === 'string') {
+      return await request(`/user/designation-matrix?designation_key=${encodeURIComponent(params)}`);
+    }
+    const query = new URLSearchParams();
+    if (params.designation_key) query.append('designation_key', params.designation_key);
+    if (params.category_id) query.append('category_id', params.category_id);
+    if (params.option_id) query.append('option_id', params.option_id);
+    const queryString = query.toString();
+    return await request(`/user/designation-matrix${queryString ? `?${queryString}` : ''}`);
   },
 
   // Functionality 7: Pre-set Management Reports

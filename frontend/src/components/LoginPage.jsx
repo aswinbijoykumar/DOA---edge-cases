@@ -139,7 +139,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'frontend_user',
-      title: 'Front-End User',
+      title: 'Requester',
       name: 'Aiden Cole',
       designation: 'Business Line Analyst',
       dept: 'Commercial Operations',

@@ -1932,27 +1932,18 @@ export default function App() {
                                   <td className="py-3 px-4 text-center">
                                     <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                       {canMutateRecord(record) ? (
-                                        <>
-                                          <button
-                                            title="Propose Rule Modification"
-                                            onClick={() => {
-                                              setActionMode('Modify');
-                                              setSelectedModifyId(record.id);
-                                              handleModifySelect(record.id);
-                                              setActiveTab('request');
-                                            }}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                          >
-                                            <Edit3 className="h-4 w-4" />
-                                          </button>
-                                          <button
-                                            title="Propose Rule Deletion"
-                                            onClick={() => setDeleteModalRecord(record)}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </button>
-                                        </>
+                                        <button
+                                          title="Propose Rule Modification"
+                                          onClick={() => {
+                                            setActionMode('Modify');
+                                            setSelectedModifyId(record.id);
+                                            handleModifySelect(record.id);
+                                            setActiveTab('request');
+                                          }}
+                                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                        >
+                                          <Edit3 className="h-4 w-4" />
+                                        </button>
                                       ) : (
                                         <button
                                           title="Read-Only Access (Inspect Governance Rule)"
@@ -3060,16 +3051,18 @@ export default function App() {
                     >
                       <Edit3 className="h-4 w-4" /> Edit Authority
                     </button>
-                    <button
-                      onClick={() => {
-                        const rec = selectedRecord;
-                        setSelectedRecord(null);
-                        setDeleteModalRecord(rec);
-                      }}
-                      className="py-2.5 px-4 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete Proposal
-                    </button>
+                    {['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser?.role) && (
+                      <button
+                        onClick={() => {
+                          const rec = selectedRecord;
+                          setSelectedRecord(null);
+                          setDeleteModalRecord(rec);
+                        }}
+                        className="py-2.5 px-4 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete Proposal
+                      </button>
+                    )}
                   </>
                 ) : (
                   <button
