@@ -54,6 +54,12 @@ import {
 } from 'lucide-react';
 
 
+// Helper to format authority chains with leftward flow arrows
+function formatAuthorityFlow(str) {
+  if (!str) return 'A';
+  return str.replace(/[➔→]|->/g, '←');
+}
+
 // Custom Dropdown with Radio Buttons inside each option
 function RadioDropdown({
   selectedValue,
@@ -1674,7 +1680,7 @@ export default function App() {
               <div>
                 <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Delegation Matrix Explorer</h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  Search, filter, and inspect finance &amp; risk authority layers. Click any row to inspect the full governance breakdown.
+                  Explore and filter authorities across the Delegation of Authority framework
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -1808,7 +1814,7 @@ export default function App() {
                       <th className="py-3.5 px-4 font-semibold w-24 border-b border-slate-700">Function</th>
                       <th className="py-3.5 px-4 font-semibold w-20 border-b border-slate-700">Type</th>
                       <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
-                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Proposed Authority Chain</th>
+                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Authority Chain</th>
                       <th className="py-3.5 px-4 font-semibold text-center w-24 border-b border-slate-700">Actions</th>
                     </tr>
                   </thead>
@@ -1918,12 +1924,12 @@ export default function App() {
                                     </div>
                                   </td>
 
-                                  {/* Proposed Authority Chain */}
+                                  {/* Authority Chain */}
                                   <td className="py-3 px-4">
                                     <div className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-                                      <span className="text-teal-600 flex-shrink-0 font-bold">↳</span>
-                                      <span className="truncate" title={record.compositeAuthority || record.shareholders || record.boardOfDirectors}>
-                                        {record.compositeAuthority || record.shareholders || record.boardOfDirectors || 'A'}
+                                      <span className="text-teal-600 flex-shrink-0 font-bold">↲</span>
+                                      <span className="truncate" title={formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors)}>
+                                        {formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors || 'A')}
                                       </span>
                                     </div>
                                   </td>
@@ -2942,7 +2948,7 @@ export default function App() {
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Composite Delegation Flow</h4>
                   <div className="p-3.5 bg-teal-50/60 border border-teal-200/60 rounded-xl text-xs font-bold text-teal-900 font-mono">
-                    {selectedRecord.compositeAuthority || selectedRecord.composite_authority || selectedRecord.shareholders || selectedRecord.boardOfDirectors || 'A'}
+                    {formatAuthorityFlow(selectedRecord.compositeAuthority || selectedRecord.composite_authority || selectedRecord.shareholders || selectedRecord.boardOfDirectors || 'A')}
                   </div>
                 </div>
 
