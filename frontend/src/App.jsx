@@ -12,6 +12,7 @@ import DoaAdminDashboard from './components/dashboards/DoaAdminDashboard';
 import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
 import ChatbotWidget from './components/ChatbotWidget';
 import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflowInbox';
+import nexusLogo from './assets/nexus-logo.jpg';
 import { 
   Search, 
   Plus, 
@@ -1463,24 +1464,16 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-4">
             
-            {/* Protiviti-Inspired Branding */}
+            {/* DoA Nexus Branding */}
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 bg-teal-600 rounded-lg flex items-center justify-center text-white font-extrabold text-lg tracking-tighter shadow-md">
-                P
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-xl tracking-tight text-slate-800">protiviti</span>
-                  <div className="h-1.5 w-1.5 bg-rose-600 rounded-full mt-2"></div>
-                </div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-                  Risk &amp; Internal Audit
-                </div>
-              </div>
-              <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden sm:block"></div>
+              <img 
+                src={nexusLogo} 
+                alt="DoA Nexus" 
+                className="h-9 w-9 object-contain rounded-lg shadow-xs" 
+              />
+              <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-slate-800 tracking-tight">DoA Management Tool</h1>
-                <p className="text-xs text-slate-500">Delegation of Authority | Risk &amp; Finance Governance</p>
+                <h1 className="text-lg font-bold text-slate-800 tracking-tight">DoA Nexus</h1>
               </div>
             </div>
 
@@ -1547,18 +1540,11 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200/80 text-xs font-semibold text-slate-700">
                   <User className="h-3.5 w-3.5 text-teal-600" />
-                  <div className="text-left">
-                    <span className="font-bold text-slate-800 block text-xs leading-none">
-                      {currentUser.full_name || 'User'}
-                    </span>
-                    {currentUser.designation && (
-                      <span className="text-[10px] text-teal-700 font-semibold block leading-tight mt-0.5">
-                        {currentUser.designation}
-                      </span>
-                    )}
-                  </div>
+                  <span className="font-bold text-slate-800 text-xs">
+                    {currentUser.full_name || 'User'}
+                  </span>
                   <span className={`ml-1 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${ROLE_CONFIGS[currentUser.role]?.badgeClass || 'bg-slate-200 text-slate-700'}`}>
-                    {currentUser.persona_type ? currentUser.persona_type.replace('_', ' ') : (ROLE_CONFIGS[currentUser.role]?.label || currentUser.role)}
+                    {currentUser.designation || (currentUser.persona_type ? currentUser.persona_type.replace('_', ' ') : (ROLE_CONFIGS[currentUser.role]?.label || currentUser.role))}
                   </span>
                 </div>
 
@@ -3519,21 +3505,13 @@ export default function App() {
       )}
 
       {/* Footer Branding */}
-      <footer className="bg-slate-950 text-slate-400 text-xs py-6 border-t border-slate-900 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-200 text-sm">protiviti</span>
-            <div className="h-1 w-1 bg-rose-600 rounded-full mt-1.5"></div>
-            <span className="text-[10px] text-slate-500 font-medium">DoA Governance Matrix v2.0</span>
-          </div>
-          <div className="flex gap-4 text-[11px]">
-            <span className="hover:text-slate-300 cursor-pointer">Risk Governance</span>
-            <span className="hover:text-slate-300 cursor-pointer">Finance Limits</span>
-            <span className="hover:text-slate-300 cursor-pointer">Internal Audit Standard</span>
-          </div>
-          <p className="text-[10px] text-slate-500">
-            &copy; 2026 Protiviti Inc. All rights reserved. Confidential governance prototype.
-          </p>
+      <footer className="bg-white border-t border-slate-200 shadow-sm mt-auto py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
+          <img 
+            src={nexusLogo} 
+            alt="DoA Nexus" 
+            className="h-8 w-8 object-contain rounded shadow-2xs" 
+          />
         </div>
       </footer>
     </div>

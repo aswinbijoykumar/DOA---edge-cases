@@ -141,7 +141,7 @@ export default function LoginPage({ onLoginSuccess }) {
       id: 'frontend_user',
       title: 'Front-End User',
       name: 'Aiden Cole',
-      designation: 'Commercial Analyst',
+      designation: 'Business Line Analyst',
       dept: 'Commercial Operations',
       scope: 'Finance Only • Own CRs Only',
       email: 'user@doa.local',
