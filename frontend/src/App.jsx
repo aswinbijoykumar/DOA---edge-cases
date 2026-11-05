@@ -13,6 +13,7 @@ import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
 import ChatbotWidget from './components/ChatbotWidget';
 import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflowInbox';
 import nexusLogo from './assets/nexus-logo.jpg';
+import doaNexusBrand from './assets/doa-nexus-brand.png';
 import { 
   Search, 
   Plus, 
@@ -1471,16 +1472,16 @@ export default function App() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-4">
             
             {/* DoA Nexus Branding */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center">
               <img 
-                src={nexusLogo} 
-                alt="DoA Nexus" 
-                className="h-9 w-9 object-contain rounded-lg shadow-xs" 
+                src={doaNexusBrand} 
+                alt="DOA Nexus - Delegation of authority" 
+                className="h-12 md:h-14 w-auto object-contain cursor-pointer transition-transform" 
+                onClick={() => {
+                  setActiveTab('overview');
+                  setSelectedRecord(null);
+                }}
               />
-              <div className="h-8 w-[1px] bg-slate-200 mx-1 hidden sm:block"></div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-slate-800 tracking-tight">DoA Nexus</h1>
-              </div>
             </div>
 
             {/* Navigation Tabs & Role Switcher */}
@@ -1592,17 +1593,7 @@ export default function App() {
                 Viewing: <span className="font-bold text-teal-300 capitalize">{activeTab === 'request' ? 'New Change Request' : activeTab === 'queue' ? 'Change Queue' : activeTab === 'search' ? 'Search DoA Matrix' : activeTab === 'exceptions' ? 'Exception Workflow' : 'Audit Trail'}</span>
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  setActiveTab('overview');
-                  setSelectedRecord(null);
-                }}
-                className="text-xs text-slate-400 hover:text-white transition-colors"
-              >
-                Home Dashboard
-              </button>
-            </div>
+
           </div>
         )}
         
@@ -1981,22 +1972,19 @@ export default function App() {
             {/* Title Section */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">New Request / DoA Amendment</h2>
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">New Request</h2>
                 <p className="text-sm text-slate-500 mt-1">
                   Submit a new proposal, modify existing thresholds, or delete an outdated delegation rule.
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200">
-                Governance Workflow
-              </span>
             </div>
 
             {/* Action Mode Selector with Explicit Delete Proposal */}
             <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full border border-slate-200/80 shadow-xs">
               {[
-                { id: 'Add', label: 'Add Proposal', icon: Plus, activeBg: 'bg-white text-emerald-600 shadow-sm border border-emerald-100' },
-                { id: 'Modify', label: 'Modify Proposal', icon: Edit3, activeBg: 'bg-white text-blue-600 shadow-sm border border-blue-100' },
-                { id: 'Delete', label: 'Delete Proposal', icon: Trash2, activeBg: 'bg-white text-rose-600 shadow-sm border border-rose-200' },
+                { id: 'Add', label: 'Add Descision Area', icon: Plus, activeBg: 'bg-white text-emerald-600 shadow-sm border border-emerald-100' },
+                { id: 'Modify', label: 'Modify Descision Area', icon: Edit3, activeBg: 'bg-white text-blue-600 shadow-sm border border-blue-100' },
+                { id: 'Delete', label: 'Delete Descision Area', icon: Trash2, activeBg: 'bg-white text-rose-600 shadow-sm border border-rose-200' },
               ].map(mode => {
                 const Icon = mode.icon;
                 const isActive = actionMode === mode.id;
@@ -2087,34 +2075,21 @@ export default function App() {
                         <Briefcase className="h-4 w-4 text-teal-600" />
                         Function / Business Line
                       </span>
-                      <span className="text-[10px] text-teal-600 font-semibold uppercase bg-teal-50 px-2 py-0.5 rounded border border-teal-200/50">
-                        Governance Domain
-                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Function Dropdown */}
+                      {/* Function Field (Mandatory & Non-Editable) */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-600">
-                          Function
+                        <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                          Function <span className="text-rose-500">*</span>
                         </label>
-                        <select 
-                          value={formData.parentFunction}
-                          onChange={(e) => {
-                            const newParent = e.target.value;
-                            const newCategories = functionTaxonomy[newParent] || [];
-                            setFormData(prev => ({
-                              ...prev,
-                              parentFunction: newParent,
-                              businessLine: newCategories[0] || ''
-                            }));
-                          }}
+                        <input
+                          type="text"
+                          readOnly
+                          value={formData.parentFunction || (allowedDomains && allowedDomains[0]) || 'Finance'}
                           required
-                          className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                        >
-                          {allowedDomains.includes('Finance') && <option value="Finance">Finance</option>}
-                          {allowedDomains.includes('Risk') && <option value="Risk">Risk</option>}
-                        </select>
+                          className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
+                        />
                       </div>
 
                       {/* Business Line / Risk Factor Dropdown */}
@@ -2299,17 +2274,17 @@ export default function App() {
                       </div>
                     )}
 
-                    {/* Authority preview input */}
+                    {/* Authority preview input (Non-Editable) */}
                     <div className="space-y-1">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Composite Authority String
                       </label>
                       <input 
                         type="text"
+                        readOnly
                         value={formData.authority}
-                        onChange={(e) => setFormData(prev => ({ ...prev, authority: e.target.value }))}
                         placeholder="e.g. BoD (A) ➔ BRPC (E1) ➔ GCFO (R)"
-                        className="w-full text-xs font-semibold border border-slate-200 rounded-lg p-2.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        className="w-full text-xs font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-600 cursor-not-allowed select-none focus:outline-none transition-all"
                       />
                     </div>
                   </div>
