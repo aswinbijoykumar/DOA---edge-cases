@@ -55,7 +55,7 @@ def list_change_requests(
     List change requests scoped strictly to current_user's role, persona, and domain:
     - Oversight / Governance / Audit / Reviewer / Approver / Authority Owner: authorized domains
     - Dept Owner / Process Owner: own requests + requests in their department/domain
-    - Front-End User: strictly own submitted requests
+    - Requester: strictly own submitted requests
     """
     crs = change_request_service.get_change_requests(
         db=db,

@@ -339,7 +339,7 @@ def can_user_view_change_request(db: Session, cr: ChangeRequest, user: User) -> 
     - Oversight/Governance/Admin/Audit/Reviewer/Approver/AuthorityOwner see requests within their allowed domains.
     - Dept Owners see own requests + requests belonging to their department/functional domain.
     - Process Owners see own requests + operational requests within their domain scope.
-    - Front-End Users see ONLY their own submitted ChangeRequests.
+    - Requesters see ONLY their own submitted ChangeRequests.
     """
     if cr.requester_id == user.id or cr.requester_email == user.email:
         return True

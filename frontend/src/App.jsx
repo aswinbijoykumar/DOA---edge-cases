@@ -1465,21 +1465,15 @@ export default function App() {
             
             {/* Protiviti-Inspired Branding */}
             <div className="flex items-center gap-3">
-              <div className="h-9 w-9 bg-teal-600 rounded-lg flex items-center justify-center text-white font-extrabold text-lg tracking-tighter shadow-md">
-                P
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-xl tracking-tight text-slate-800">protiviti</span>
-                  <div className="h-1.5 w-1.5 bg-rose-600 rounded-full mt-2"></div>
-                </div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-                  Risk &amp; Internal Audit
-                </div>
-              </div>
-              <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden sm:block"></div>
+              <img 
+                src="/protiviti-logo.png" 
+                alt="Protiviti" 
+                className="h-10 sm:h-11 w-auto object-contain max-w-[170px] sm:max-w-[200px]"
+                onError={(e) => { e.target.src = 'https://www.orgvue.com/content/uploads/sites/2/2024/04/protiviti-logo-1024x379.png'; }}
+              />
+              <div className="h-9 w-[1px] bg-slate-200 mx-2 hidden sm:block"></div>
               <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-slate-800 tracking-tight">DoA Management Tool</h1>
+                <h1 className="text-lg font-bold text-slate-800 tracking-tight">DoA Nexus</h1>
                 <p className="text-xs text-slate-500">Delegation of Authority | Risk &amp; Finance Governance</p>
               </div>
             </div>
@@ -1551,15 +1545,10 @@ export default function App() {
                     <span className="font-bold text-slate-800 block text-xs leading-none">
                       {currentUser.full_name || 'User'}
                     </span>
-                    {currentUser.designation && (
-                      <span className="text-[10px] text-teal-700 font-semibold block leading-tight mt-0.5">
-                        {currentUser.designation}
-                      </span>
-                    )}
+                    <span className="text-[10px] text-teal-700 font-semibold block leading-tight mt-0.5">
+                      {currentUser.designation || 'Business Stakeholder'}
+                    </span>
                   </div>
-                  <span className={`ml-1 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${ROLE_CONFIGS[currentUser.role]?.badgeClass || 'bg-slate-200 text-slate-700'}`}>
-                    {currentUser.persona_type ? currentUser.persona_type.replace('_', ' ') : (ROLE_CONFIGS[currentUser.role]?.label || currentUser.role)}
-                  </span>
                 </div>
 
                 <button
@@ -1946,27 +1935,18 @@ export default function App() {
                                   <td className="py-3 px-4 text-center">
                                     <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                       {canMutateRecord(record) ? (
-                                        <>
-                                          <button
-                                            title="Propose Rule Modification"
-                                            onClick={() => {
-                                              setActionMode('Modify');
-                                              setSelectedModifyId(record.id);
-                                              handleModifySelect(record.id);
-                                              setActiveTab('request');
-                                            }}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                          >
-                                            <Edit3 className="h-4 w-4" />
-                                          </button>
-                                          <button
-                                            title="Propose Rule Deletion"
-                                            onClick={() => setDeleteModalRecord(record)}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </button>
-                                        </>
+                                        <button
+                                          title="Propose Rule Modification"
+                                          onClick={() => {
+                                            setActionMode('Modify');
+                                            setSelectedModifyId(record.id);
+                                            handleModifySelect(record.id);
+                                            setActiveTab('request');
+                                          }}
+                                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                                        >
+                                          <Edit3 className="h-4 w-4" />
+                                        </button>
                                       ) : (
                                         <button
                                           title="Read-Only Access (Inspect Governance Rule)"
@@ -3074,16 +3054,18 @@ export default function App() {
                     >
                       <Edit3 className="h-4 w-4" /> Edit Authority
                     </button>
-                    <button
-                      onClick={() => {
-                        const rec = selectedRecord;
-                        setSelectedRecord(null);
-                        setDeleteModalRecord(rec);
-                      }}
-                      className="py-2.5 px-4 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete Proposal
-                    </button>
+                    {['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser?.role) && (
+                      <button
+                        onClick={() => {
+                          const rec = selectedRecord;
+                          setSelectedRecord(null);
+                          setDeleteModalRecord(rec);
+                        }}
+                        className="py-2.5 px-4 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete Proposal
+                      </button>
+                    )}
                   </>
                 ) : (
                   <button

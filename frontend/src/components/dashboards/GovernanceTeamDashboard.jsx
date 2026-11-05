@@ -292,12 +292,17 @@ export default function GovernanceTeamDashboard({
         {/* Left: Brand & Hub Badge */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-500/20">
-              P
+            <div className="bg-white px-3 py-1.5 rounded-xl shadow-sm flex items-center">
+              <img 
+                src="/protiviti-logo.png" 
+                alt="Protiviti" 
+                className="h-8 sm:h-9 w-auto object-contain max-w-[160px] sm:max-w-[185px]"
+                onError={(e) => { e.target.src = 'https://www.orgvue.com/content/uploads/sites/2/2024/04/protiviti-logo-1024x379.png'; }}
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base tracking-tight text-white">protiviti</span>
+                <span className="font-extrabold text-base tracking-tight text-white">DoA Nexus</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/10 border border-blue-500/30 text-blue-400">
                   GOVERNANCE TEAM CONSOLE
                 </span>
@@ -399,7 +404,7 @@ export default function GovernanceTeamDashboard({
               </div>
               <div className="text-left hidden sm:block">
                 <p className="text-xs font-bold leading-none text-slate-200">{currentUser?.full_name || 'Governance Officer'}</p>
-                <p className="text-[10px] text-blue-400 font-mono mt-0.5">GOVERNANCE_TEAM</p>
+                <p className="text-[10px] text-blue-400 font-medium mt-0.5">{currentUser?.designation || 'Governance Officer'}</p>
               </div>
             </button>
 
