@@ -360,7 +360,6 @@ export default function NormalUserDashboard({
           <div className="space-y-2.5">
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
               <span>Welcome back, {currentUser?.full_name || 'Stakeholder'}</span>
-              <Sparkles className="h-5 w-5 text-teal-400" />
             </h2>
             
             <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
@@ -373,7 +372,7 @@ export default function NormalUserDashboard({
 
         {/* Dedicated Navigation Button Row for All Normal User Personas */}
         <div className="mt-6 pt-5 border-t border-white/10">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
+          <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 w-full`}>
             {/* 1. Overview */}
             <button
               onClick={() => onNavigateTab('overview')}
@@ -461,7 +460,7 @@ export default function NormalUserDashboard({
             </button>
 
             {/* 6. Audit Trail (Assurance & 2LoD Review Only) */}
-            {canViewAudit ? (
+            {canViewAudit && (
               <button
                 onClick={() => onNavigateTab('audit')}
                 className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
@@ -473,15 +472,6 @@ export default function NormalUserDashboard({
               >
                 <History className="h-4 w-4 text-slate-950 shrink-0" />
                 <span className="truncate">Audit Trail</span>
-              </button>
-            ) : (
-              <button
-                disabled
-                className="h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
-                title="Audit Trail restricted to Internal Audit, 2LoD Governance & Admin roles"
-              >
-                <History className="h-4 w-4 text-slate-500 shrink-0" />
-                <span className="truncate">Audit (Restricted)</span>
               </button>
             )}
           </div>

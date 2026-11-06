@@ -51,7 +51,8 @@ import {
   ArrowUpRight,
   Paperclip,
   BookOpen,
-  AlertOctagon
+  AlertOctagon,
+  Download
 } from 'lucide-react';
 
 
@@ -328,6 +329,8 @@ export default function App() {
   const [activeDiffCR, setActiveDiffCR] = useState(null);
   const [diffDetails, setDiffDetails] = useState(null);
   const [isLoadingDiff, setIsLoadingDiff] = useState(false);
+  const [diffRejectBoxOpen, setDiffRejectBoxOpen] = useState(false);
+  const [diffRejectComment, setDiffRejectComment] = useState('');
 
   // Search & Filtering State (Parent / Child Function Filters)
   const [filterParentFunction, setFilterParentFunction] = useState('Finance'); // 'Finance' | 'Risk' | 'All'
@@ -1045,6 +1048,8 @@ export default function App() {
   // Inspect Diff for a Change Request
   const handleInspectDiff = async (cr) => {
     setActiveDiffCR(cr);
+    setDiffRejectBoxOpen(false);
+    setDiffRejectComment('');
     setIsLoadingDiff(true);
     try {
       const diff = await api.getChangeRequestDiff(cr.id);
@@ -1841,7 +1846,7 @@ export default function App() {
                                   {isRiskCat ? 'Risk Domain:' : 'Finance Domain:'}
                                 </span>
                                 {category}
-                                <span className="ml-2 text-[10px] text-slate-400 font-normal">({recsInGroup.length} rules)</span>
+                                <span className="ml-2 text-[10px] text-slate-400 font-normal">({recsInGroup.length} decision areas)</span>
                               </td>
                             </tr>
                             
@@ -2408,10 +2413,7 @@ export default function App() {
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Governance Change Queue</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Controlled approval queue: inspect field-level Diffs, review rationale, approve, reject, and publish active master versions.
-                </p>
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Change Queue</h2>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full font-medium">
@@ -2519,7 +2521,7 @@ export default function App() {
                                   title="Inspect Current vs Proposed Field Differences"
                                   className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
                                 >
-                                  <Eye className="h-3.5 w-3.5 text-teal-600" /> Diff
+                                  <Eye className="h-3.5 w-3.5 text-teal-600" /> Review
                                 </button>
 
                                 {/* Process Owner Endorsement Action */}
@@ -3073,11 +3075,11 @@ export default function App() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-slate-800">Proposal Diff Inspector</h3>
-                    <span className="px-2 py-0.2 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-700">
+                    <h3 className="text-base font-bold text-slate-800">Review Proposal</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-700">
                       {activeDiffCR.id}
                     </span>
-                    <span className={`px-2 py-0.2 rounded text-[10px] font-extrabold uppercase ${
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
                       activeDiffCR.request_type === 'ADD' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                       activeDiffCR.request_type === 'MODIFY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                       'bg-rose-50 text-rose-700 border border-rose-200'
@@ -3085,9 +3087,6 @@ export default function App() {
                       {activeDiffCR.request_type}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Target DOA: {activeDiffCR.doa_id ? `#${activeDiffCR.doa_id}` : 'New Record'} &bull; Base Version: v{activeDiffCR.base_version}
-                  </p>
                 </div>
               </div>
               <button 
@@ -3151,6 +3150,78 @@ export default function App() {
                   </p>
                 </div>
               )}
+
+              {/* Supporting Attachments Section */}
+              {(() => {
+                let attList = [];
+                if (Array.isArray(activeDiffCR.attachments)) {
+                  attList = activeDiffCR.attachments;
+                } else if (typeof activeDiffCR.attachments === 'string') {
+                  try {
+                    attList = JSON.parse(activeDiffCR.attachments) || [];
+                  } catch {
+                    attList = [];
+                  }
+                }
+
+                return (
+                  <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Paperclip className="h-3.5 w-3.5 text-teal-600" /> Supporting Attachments &amp; Documentation
+                      </span>
+                      {attList.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                          {attList.length} {attList.length === 1 ? 'document' : 'documents'}
+                        </span>
+                      )}
+                    </div>
+
+                    {attList.length === 0 ? (
+                      <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-400 italic flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-slate-300 shrink-0" />
+                        <span>No supporting attachments uploaded for this proposal.</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {attList.map((att, idx) => {
+                          const fileName = att.name || att.filename || `Document_${idx + 1}.pdf`;
+                          const fileType = att.type || (fileName.toLowerCase().endsWith('.pdf') ? 'PDF Document' : 'Document');
+                          const fileSize = att.size || '450 KB';
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-lg transition-colors group"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="p-1.5 bg-white border border-slate-200 rounded text-teal-600 shadow-2xs shrink-0">
+                                  <FileText className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-slate-700 truncate" title={fileName}>
+                                    {fileName}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400">
+                                    {fileType} &bull; {fileSize}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => addToast(`Opening attachment: ${fileName}`, 'info')}
+                                title="View / Download Document"
+                                className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-white rounded transition-colors shrink-0"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* VIEW A: FOR REQUESTORS (Simple comparison status) */}
               {currentUser?.persona_type === 'FRONTEND_USER' ? (
@@ -3252,9 +3323,6 @@ export default function App() {
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
                       Field Comparison (Automatic Change Highlighting)
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500">
-                      Comparing: Base v{activeDiffCR.base_version} vs Proposed
-                    </span>
                   </div>
                   
                   {isLoadingDiff ? (
@@ -3316,54 +3384,110 @@ export default function App() {
 
             </div>
 
-            {/* Modal Footer with Actions */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-              <span className="text-[11px] text-slate-400">
-                Status: <strong className="text-slate-700">{activeDiffCR.status}</strong>
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveDiffCR(null);
-                    setDiffDetails(null);
-                  }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-
-                {!isOwnChangeRequest(activeDiffCR) && (['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser.role) || (currentUser.role === 'NORMAL_USER' && currentUser.persona_type === 'APPROVER')) && activeDiffCR.status === 'SUBMITTED' && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => triggerDecisionModal(activeDiffCR.id, 'REJECT')}
-                      className="px-3.5 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <X className="h-3.5 w-3.5" /> Reject with Rationale
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerDecisionModal(activeDiffCR.id, 'APPROVE')}
-                      className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-                    >
-                      <Check className="h-3.5 w-3.5" /> Approve Proposal
-                    </button>
-                  </>
-                )}
-
-                {!isOwnChangeRequest(activeDiffCR) && ['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && activeDiffCR.status === 'APPROVED' && (
+            {/* Inline Rejection Comments Box */}
+            {diffRejectBoxOpen && (
+              <div className="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl space-y-2.5 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 text-rose-600" />
+                    Rejection Feedback &amp; Comments <span className="text-rose-500">*</span>
+                  </span>
+                  <span className="text-[10px] text-rose-600 font-semibold uppercase">Required</span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={diffRejectComment}
+                  onChange={(e) => setDiffRejectComment(e.target.value)}
+                  placeholder="Enter detailed comments explaining why this proposal is being rejected..."
+                  className="w-full text-xs font-medium border border-rose-200 bg-white rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-slate-400 shadow-2xs"
+                  autoFocus
+                />
+                <div className="flex items-center justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => handlePublishCR(activeDiffCR.id)}
-                    className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                    onClick={() => {
+                      setDiffRejectBoxOpen(false);
+                      setDiffRejectComment('');
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                   >
-                    <Send className="h-3.5 w-3.5" /> Publish New Version
+                    Cancel
                   </button>
-                )}
-
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!diffRejectComment.trim()) {
+                        addToast('Please enter comments explaining the rejection rationale.', 'error');
+                        return;
+                      }
+                      await handleRejectCR(activeDiffCR.id, diffRejectComment);
+                      setDiffRejectBoxOpen(false);
+                      setDiffRejectComment('');
+                      setActiveDiffCR(prev => prev ? { ...prev, status: 'REJECTED' } : null);
+                    }}
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <X className="h-3.5 w-3.5" /> Confirm Rejection
+                  </button>
+                </div>
               </div>
+            )}
+
+            {/* Modal Footer with Actions */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              {isOwnChangeRequest(activeDiffCR) ? (
+                <span className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
+                  VAL-06 SoD: Self-Authored Proposal (Independent Review Required)
+                </span>
+              ) : activeDiffCR.status === 'REJECTED' ? (
+                <span className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-1.5">
+                  <X className="h-3.5 w-3.5" /> Proposal Rejected
+                </span>
+              ) : activeDiffCR.status === 'APPROVED' ? (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5" /> Proposal Approved
+                  </span>
+                  {['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && (
+                    <button
+                      type="button"
+                      onClick={() => handlePublishCR(activeDiffCR.id)}
+                      className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                    >
+                      <Send className="h-3.5 w-3.5" /> Publish New Version
+                    </button>
+                  )}
+                </div>
+              ) : activeDiffCR.status === 'PUBLISHED' ? (
+                <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold flex items-center gap-1.5">
+                  <CheckCheck className="h-3.5 w-3.5" /> Published to Active Matrix
+                </span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDiffRejectBoxOpen(prev => !prev)}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+                      diffRejectBoxOpen
+                        ? 'bg-rose-200 text-rose-900 border border-rose-300'
+                        : 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-2xs'
+                    }`}
+                  >
+                    <X className="h-3.5 w-3.5" /> Reject
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleApproveCR(activeDiffCR.id, 'Approved in Proposal Review session');
+                      setActiveDiffCR(prev => prev ? { ...prev, status: 'APPROVED' } : null);
+                    }}
+                    className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <Check className="h-3.5 w-3.5" /> Approve
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>
@@ -3480,12 +3604,19 @@ export default function App() {
 
       {/* Footer Branding */}
       <footer className="bg-white border-t border-slate-200 shadow-sm mt-auto py-4">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-          <img 
-            src={nexusLogo} 
-            alt="DoA Nexus" 
-            className="h-8 w-8 object-contain rounded shadow-2xs" 
-          />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img 
+              src={nexusLogo} 
+              alt="DoA Nexus" 
+              className="h-8 w-8 object-contain rounded-lg shadow-xs" 
+            />
+            <div className="h-7 w-[1px] bg-slate-200 mx-0.5"></div>
+            <span className="text-sm font-bold text-slate-800 tracking-tight">DoA Nexus</span>
+          </div>
+          <p className="text-xs text-slate-400">
+            &copy; {new Date().getFullYear()} DoA Nexus. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>

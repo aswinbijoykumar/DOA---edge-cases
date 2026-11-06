@@ -22,6 +22,7 @@ import {
   Search
 } from 'lucide-react';
 import { api } from '../services/api';
+import nexusLogo from '../assets/nexus-logo.jpg';
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('dept.owner@doa.local');
@@ -263,20 +264,16 @@ export default function LoginPage({ onLoginSuccess }) {
 
       {/* Brand & Portal Header */}
       <div className="sm:mx-auto sm:w-full sm:max-w-4xl text-center relative z-10 mb-6">
-        <div className="inline-flex items-center justify-center px-4 py-2 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl mb-3 backdrop-blur-md">
-          <div className="flex items-center gap-2.5">
-            <span className="font-extrabold text-2xl tracking-tight text-white">protiviti</span>
-            <div className="h-2.5 w-2.5 bg-rose-500 rounded-full mt-1.5 animate-pulse" />
-            <span className="text-slate-500 font-light mx-1">|</span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-teal-400">DOA Governance Suite</span>
-          </div>
+        <div className="inline-flex items-center justify-center gap-3 px-5 py-2.5 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl mb-2 backdrop-blur-md">
+          <img 
+            src={nexusLogo} 
+            alt="DoA Nexus" 
+            className="h-8 w-8 object-contain rounded-lg shadow-xs" 
+          />
+          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            DOA Nexus Login Portal
+          </h1>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Delegation of Authority (DOA) Governance Portal
-        </h1>
-        <p className="mt-1.5 text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto">
-          Two Lines of Defense (2LoD) Governance Matrix with Role-Based Access Control, Domain &amp; Entity Ownership, and Segregation of Duties.
-        </p>
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-5xl px-4 relative z-10">
@@ -426,7 +423,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   </span>
                   <h3 className="text-base font-bold text-slate-900 mt-0.5 flex items-center gap-2">
                     <Lock className="h-4 w-4 text-teal-600" />
-                    Sign In with Selected Persona
+                    Login
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Credentials populate automatically upon clicking any role card.
@@ -489,7 +486,7 @@ export default function LoginPage({ onLoginSuccess }) {
                         <span>Authenticating...</span>
                       ) : (
                         <>
-                          <span>Enter Governance Workspace</span>
+                          <span>Login</span>
                           <ArrowRight className="h-4 w-4" />
                         </>
                       )}
@@ -497,30 +494,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   </div>
                 </form>
 
-                {/* Key Points Checklist Feature Preview */}
-                <div className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs space-y-2 mt-4">
-                  <h4 className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5 text-teal-600" /> Enforced RBAC &amp; BRD Guardrails
-                  </h4>
-                  <ul className="text-[11px] text-slate-600 space-y-1.5 font-medium">
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>Domain Scoping:</strong> Finance vs Risk visibility strictly isolated</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>Entity Ownership:</strong> Cross-entity mutations blocked (BH vs KSA)</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>VAL-06 SoD:</strong> Proposers cannot endorse, approve, or publish own CRs</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-teal-500" />
-                      <span><strong>CRUD Authority:</strong> Read-only Audit, Reviewer &amp; Approver cannot draft</span>
-                    </li>
-                  </ul>
-                </div>
+
               </div>
 
               <div className="pt-5 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-400">

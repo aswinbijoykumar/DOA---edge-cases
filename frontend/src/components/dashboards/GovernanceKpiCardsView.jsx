@@ -380,7 +380,7 @@ export default function GovernanceKpiCardsView({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Filter rules..."
+              placeholder="Search..."
               className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
             />
           </div>
@@ -409,7 +409,6 @@ export default function GovernanceKpiCardsView({
                 Displaying <span className="text-teal-700">{filteredAuthorities.length}</span> of{' '}
                 {authoritiesList.length} authorities
               </span>
-              <span className="text-slate-400 text-[11px]">Live Database &bull; Matrix 4.2</span>
             </div>
 
             <div className="overflow-x-auto">
