@@ -15,7 +15,15 @@ import {
   RefreshCw,
   Filter,
   SlidersHorizontal,
-  ArrowRight
+  ArrowRight,
+  FileSpreadsheet,
+  FileText,
+  Download,
+  ArrowUpRight,
+  X,
+  Clock,
+  ExternalLink,
+  ShieldAlert
 } from 'lucide-react';
 
 /**
@@ -161,7 +169,10 @@ export default function GovernanceKpiCardsView({
 }) {
   const [openDropdownId, setOpenDropdownId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionFilter, setActionFilter] = useState('ALL'); // ALL, APPROVE, ENDORSE, RECOMMEND, NOTIFICATION
+  const [actionFilter, setActionFilter] = useState('ALL'); // ALL, APPROVE, ENDORSE, RECOMMEND, PROPOSE, NOTIFICATION
+  const [departmentFilter, setDepartmentFilter] = useState('ALL'); // ALL, Finance, Risk, Treasury, Operations, Legal
+  const [regulatoryFilter, setRegulatoryFilter] = useState('ALL'); // ALL, REGULATORY, NON_REGULATORY
+  const [selectedLinkageItem, setSelectedLinkageItem] = useState(null);
   const containerRef = useRef(null);
 
   // Close dropdown on outside click or Escape key
@@ -203,8 +214,41 @@ export default function GovernanceKpiCardsView({
   // Filter authorities in the table
   const authoritiesList = matrixData?.authorities || [];
   const filteredAuthorities = authoritiesList.filter((item) => {
-    const matchesAction = actionFilter === 'ALL' || item.action_type === actionFilter;
-    if (!matchesAction) return false;
+    // Action code filter (Approve, Endorse/Review, Recommend, Propose, Notify)
+    if (actionFilter !== 'ALL') {
+      if (actionFilter === 'PROPOSE') {
+        const v = (item.authority_code || item.composite_authority || '').toUpperCase();
+        if (!v.includes('P') && !v.includes('INITIATE') && item.action_type !== 'PROPOSE') return false;
+      } else if (actionFilter === 'RECOMMEND') {
+        const v = (item.authority_code || '').toUpperCase();
+        if (item.action_type !== 'RECOMMEND' && !v.includes('(R)')) return false;
+      } else if (actionFilter === 'ENDORSE') {
+        const v = (item.authority_code || '').toUpperCase();
+        if (item.action_type !== 'ENDORSE' && !v.includes('(E)')) return false;
+      } else if (item.action_type !== actionFilter) {
+        return false;
+      }
+    }
+
+    // Department / Function view filter
+    if (departmentFilter !== 'ALL') {
+      const func = (item.function || '').toLowerCase();
+      const bline = (item.business_line || '').toLowerCase();
+      const darea = (item.decision_area || '').toLowerCase();
+      const target = departmentFilter.toLowerCase();
+      if (!func.includes(target) && !bline.includes(target) && !darea.includes(target)) {
+        return false;
+      }
+    }
+
+    // Regulatory & Non-Regulatory filter
+    if (regulatoryFilter === 'REGULATORY') {
+      const isReg = item.regulatory === 'Y' || Boolean(item.regulatory_requirement);
+      if (!isReg) return false;
+    } else if (regulatoryFilter === 'NON_REGULATORY') {
+      const isReg = item.regulatory === 'Y' || Boolean(item.regulatory_requirement);
+      if (isReg) return false;
+    }
 
     if (!searchTerm.trim()) return true;
     const q = searchTerm.toLowerCase();
@@ -214,9 +258,126 @@ export default function GovernanceKpiCardsView({
       item.business_line?.toLowerCase().includes(q) ||
       item.function?.toLowerCase().includes(q) ||
       item.authority_code?.toLowerCase().includes(q) ||
-      item.policy_reference?.toLowerCase().includes(q)
+      item.policy_reference?.toLowerCase().includes(q) ||
+      item.regulatory_requirement?.toLowerCase().includes(q) ||
+      item.composite_authority?.toLowerCase().includes(q)
     );
   });
+
+  // Export to Excel / CSV
+  const handleExportExcel = () => {
+    if (!filteredAuthorities.length) return;
+    const headers = [
+      'Ref #',
+      'Function',
+      'Business Line',
+      'Decision Area',
+      'Action Code',
+      'Key / Non-Key',
+      'Policy Reference',
+      'Regulatory Requirement',
+      'LUD (Last Update Date)',
+      'Composite Authority Flow'
+    ];
+
+    const rows = filteredAuthorities.map((item) => [
+      `"${item.id || ''}"`,
+      `"${(item.function || '').replace(/"/g, '""')}"`,
+      `"${(item.business_line || '').replace(/"/g, '""')}"`,
+      `"${(item.decision_area || '').replace(/"/g, '""')}"`,
+      `"${item.authority_code || item.action_type || ''}"`,
+      `"${item.key_non_key || 'Key'}"`,
+      `"${(item.policy_reference || '').replace(/"/g, '""')}"`,
+      `"${(item.regulatory_requirement || '').replace(/"/g, '""')}"`,
+      `"${item.last_update_date || item.effective_date || '2026-02-15'}"`,
+      `"${(item.composite_authority || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `DOA_Designation_Matrix_${activeCategoryId}_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export to PDF (Print-ready report)
+  const handleExportPdf = () => {
+    if (!filteredAuthorities.length) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>DOA Nexus - Designation Matrix Report</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; }
+            h2 { margin: 0 0 4px 0; color: #0f172a; font-size: 20px; }
+            .subtitle { color: #64748b; font-size: 12px; margin-bottom: 16px; }
+            .meta { margin-bottom: 20px; font-size: 11px; color: #475569; display: flex; gap: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            th { background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 6px; text-align: left; font-weight: 700; text-transform: uppercase; font-size: 9px; }
+            td { border: 1px solid #e2e8f0; padding: 6px; vertical-align: top; }
+            tr:nth-child(even) { background: #f8fafc; }
+            .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; }
+            .badge-approve { background: #dcfce7; color: #166534; }
+            .badge-endorse { background: #dbeafe; color: #1e40af; }
+            .badge-recommend { background: #fef3c7; color: #92400e; }
+            .date { color: #64748b; font-family: monospace; }
+          </style>
+        </head>
+        <body>
+          <h2>DOA Nexus &bull; Designation Matrix Authority Report</h2>
+          <div class="subtitle">Category: ${activeSelectedOption?.label || activeCardConfig.title} &bull; Generated: ${new Date().toLocaleString()}</div>
+          <div class="meta">
+            <div><strong>Total Lines:</strong> ${filteredAuthorities.length}</div>
+            <div><strong>Action Filter:</strong> ${actionFilter}</div>
+            <div><strong>Department:</strong> ${departmentFilter}</div>
+            <div><strong>Regulatory Scope:</strong> ${regulatoryFilter}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 45px;">Ref #</th>
+                <th style="width: 90px;">Function / Line</th>
+                <th>Decision Area Mandate</th>
+                <th style="width: 75px;">Action</th>
+                <th style="width: 120px;">Policy & Regulatory</th>
+                <th style="width: 75px;">LUD</th>
+                <th style="width: 140px;">Composite Flow</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredAuthorities.map(item => `
+                <tr>
+                  <td style="font-weight: bold;">#${item.id}</td>
+                  <td><strong>${item.function}</strong><br/><span style="color:#64748b;">${item.business_line || ''}</span></td>
+                  <td><strong>${item.decision_area}</strong></td>
+                  <td><span class="badge ${item.action_type === 'APPROVE' ? 'badge-approve' : item.action_type === 'ENDORSE' ? 'badge-endorse' : 'badge-recommend'}">${item.authority_code}</span></td>
+                  <td>${item.policy_reference || item.regulatory_requirement || '<span style="color:#94a3b8;">Internal Standard</span>'}</td>
+                  <td class="date">${item.last_update_date || item.effective_date || '2026-02-15'}</td>
+                  <td style="font-family: monospace; font-size: 9px;">${item.composite_authority || '—'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
 
   return (
     <div className="space-y-6" ref={containerRef}>
@@ -342,47 +503,141 @@ export default function GovernanceKpiCardsView({
           </div>
         </div>
 
-        {/* Action Code Legend & Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200/80">
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <span className="font-extrabold text-slate-500 uppercase text-[10px] mr-1">
-              Filter Action:
-            </span>
-            {[
-              { id: 'ALL', label: 'All Actions' },
-              { id: 'APPROVE', label: 'Approve (A)', color: 'bg-emerald-100/70 text-emerald-900 border-emerald-300' },
-              { id: 'ENDORSE', label: 'Endorse (E)', color: 'bg-blue-100/70 text-blue-900 border-blue-300' },
-              { id: 'RECOMMEND', label: 'Recommend (R)', color: 'bg-amber-100/70 text-amber-900 border-amber-300' },
-              { id: 'NOTIFICATION', label: 'Notify (N)', color: 'bg-purple-100/70 text-purple-900 border-purple-300' }
-            ].map((f) => {
-              const isSelected = actionFilter === f.id;
-              return (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => setActionFilter(f.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                    isSelected
-                      ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                      : f.color || 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              );
-            })}
+        {/* Action Code Legend & Multi-Tier Filter Bar */}
+        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 space-y-3">
+          {/* Row 1: Action Filters & Department Views */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Action Filters (Propose, Review, Endorse, Approve, Notify) */}
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="font-extrabold text-slate-500 uppercase text-[10px] mr-1 flex items-center gap-1">
+                <Filter className="h-3 w-3 text-teal-600" /> Action:
+              </span>
+              {[
+                { id: 'ALL', label: 'All Actions' },
+                { id: 'PROPOSE', label: 'Propose (P)', color: 'bg-cyan-50 text-cyan-800 border-cyan-200 hover:bg-cyan-100' },
+                { id: 'RECOMMEND', label: 'Review / Recommend (R)', color: 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100' },
+                { id: 'ENDORSE', label: 'Endorse (E)', color: 'bg-blue-50 text-blue-900 border-blue-300 hover:bg-blue-100' },
+                { id: 'APPROVE', label: 'Approve (A)', color: 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100' },
+                { id: 'NOTIFICATION', label: 'Notify (N)', color: 'bg-purple-50 text-purple-900 border-purple-300 hover:bg-purple-100' }
+              ].map((f) => {
+                const isSelected = actionFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setActionFilter(f.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                      isSelected
+                        ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                        : f.color || 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Quick Search */}
+            <div className="relative w-full sm:w-60">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search authorities..."
+                className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              />
+            </div>
           </div>
 
-          {/* Quick Search */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search..."
-              className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-            />
+          {/* Row 2: Department View, Regulatory Mandate Filters & Export Options */}
+          <div className="pt-2.5 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Department View Filter */}
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-slate-500 uppercase text-[10px]">
+                  Dept View:
+                </span>
+                <select
+                  value={departmentFilter}
+                  onChange={(e) => setDepartmentFilter(e.target.value)}
+                  className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                >
+                  <option value="ALL">All Departments</option>
+                  <option value="Finance">Finance &amp; Treasury</option>
+                  <option value="Risk">Enterprise Risk</option>
+                  <option value="Procurement">Procurement &amp; Ops</option>
+                  <option value="Capital">Capital Management</option>
+                  <option value="Legal">Legal &amp; Compliance</option>
+                </select>
+              </div>
+
+              {/* Regulatory Mandate Filter */}
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-slate-500 uppercase text-[10px]">
+                  Mandate:
+                </span>
+                <div className="inline-flex bg-white rounded-lg p-0.5 border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setRegulatoryFilter('ALL')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all ${
+                      regulatoryFilter === 'ALL'
+                        ? 'bg-slate-900 text-white'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegulatoryFilter('REGULATORY')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all ${
+                      regulatoryFilter === 'REGULATORY'
+                        ? 'bg-rose-600 text-white'
+                        : 'text-slate-600 hover:text-rose-700'
+                    }`}
+                  >
+                    Regulatory
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegulatoryFilter('NON_REGULATORY')}
+                    className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all ${
+                      regulatoryFilter === 'NON_REGULATORY'
+                        ? 'bg-teal-600 text-white'
+                        : 'text-slate-600 hover:text-teal-700'
+                    }`}
+                  >
+                    Internal
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Export Options (Excel & PDF) */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleExportExcel}
+                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                title="Download visible data in Excel (CSV) format"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Export Excel</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExportPdf}
+                className="px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-800 border border-blue-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
+                title="Generate printable PDF authority dossier"
+              >
+                <FileText className="h-3.5 w-3.5 text-blue-600" />
+                <span>Export PDF</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -420,6 +675,7 @@ export default function GovernanceKpiCardsView({
                     <th className="py-3 px-6">Decision Area / Authority Mandate</th>
                     <th className="py-3 px-4 text-center">Specific Action</th>
                     <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
+                    <th className="py-3 px-3 text-center">LUD</th>
                     <th className="py-3 px-4">Composite Flow</th>
                   </tr>
                 </thead>
@@ -477,22 +733,51 @@ export default function GovernanceKpiCardsView({
                       <td className="py-3.5 px-4">
                         <div className="space-y-1">
                           {item.policy_reference && (
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">
-                              <BookOpen className="h-3 w-3 text-teal-600 shrink-0" />
-                              <span className="truncate max-w-[180px]">{item.policy_reference}</span>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLinkageItem(item)}
+                              className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline text-left cursor-pointer group"
+                              title="Click to view full Policy &amp; Charter mandate details"
+                            >
+                              <BookOpen className="h-3 w-3 text-teal-600 shrink-0 group-hover:scale-110 transition-transform" />
+                              <span className="truncate max-w-[160px]">{item.policy_reference}</span>
+                              <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
+                            </button>
                           )}
                           {item.regulatory_requirement && (
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-rose-700">
-                              <ShieldCheck className="h-3 w-3 text-rose-500 shrink-0" />
-                              <span className="truncate max-w-[180px]">{item.regulatory_requirement}</span>
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLinkageItem(item)}
+                              className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700 hover:text-rose-900 hover:underline text-left cursor-pointer group"
+                              title="Click to view statutory requirement &amp; regulatory code"
+                            >
+                              <ShieldCheck className="h-3 w-3 text-rose-500 shrink-0 group-hover:scale-110 transition-transform" />
+                              <span className="truncate max-w-[160px]">{item.regulatory_requirement}</span>
+                              <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
+                            </button>
                           )}
                           {!item.policy_reference && !item.regulatory_requirement && (
-                            <span className="text-slate-400 text-[11px] italic">Internal DOA Standard</span>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedLinkageItem(item)}
+                              className="text-slate-400 text-[11px] italic hover:text-teal-700 hover:underline flex items-center gap-1 text-left cursor-pointer"
+                              title="Click to inspect internal DOA standard details"
+                            >
+                              <span>Internal DOA Standard</span>
+                              <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
+                            </button>
                           )}
                         </div>
                       </td>
+
+                      {/* LUD (Last Update Date) */}
+                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                          <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
+                          <span>{item.last_update_date || item.effective_date || '2026-02-15'}</span>
+                        </span>
+                      </td>
+
                       <td className="py-3.5 px-4">
                         <span className="text-xs font-mono font-medium text-slate-700 block max-w-xs truncate" title={item.composite_authority}>
                           {item.composite_authority || '—'}
@@ -506,6 +791,135 @@ export default function GovernanceKpiCardsView({
           </div>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* POLICY & REGULATORY LINKAGE DETAILS MODAL */}
+      {/* ========================================================================= */}
+      {selectedLinkageItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 bg-teal-50 text-teal-700 rounded-2xl border border-teal-200/60">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                    <span>Policy &amp; Regulatory Mandate</span>
+                    <span className="text-xs font-mono px-2 py-0.2 rounded bg-slate-100 text-slate-600 font-bold">
+                      #{selectedLinkageItem.id}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {selectedLinkageItem.function} &bull; {selectedLinkageItem.business_line}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedLinkageItem(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Decision Area Callout */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                Governed Decision Area
+              </span>
+              <p className="text-xs font-bold text-slate-800 leading-snug">
+                {selectedLinkageItem.decision_area}
+              </p>
+            </div>
+
+            {/* Linked Cards */}
+            <div className="space-y-3">
+              {/* Card 1: Internal Corporate Policy Reference */}
+              <div className="p-3.5 bg-teal-50/50 border border-teal-200/70 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-900 flex items-center gap-1.5">
+                    <BookOpen className="h-3.5 w-3.5 text-teal-600" />
+                    Internal Corporate Policy Mandate
+                  </span>
+                  <span className="px-2 py-0.2 bg-teal-100 text-teal-800 rounded text-[9px] font-extrabold uppercase">
+                    Charter Binding
+                  </span>
+                </div>
+                <div className="text-xs space-y-1">
+                  <p className="font-bold text-teal-950">
+                    {selectedLinkageItem.policy_reference || 'Group Delegation of Authority Standard §4.2'}
+                  </p>
+                  <p className="text-[11px] text-teal-800 font-medium">
+                    Charter Terms of Reference: <strong className="text-slate-900">{selectedLinkageItem.charter_section || 'Board Governance Committee Mandate'}</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 2: Statutory & Central Bank Regulatory Requirements */}
+              <div className="p-3.5 bg-rose-50/50 border border-rose-200/70 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-900 flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-rose-600" />
+                    Statutory &amp; Central Bank Regulatory Code
+                  </span>
+                  <span className={`px-2 py-0.2 rounded text-[9px] font-extrabold uppercase ${
+                    selectedLinkageItem.regulatory === 'Y'
+                      ? 'bg-rose-100 text-rose-800 border border-rose-300'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {selectedLinkageItem.regulatory === 'Y' ? 'Statutory Mandated' : 'Internal Guideline'}
+                  </span>
+                </div>
+                <div className="text-xs space-y-1">
+                  <p className="font-bold text-rose-950">
+                    {selectedLinkageItem.regulatory_requirement || 'Central Bank Rulebook (High-Level Control &amp; Corporate Governance Module §12)'}
+                  </p>
+                  <p className="text-[11px] text-rose-800 font-medium">
+                    Mandatory 2LoD Review, Segregation of Duties (VAL-06), and Audit Dossier snapshot required.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Line Item Telemetry & LUD */}
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                    Last Update Date (LUD)
+                  </span>
+                  <span className="font-mono font-bold text-slate-800 text-[11px] mt-0.5 block">
+                    {selectedLinkageItem.last_update_date || selectedLinkageItem.effective_date || '2026-02-15'}
+                  </span>
+                </div>
+                <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                  <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                    Authority Action Code
+                  </span>
+                  <span className="font-bold text-slate-800 text-[11px] mt-0.5 block">
+                    {selectedLinkageItem.authority_code} ({selectedLinkageItem.action_type})
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400 font-mono truncate max-w-[320px]">
+                Flow: {selectedLinkageItem.composite_authority}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedLinkageItem(null)}
+                className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

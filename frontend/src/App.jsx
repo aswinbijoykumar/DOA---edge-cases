@@ -528,7 +528,8 @@ export default function App() {
           cLevel2: r.c_level2,
           cLevel2Op: r.c_level2_op,
           compositeAuthority: r.composite_authority,
-          currentVersion: r.current_version
+          currentVersion: r.current_version,
+          lastUpdateDate: r.last_update_date || (r.created_at ? (typeof r.created_at === 'string' ? r.created_at.slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10)) : r.effective_date) || '2026-02-15'
         }));
         setDoaRecords(mapped);
       }
@@ -1915,6 +1916,10 @@ export default function App() {
                                             Modified
                                           </span>
                                         )}
+                                        <span className="inline-flex items-center gap-1 text-[9px] font-mono font-semibold text-slate-600 bg-slate-100 border border-slate-200/80 px-1.5 py-0.2 rounded" title="Last Update Date (LUD)">
+                                          <Clock className="h-2.5 w-2.5 text-slate-400" />
+                                          <span>LUD: {record.lastUpdateDate || record.effective_date || '2026-02-15'}</span>
+                                        </span>
                                       </div>
                                     </div>
                                   </td>
@@ -2757,6 +2762,15 @@ export default function App() {
                     <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Regulatory mandated</h5>
                     <span className="text-xs font-semibold text-slate-700">
                       {selectedRecord.regulatory === 'Y' || isRegulatoryMandated(selectedRecord.decisionArea) ? 'Yes (Mandated)' : 'No (Internal)'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                    <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5 text-slate-400" /> Last Update Date (LUD)
+                    </h5>
+                    <span className="text-xs font-mono font-bold text-slate-800">
+                      {selectedRecord.lastUpdateDate || selectedRecord.effective_date || '2026-02-15'}
                     </span>
                   </div>
                 </div>
