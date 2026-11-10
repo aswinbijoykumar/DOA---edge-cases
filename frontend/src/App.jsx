@@ -16,7 +16,7 @@ import AuthorityChainBuilder from './components/AuthorityChainBuilder';
 import UserProfilePill from './components/common/UserProfilePill';
 import OrgChartModal from './components/common/OrgChartModal';
 import nexusLogo from './assets/nexus-logo.jpg';
-import doaNexusBrand from './assets/doa-nexus-brand.png';
+import proNexusBrand from './assets/pro-nexus-brand.png';
 import { 
   Search, 
   Plus, 
@@ -1481,12 +1481,12 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-4">
             
-            {/* DoA Nexus Branding */}
+            {/* Pro Nexus Branding */}
             <div className="flex items-center">
               <img 
-                src={doaNexusBrand} 
-                alt="DOA Nexus - Delegation of authority" 
-                className="h-12 md:h-14 w-auto object-contain cursor-pointer transition-transform" 
+                src={proNexusBrand} 
+                alt="Pro Nexus - Delegation of Authority" 
+                className="h-13 sm:h-14 md:h-15 w-auto object-contain cursor-pointer transition-transform" 
                 onClick={() => {
                   setActiveTab('overview');
                   setSelectedRecord(null);
@@ -3538,13 +3538,13 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center">
             <img 
-              src={doaNexusBrand} 
-              alt="DoA Nexus" 
-              className="h-8 w-auto object-contain" 
+              src={proNexusBrand} 
+              alt="Pro Nexus" 
+              className="h-9 sm:h-10 w-auto object-contain" 
             />
           </div>
           <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} DoA Nexus. All rights reserved.
+            &copy; {new Date().getFullYear()} Pro Nexus. All rights reserved.
           </p>
         </div>
       </footer>
