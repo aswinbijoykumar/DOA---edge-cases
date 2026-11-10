@@ -234,7 +234,9 @@ def get_designation_wise_authorities(
                     "policy_reference": getattr(r, "policy_reference", ""),
                     "charter_section": getattr(r, "charter_section", ""),
                     "regulatory_requirement": getattr(r, "regulatory_requirement", ""),
-                    "effective_date": r.effective_date
+                    "regulatory": getattr(r, "regulatory", "N"),
+                    "effective_date": r.effective_date,
+                    "last_update_date": r.created_at.strftime("%Y-%m-%d") if getattr(r, "created_at", None) else (r.effective_date or "2026-02-15")
                 })
 
         return {
@@ -273,7 +275,9 @@ def get_designation_wise_authorities(
                 "policy_reference": getattr(r, "policy_reference", ""),
                 "charter_section": getattr(r, "charter_section", ""),
                 "regulatory_requirement": getattr(r, "regulatory_requirement", ""),
-                "effective_date": r.effective_date
+                "regulatory": getattr(r, "regulatory", "N"),
+                "effective_date": r.effective_date,
+                "last_update_date": r.created_at.strftime("%Y-%m-%d") if getattr(r, "created_at", None) else (r.effective_date or "2026-02-15")
             })
 
     return {

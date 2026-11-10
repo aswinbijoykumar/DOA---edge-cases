@@ -66,20 +66,11 @@ export default function NormalUserDashboard({
 
   const isFrontendUser = currentUser?.persona_type === 'FRONTEND_USER';
 
-  const [activeSubTab, setActiveSubTab] = useState(
-    isFrontendUser ? 'designations' :
-    currentUser?.persona_type === 'PROCESS_OWNER' ? 'hr_integration' : 'overview'
-  );
+  const [activeSubTab, setActiveSubTab] = useState('overview');
 
   useEffect(() => {
     if (currentUser?.persona_type) {
-      if (isFrontendUser) {
-        setActiveSubTab('designations');
-      } else if (currentUser?.persona_type === 'PROCESS_OWNER') {
-        setActiveSubTab('hr_integration');
-      } else {
-        setActiveSubTab('overview');
-      }
+      setActiveSubTab('overview');
     }
   }, [currentUser?.id, currentUser?.persona_type]);
 
@@ -121,6 +112,7 @@ export default function NormalUserDashboard({
   // HR Integration State (Functionality 9)
   const [hrData, setHrData] = useState(null);
   const [isLoadingHr, setIsLoadingHr] = useState(false);
+  const [reportsSubView, setReportsSubView] = useState('preset');
 
   // Persona configurations
   const PERSONA_CONFIGS = {
@@ -331,9 +323,7 @@ export default function NormalUserDashboard({
     ? Boolean(currentUser.permissions.can_propose)
     : ['FRONTEND_USER', 'PROCESS_OWNER', 'DEPT_OWNER', 'AUTHORITY_OWNER'].includes(personaKey);
 
-  const canViewAudit = currentUser?.permissions
-    ? Boolean(currentUser.permissions.can_view_audit_logs)
-    : ['AUDIT_READONLY', 'REVIEWER'].includes(personaKey);
+  const canViewAudit = personaKey === 'AUDIT_READONLY';
 
   const scopeDomainsLabel = currentUser?.permissions?.allowed_domains?.length
     ? currentUser.permissions.allowed_domains.join(' & ')
@@ -366,28 +356,83 @@ export default function NormalUserDashboard({
         <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-10 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2.5">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-2.5 max-w-2xl">
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
               <span>Welcome back, {currentUser?.full_name || 'Stakeholder'}</span>
             </h2>
             
-            <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
-              What would you like to get started with?
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
+              Institutional delegation intelligence: navigate authority boundaries, streamline dual-control reviews, and enforce corporate governance mandates in real time.
             </p>
           </div>
 
+          {/* Animated Modern Governance Telemetry Graphic */}
+          <div className="relative shrink-0 flex items-center justify-start lg:justify-end">
+            <div className="relative w-64 sm:w-72 h-28 flex items-center justify-center">
+              {/* Outer Pulsing Glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/25 via-cyan-500/20 to-indigo-500/25 rounded-2xl blur-xl animate-pulse pointer-events-none" />
+              
+              {/* Glassmorphic Container */}
+              <div className="relative w-full h-full rounded-2xl bg-slate-900/85 backdrop-blur-md border border-teal-500/30 p-3.5 flex flex-col justify-between overflow-hidden shadow-2xl">
+                {/* Orbital animated dashed ring */}
+                <div className="absolute -right-8 -bottom-8 w-28 h-28 border border-teal-400/25 rounded-full border-dashed animate-spin [animation-duration:20s] pointer-events-none" />
+                <div className="absolute -left-6 -top-6 w-20 h-20 border border-cyan-400/20 rounded-full animate-ping [animation-duration:5s] pointer-events-none" />
 
+                <div className="flex items-center justify-between z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-teal-300">Nexus Live Matrix</span>
+                  </div>
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-teal-950/80 text-teal-300 border border-teal-500/40 font-bold">
+                    Matrix 4.2
+                  </span>
+                </div>
+
+                <div className="z-10 py-0.5">
+                  <div className="text-xs font-black text-white tracking-tight flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
+                    <span>2LoD Dual Control</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium">RBAC Guardrails &bull; VAL-01..12 Active</p>
+                </div>
+
+                <div className="flex items-center justify-between text-[9px] text-slate-400 border-t border-white/10 pt-1.5 z-10 font-mono">
+                  <span className="text-teal-300 font-bold flex items-center gap-1">
+                    <CheckSquare className="w-3 h-3 text-teal-400" />
+                    SoD Verified
+                  </span>
+                  <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Enforced
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Dedicated Navigation Button Row for All Normal User Personas */}
+        {/* Action > Core Governance Operations */}
         <div className="mt-6 pt-5 border-t border-white/10">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded-md">
+              Action &gt;
+            </span>
+            <span className="text-[11px] text-slate-400 font-medium">Core Governance Operations</span>
+          </div>
+
           <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 w-full`}>
             {/* 1. Overview */}
             <button
-              onClick={() => onNavigateTab('overview')}
+              onClick={() => {
+                onNavigateTab('overview');
+                setActiveSubTab('overview');
+              }}
               className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
-                activeTab === 'overview'
+                activeTab === 'overview' && activeSubTab === 'overview'
                   ? 'bg-indigo-600 text-white border-indigo-400 shadow-indigo-600/30 ring-2 ring-indigo-400/30 font-black'
                   : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border-indigo-400/30'
               }`}
@@ -411,7 +456,7 @@ export default function NormalUserDashboard({
               <span className="truncate">Search DoA</span>
             </button>
 
-            {/* 3. New Request (enabled strictly for authorized proposer personas) */}
+            {/* 3. Initiate Proposal (enabled strictly for authorized proposer personas) */}
             {!canPropose ? (
               <button
                 disabled
@@ -419,7 +464,7 @@ export default function NormalUserDashboard({
                 title="Proposal authoring disabled for your role/persona"
               >
                 <Edit3 className="h-4 w-4 text-slate-500 shrink-0" />
-                <span className="truncate">New Request</span>
+                <span className="truncate">Initiate Proposal</span>
               </button>
             ) : (
               <button
@@ -429,10 +474,10 @@ export default function NormalUserDashboard({
                     ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-600/30 ring-2 ring-cyan-400/30 font-black'
                     : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border-cyan-400/30'
                 }`}
-                title="Propose New Request"
+                title="Initiate Proposal"
               >
                 <Edit3 className="h-4 w-4 text-cyan-300 shrink-0" />
-                <span className="truncate">New Request</span>
+                <span className="truncate">Initiate Proposal</span>
               </button>
             )}
 
@@ -469,7 +514,7 @@ export default function NormalUserDashboard({
               <span className="truncate">Exception Workflow</span>
             </button>
 
-            {/* 6. Audit Trail (Assurance & 2LoD Review Only) */}
+            {/* 6. Audit Trail (Internal Audit Read-Only Only) */}
             {canViewAudit && (
               <button
                 onClick={() => onNavigateTab('audit')}
@@ -487,23 +532,24 @@ export default function NormalUserDashboard({
           </div>
         </div>
 
-        {/* Feature Sub-Navigation Tabs */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex flex-wrap gap-2 items-center">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mr-2">
-            Workspaces:
+        {/* View > Perspectives & Detailed Reports */}
+        <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap gap-2 items-center">
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded-md mr-2">
+            View &gt;
           </span>
           {[
-            ...(!isFrontendUser ? [{ id: 'overview', label: 'Persona Workspace', icon: Briefcase }] : []),
             { id: 'designations', label: 'Designation View', icon: Award, highlight: true },
-            { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true },
-            { id: 'hr_integration', label: 'HR Org & Acting Authorities', icon: Users, highlight: true }
+            { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeSubTab === tab.id;
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveSubTab(tab.id)}
+                onClick={() => {
+                  onNavigateTab('overview');
+                  setActiveSubTab(tab.id);
+                }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                   isActive
                     ? 'bg-teal-500 text-slate-950 shadow-md font-black'
@@ -524,7 +570,7 @@ export default function NormalUserDashboard({
       {/* ========================================================================= */}
       {/* SUB-VIEW 1: OVERVIEW & PERSONAL STATS */}
       {/* ========================================================================= */}
-      {!isFrontendUser && activeSubTab === 'overview' && (
+      {activeSubTab === 'overview' && (
         <div className="space-y-7">
           {/* Key KPI Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -738,10 +784,165 @@ export default function NormalUserDashboard({
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-VIEW 3: FUNCTIONALITY 7 - PRE-SET MANAGEMENT REPORTS */}
+      {/* SUB-VIEW 3: FUNCTIONALITY 7 & 9 - MANAGEMENT REPORTS & HR ORG HUB        */}
       {/* ========================================================================= */}
       {activeSubTab === 'reports' && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in">
+          {/* Sub-Switch under Management Reports: Pre-Set Reports vs HR Org & Acting Authorities */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setReportsSubView('preset')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  reportsSubView === 'preset'
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                }`}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                <span>Pre-Set Management Reports</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setReportsSubView('hr_org');
+                  fetchHrData();
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  reportsSubView === 'hr_org'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <span>HR Org &amp; Acting Authorities</span>
+              </button>
+            </div>
+
+            <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block">
+              Corporate Governance Telemetry &bull; Modules 7 &amp; 9
+            </span>
+          </div>
+
+          {reportsSubView === 'hr_org' ? (
+            /* Integrated HR Org & Acting Authorities Section */
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded text-[10px] font-extrabold uppercase">
+                      Module 9
+                    </span>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      HR System Integration &amp; Acting Authority Hub
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+                    Real-time synchronization with enterprise HR systems (SAP SuccessFactors / Workday) to auto-update designations, reporting lines, detect vacancies, and route approvals to acting authorities.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-bold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Live HR Connector: ACTIVE
+                  </span>
+                </div>
+              </div>
+
+              {isLoadingHr ? (
+                <div className="py-16 text-center text-slate-400">
+                  <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal-600 mb-2" />
+                  <p className="text-xs font-semibold">Synchronizing with HR directory...</p>
+                </div>
+              ) : !hrData ? (
+                <div className="py-16 text-center text-slate-400">
+                  <Users className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-semibold">No HR connector data available.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* HR Telemetry Bar */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Synced Positions</span>
+                      <div className="text-2xl font-black text-slate-900 mt-1">{hrData.total_synced_positions}</div>
+                    </div>
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Vacancies Detected</span>
+                      <div className="text-2xl font-black text-amber-800 mt-1">{hrData.vacancies_detected}</div>
+                    </div>
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700">Active Acting Authorities</span>
+                      <div className="text-2xl font-black text-blue-800 mt-1">{hrData.acting_delegations_active}</div>
+                    </div>
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Sync Frequency</span>
+                      <div className="text-sm font-bold text-emerald-800 mt-2">Every 15 Minutes (WebHook)</div>
+                    </div>
+                  </div>
+
+                  {/* Active Acting Delegations (Sub-Delegations) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                        Active Sub-Delegations &amp; Interim Sign-Off Authorities
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        Total Active: <strong className="text-slate-800">{hrData.acting_delegations?.length || 0}</strong>
+                      </span>
+                    </div>
+
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                      <div className="max-h-[380px] overflow-y-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200">
+                            <tr>
+                              <th className="py-3 px-4">Primary Position (Substantive)</th>
+                              <th className="py-3 px-4">Interim Acting Authority</th>
+                              <th className="py-3 px-4">Assigned Delegated Sign-Off</th>
+                              <th className="py-3 px-4">Valid Window</th>
+                              <th className="py-3 px-4 text-center">Formal Mandate</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {(hrData.acting_delegations || []).map((del, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                                <td className="py-3 px-4">
+                                  <div className="font-bold text-slate-800">{del.primary_position}</div>
+                                  <div className="text-[10px] text-slate-500 font-mono">{del.primary_holder}</div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="font-bold text-indigo-700">{del.acting_holder}</div>
+                                  <div className="text-[10px] text-slate-500">{del.acting_position}</div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                                    {del.authorized_scope}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                                  {del.start_date} &rarr; {del.end_date}
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    {del.mandate_status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
               <div className="flex items-center gap-2">
@@ -882,7 +1083,7 @@ export default function NormalUserDashboard({
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200 z-10">
                       <tr>
-                        {(reportData.columns || (reportData.data.length ? Object.keys(reportData.data[0]) : [])).map((col) => (
+                        {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col) => (
                           <th key={col} className="py-3 px-4 whitespace-nowrap">
                             {col.replace(/_/g, ' ')}
                           </th>
@@ -890,58 +1091,66 @@ export default function NormalUserDashboard({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {reportData.data.map((item, idx) => {
-                        const cols = reportData.columns || Object.keys(item);
-                        return (
-                          <tr key={item.id || item.log_id || item.version_id || idx} className="hover:bg-slate-50/70 transition-colors">
-                            {cols.map((colKey, cIdx) => {
-                              const val = item[colKey];
-                              const renderedVal = val !== null && val !== undefined ? (typeof val === 'object' ? JSON.stringify(val) : String(val)) : '-';
-                              const isId = colKey.toLowerCase().includes('id');
-                              const isStatus = colKey.toLowerCase().includes('status') || colKey === 'decision';
-                              const isAlert = colKey.toLowerCase().includes('alert');
+                      {!Array.isArray(reportData.data) || reportData.data.length === 0 ? (
+                        <tr>
+                          <td colSpan={reportData.columns?.length || 5} className="py-8 text-center text-slate-400">
+                            No records found for this report.
+                          </td>
+                        </tr>
+                      ) : (
+                        reportData.data.map((item, idx) => {
+                          const cols = reportData.columns || Object.keys(item);
+                          return (
+                            <tr key={item.id || item.log_id || item.version_id || idx} className="hover:bg-slate-50/70 transition-colors">
+                              {cols.map((colKey, cIdx) => {
+                                const val = item[colKey];
+                                const renderedVal = val !== null && val !== undefined ? (typeof val === 'object' ? JSON.stringify(val) : String(val)) : '-';
+                                const isId = colKey.toLowerCase().includes('id');
+                                const isStatus = colKey.toLowerCase().includes('status') || colKey === 'decision';
+                                const isAlert = colKey.toLowerCase().includes('alert');
 
-                              return (
-                                <td key={colKey + cIdx} className={`py-3 px-4 ${isId ? 'font-mono font-bold text-slate-900' : 'text-slate-700'}`}>
-                                  {isStatus ? (
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                                      renderedVal.includes('APPROVED') || renderedVal.includes('COMPLIANT') || renderedVal.includes('PASS')
-                                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                        : renderedVal.includes('REJECTED') || renderedVal.includes('VIOLATION')
-                                        ? 'bg-rose-50 text-rose-800 border border-rose-200'
-                                        : 'bg-teal-50 text-teal-800 border border-teal-200'
-                                    }`}>
-                                      {renderedVal}
-                                    </span>
-                                  ) : isAlert ? (
-                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                      renderedVal.includes('EXCEEDED')
-                                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                                        : 'bg-slate-100 text-slate-700'
-                                    }`}>
-                                      {renderedVal}
-                                    </span>
-                                  ) : (
-                                    <span className="line-clamp-2 max-w-xs">{renderedVal}</span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
+                                return (
+                                  <td key={colKey + cIdx} className={`py-3 px-4 ${isId ? 'font-mono font-bold text-slate-900' : 'text-slate-700'}`}>
+                                    {isStatus ? (
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                                        renderedVal.includes('APPROVED') || renderedVal.includes('COMPLIANT') || renderedVal.includes('PASS')
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                          : renderedVal.includes('REJECTED') || renderedVal.includes('VIOLATION')
+                                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                                          : 'bg-teal-50 text-teal-800 border border-teal-200'
+                                      }`}>
+                                        {renderedVal}
+                                      </span>
+                                    ) : isAlert ? (
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                        renderedVal.includes('EXCEEDED')
+                                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                          : 'bg-slate-100 text-slate-700'
+                                      }`}>
+                                        {renderedVal}
+                                      </span>
+                                    ) : (
+                                      <span className="line-clamp-2 max-w-xs">{renderedVal}</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
           )}
+          </div>
+          )}
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 4: FUNCTIONALITY 9 - HR SYSTEM INTEGRATION & ACTING AUTHORITIES */}
-      {/* ========================================================================= */}
+      {/* Legacy fallback if activeSubTab === 'hr_integration' */}
       {activeSubTab === 'hr_integration' && (
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
