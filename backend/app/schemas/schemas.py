@@ -7,6 +7,32 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    email: str
+    dev_otp: Optional[str] = None
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    otp: str
+
+class VerifyOtpResponse(BaseModel):
+    message: str
+    reset_token: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    reset_token: str
+    new_password: str
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+    success: bool
+
+
 
 class Token(BaseModel):
     access_token: str

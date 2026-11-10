@@ -97,6 +97,31 @@ export const api = {
     removeStoredToken();
   },
 
+  async forgotPassword(email) {
+    return await request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  async verifyOtp(email, otp) {
+    return await request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  },
+
+  async resetPassword(email, resetToken, newPassword) {
+    return await request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        reset_token: resetToken,
+        new_password: newPassword
+      })
+    });
+  },
+
   // Functionality 5: Designation-wise authorities & Governance KPI Categories
   async getDesignationMatrix(params = 'ceo') {
     if (typeof params === 'string') {

@@ -13,6 +13,8 @@ import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
 import ChatbotWidget from './components/ChatbotWidget';
 import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflowInbox';
 import AuthorityChainBuilder from './components/AuthorityChainBuilder';
+import UserProfilePill from './components/common/UserProfilePill';
+import OrgChartModal from './components/common/OrgChartModal';
 import nexusLogo from './assets/nexus-logo.jpg';
 import doaNexusBrand from './assets/doa-nexus-brand.png';
 import { 
@@ -172,7 +174,8 @@ function RadioDropdown({
 export default function App() {
   // Navigation State
 
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'search' | 'request' | 'queue' | 'audit'
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showOrgChartModal, setShowOrgChartModal] = useState(false); // 'overview' | 'search' | 'request' | 'queue' | 'audit'
   
   // Authentication State (starts from stored user session or null, requiring manual login)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -1551,15 +1554,10 @@ export default function App() {
 
               {/* Active User Profile & Logout */}
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200/80 text-xs font-semibold text-slate-700">
-                  <User className="h-3.5 w-3.5 text-teal-600" />
-                  <span className="font-bold text-slate-800 text-xs">
-                    {currentUser.full_name || 'User'}
-                  </span>
-                  <span className={`ml-1 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${ROLE_CONFIGS[currentUser.role]?.badgeClass || 'bg-slate-200 text-slate-700'}`}>
-                    {currentUser.designation || (currentUser.persona_type ? currentUser.persona_type.replace('_', ' ') : (ROLE_CONFIGS[currentUser.role]?.label || currentUser.role))}
-                  </span>
-                </div>
+                <UserProfilePill 
+                  currentUser={currentUser} 
+                  onOpenOrgChart={() => setShowOrgChartModal(true)} 
+                />
 
                 <button
                   type="button"
@@ -3513,6 +3511,13 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Organization Hierarchy Modal (MS Teams Style) */}
+      <OrgChartModal 
+        isOpen={showOrgChartModal} 
+        onClose={() => setShowOrgChartModal(false)} 
+        initialUser={currentUser} 
+      />
 
       {/* Footer Branding */}
       <footer className="bg-white border-t border-slate-200 shadow-sm mt-auto py-4">

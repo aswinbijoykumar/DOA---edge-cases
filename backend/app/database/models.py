@@ -30,6 +30,20 @@ class User(Base):
     change_requests = relationship("ChangeRequest", back_populates="requester", foreign_keys="ChangeRequest.requester_id")
 
 
+class PasswordResetToken(Base):
+    __tablename__ = "password_resets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    email = Column(String(255), index=True, nullable=False)
+    otp = Column(String(10), nullable=False)
+    reset_token = Column(String(255), nullable=True, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+
+
 class DOARecord(Base):
     __tablename__ = "doa_records"
 
