@@ -68,3 +68,23 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+@app.on_event("startup")
+def startup_event():
+    # Automatically seed users, DOAs, and change requests if the database is empty
+    from app.database.database import SessionLocal
+    from app.database.models import User
+    from app.seed import seed_database
+    from app.seed_supplementary import seed_supplementary_data
+
+    db = SessionLocal()
+    try:
+        user_count = db.query(User).count()
+        if user_count == 0:
+            print("[RENDER STARTUP] Database is empty. Seeding initial users and DOA master records...")
+            seed_database()
+            seed_supplementary_data()
+            print("[RENDER STARTUP] Seeding completed successfully.")
+    except Exception as e:
+        print(f"[RENDER STARTUP] Seeding check error: {e}")
+    finally:
+        db.close()
