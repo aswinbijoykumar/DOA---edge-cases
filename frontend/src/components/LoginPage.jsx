@@ -22,7 +22,7 @@ import {
   Search
 } from 'lucide-react';
 import { api } from '../services/api';
-import nexusLogo from '../assets/nexus-logo.jpg';
+import doaNexusBrand from '../assets/doa-nexus-brand.png';
 
 export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('dept.owner@doa.local');
@@ -35,7 +35,7 @@ export default function LoginPage({ onLoginSuccess }) {
   const NORMAL_USER_PERSONAS = [
     {
       id: 'dept_owner',
-      title: 'Department / Function Owner (Finance - Bahrain)',
+      title: 'Department Owner (Finance - Bahrain)',
       name: 'Marcus Vance',
       designation: 'Head of Finance & Treasury',
       dept: 'Finance & Treasury',
@@ -50,7 +50,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'risk_owner',
-      title: 'Department / Function Owner (Risk - Bahrain)',
+      title: 'Department Owner (Risk - Bahrain)',
       name: 'Tariq Al-Mansoor',
       designation: 'Head of Enterprise Credit & Risk',
       dept: 'Risk Management',
@@ -65,7 +65,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'ksa_owner',
-      title: 'Department / Function Owner (Finance - KSA)',
+      title: 'Department Owner (Finance - KSA)',
       name: 'Nadia Al-Qahtani',
       designation: 'Head of Finance (KSA Subsidiary)',
       dept: 'Finance (KSA)',
@@ -80,7 +80,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'process_owner',
-      title: 'Process Owner',
+      title: 'Process Owner (P2P & Ops)',
       name: 'Elena Rostova',
       designation: 'P2P & Procurement Lead',
       dept: 'Supply Chain Operations',
@@ -95,7 +95,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'authority_owner',
-      title: 'Authority Owner',
+      title: 'Authority Owner (Legal/Secretariat)',
       name: 'David Sterling',
       designation: 'Governance Counsel',
       dept: 'Legal & Board Secretariat',
@@ -110,11 +110,11 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'reviewer',
-      title: 'Reviewer (2LoD Risk — Non-Proposer)',
+      title: 'Reviewer (2LoD Risk)',
       name: 'Sophia Zhang',
       designation: 'Senior Risk Reviewer',
       dept: 'Enterprise Risk Management',
-      scope: 'Cross-Domain Review • No Propose CRUD',
+      scope: 'Cross-Domain Review • No Propose',
       email: 'reviewer@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
@@ -125,11 +125,11 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'approver',
-      title: 'Approver (Executive — Non-Proposer)',
+      title: 'Approver (Executive Non-Proposer)',
       name: 'Julian Hayes',
       designation: 'VP Finance (Exec Approver)',
       dept: 'Executive Management',
-      scope: 'Cross-Domain Approval • No Propose CRUD',
+      scope: 'Cross-Domain Approval • No Propose',
       email: 'approver@doa.local',
       password: 'User@123',
       role: 'NORMAL_USER',
@@ -140,7 +140,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'frontend_user',
-      title: 'Requester',
+      title: 'Requester (Business Line Analyst)',
       name: 'Aiden Cole',
       designation: 'Business Line Analyst',
       dept: 'Commercial Operations',
@@ -155,7 +155,7 @@ export default function LoginPage({ onLoginSuccess }) {
     },
     {
       id: 'audit_readonly',
-      title: 'Internal Audit / Compliance (Read-Only)',
+      title: 'Audit & Assurance (Read-Only)',
       name: 'Claire Montgomery',
       designation: 'Senior Internal Auditor',
       dept: 'Internal Audit & Assurance',
@@ -177,7 +177,7 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Risk & Governance Reviewer',
       designation: '2LoD Governance Officer',
       dept: 'Enterprise Governance & Compliance',
-      scope: 'All Domains • Review & Publish (No Propose)',
+      scope: 'All Domains • Review & Publish',
       email: 'governance@doa.local',
       password: 'GovTeam@123',
       role: 'GOVERNANCE_TEAM',
@@ -192,7 +192,7 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'Chief Delegation Officer',
       designation: 'DOA Administrator',
       dept: 'Executive Office / DOA Governance',
-      scope: 'All Domains & Entities • VAL-06 SoD Enforced',
+      scope: 'All Domains & Entities • VAL-06 SoD',
       email: 'doaadmin@doa.local',
       password: 'DoaAdmin@123',
       role: 'DOA_ADMINISTRATOR',
@@ -207,7 +207,7 @@ export default function LoginPage({ onLoginSuccess }) {
       name: 'IT & System Administrator',
       designation: 'Platform Architect',
       dept: 'Information Technology / Systems',
-      scope: 'IT Telemetry & Audit • Read-Only Business DOA',
+      scope: 'IT Telemetry & Audit • Read-Only',
       email: 'sysadmin@doa.local',
       password: 'SysAdmin@123',
       role: 'SYSTEM_ADMINISTRATOR',
@@ -219,6 +219,9 @@ export default function LoginPage({ onLoginSuccess }) {
   ];
 
   const currentList = activeTab === 'normal_users' ? NORMAL_USER_PERSONAS : ENTERPRISE_ROLES;
+  const selectedPersona = currentList.find(p => p.id === selectedPersonaId && p.email === email) 
+    || NORMAL_USER_PERSONAS.find(p => p.email === email)
+    || ENTERPRISE_ROLES.find(p => p.email === email);
 
   const handleSelectPersona = (p) => {
     setSelectedPersonaId(p.id);
@@ -257,258 +260,252 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative overflow-hidden font-sans text-slate-900">
-      {/* Dynamic ambient background glow */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
+    <div className="min-h-screen w-full bg-white flex flex-col justify-center p-3 sm:p-5 lg:p-6 font-sans text-slate-900">
+      
+      {/* Full-width screen-spread layout without outer card boundary */}
+      <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch min-h-[calc(100vh-2.5rem)]">
+        
+        {/* Left Column: Blue Shaded Canvas with Horizontal KPI Role Cards */}
+        <div className="lg:col-span-7 xl:col-span-8 rounded-3xl p-5 sm:p-7 md:p-8 bg-gradient-to-br from-[#1e40af] via-[#2563eb] to-[#38bdf8] text-white relative overflow-hidden flex flex-col justify-between shadow-2xl">
+          {/* Ambient glass light effects */}
+          <div className="absolute -bottom-28 -left-28 w-96 h-96 bg-white/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-300/20 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Brand & Portal Header */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-4xl text-center relative z-10 mb-6">
-        <div className="inline-flex items-center justify-center gap-3 px-5 py-2.5 bg-slate-900/90 border border-slate-800 rounded-2xl shadow-2xl mb-2 backdrop-blur-md">
-          <img 
-            src={nexusLogo} 
-            alt="DoA Nexus" 
-            className="h-8 w-8 object-contain rounded-lg shadow-xs" 
-          />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            DOA Nexus Login Portal
-          </h1>
-        </div>
-      </div>
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-5xl px-4 relative z-10">
-        <div className="bg-white/95 backdrop-blur-xl shadow-2xl rounded-3xl border border-slate-200/80 overflow-hidden">
-          
-          {/* Persona Category Segmented Control */}
-          <div className="bg-slate-100/80 p-2 border-b border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl shadow-2xs border border-slate-200/60 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('normal_users');
-                  handleSelectPersona(NORMAL_USER_PERSONAS[0]);
-                }}
-                className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  activeTab === 'normal_users'
-                    ? 'bg-teal-600 text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Users className="h-3.5 w-3.5" />
-                <span>Normal User Personas ({NORMAL_USER_PERSONAS.length} Users)</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold ${
-                  activeTab === 'normal_users' ? 'bg-teal-700 text-white' : 'bg-slate-200 text-slate-700'
-                }`}>
-                  {NORMAL_USER_PERSONAS.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('enterprise_admins');
-                  handleSelectPersona(ENTERPRISE_ROLES[0]);
-                }}
-                className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-                  activeTab === 'enterprise_admins'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <ShieldCheck className="h-3.5 w-3.5 text-teal-400" />
-                <span>Governance &amp; Admin Team</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold ${
-                  activeTab === 'enterprise_admins' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
-                }`}>
-                  3
-                </span>
-              </button>
-            </div>
-
-            <div className="text-[11px] text-slate-500 font-medium px-2 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-teal-600" />
-              <span>Click any card for 1-Click Fast Auth</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
-            
-            {/* Left Column: Interactive Persona Card Selector */}
-            <div className="lg:col-span-7 p-6 sm:p-7 space-y-3.5 max-h-[620px] overflow-y-auto custom-scrollbar">
-              <div className="flex items-center justify-between pb-1">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {activeTab === 'normal_users' ? 'Select Normal User Persona' : 'Select Governance or Administrative Role'}
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    {activeTab === 'normal_users'
-                      ? 'Scoped by functional domain (Finance vs Risk), legal entity (Bahrain vs KSA), and CRUD authority.'
-                      : 'Executive, Reviewer, and System Administrator privileges for 2LoD governance.'}
-                  </p>
-                </div>
+          <div className="relative z-10 space-y-4">
+            {/* Header: Enlarged DOA Nexus Logo & Persona Segmented Tabs */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
+              <div className="inline-flex items-center justify-center px-5 py-2.5 sm:px-6 sm:py-3 bg-white rounded-2xl shadow-xl border border-white/60">
+                <img 
+                  src={doaNexusBrand} 
+                  alt="DOA Nexus - Delegation of authority" 
+                  className="h-10 sm:h-12 md:h-14 w-auto object-contain" 
+                />
               </div>
 
-              <div className="space-y-2.5">
-                {currentList.map((p) => {
-                  const isSelected = selectedPersonaId === p.id && email === p.email;
-                  const Icon = p.icon;
-                  return (
-                    <div
-                      key={p.id}
-                      onClick={() => handleSelectPersona(p)}
-                      className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 text-left relative ${
-                        isSelected
-                          ? 'border-teal-600 bg-teal-50/50 shadow-md ring-2 ring-teal-500/20'
-                          : 'border-slate-200/80 hover:border-teal-300 bg-white hover:bg-slate-50/60'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`p-2.5 rounded-xl flex-shrink-0 mt-0.5 ${
-                          isSelected ? 'bg-teal-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600'
+              {/* Segmented Persona Category Tabs */}
+              <div className="flex items-center gap-1.5 bg-black/20 p-1.5 rounded-2xl backdrop-blur-md border border-white/20 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('normal_users');
+                    handleSelectPersona(NORMAL_USER_PERSONAS[0]);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                    activeTab === 'normal_users'
+                      ? 'bg-white text-blue-700 shadow-md'
+                      : 'text-white/85 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <Users className="h-4 w-4" />
+                  <span>Normal Users ({NORMAL_USER_PERSONAS.length})</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('enterprise_admins');
+                    handleSelectPersona(ENTERPRISE_ROLES[0]);
+                  }}
+                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+                    activeTab === 'enterprise_admins'
+                      ? 'bg-white text-blue-700 shadow-md'
+                      : 'text-white/85 hover:text-white hover:bg-white/10'
+                  }`}
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  <span>Governance &amp; Admin ({ENTERPRISE_ROLES.length})</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Title & Instructions */}
+            <div className="pt-1">
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                {activeTab === 'normal_users' ? 'Select Normal User Persona' : 'Select Governance or Administrative Role'}
+              </h1>
+              <p className="text-xs sm:text-sm text-blue-100 font-medium mt-0.5">
+                Click any card below to automatically populate credentials and switch perspective.
+              </p>
+            </div>
+
+            {/* Horizontal Aligned KPI Persona Cards Grid (Strictly fits without scroll) */}
+            <div className={`grid gap-3 pt-2 ${
+              activeTab === 'normal_users' 
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                : 'grid-cols-1 sm:grid-cols-3'
+            }`}>
+              {currentList.map((p, idx) => {
+                const isSelected = selectedPersonaId === p.id && email === p.email;
+                const Icon = p.icon;
+
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => handleSelectPersona(p)}
+                    className={`p-3 rounded-2xl cursor-pointer transition-all duration-200 text-left relative flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-white text-slate-900 shadow-2xl ring-2 ring-white scale-[1.02]'
+                        : 'bg-white/15 hover:bg-white/25 border border-white/25 text-white backdrop-blur-md hover:scale-[1.01]'
+                    }`}
+                  >
+                    {/* Top: Index badge, Name & Check indicator */}
+                    <div className="flex items-center justify-between gap-1 mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-extrabold shrink-0 ${
+                          isSelected ? 'bg-blue-600 text-white shadow-xs' : 'bg-white/25 text-white'
                         }`}>
-                          <Icon className="h-4 w-4" />
+                          {idx + 1}
                         </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900">
-                              {p.title}
-                            </span>
-                            <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] font-semibold text-slate-700">
-                              {p.name}
-                            </span>
-                            {p.scope && (
-                              <span className="px-2 py-0.5 bg-teal-50 border border-teal-200 rounded text-[9px] font-extrabold text-teal-800 uppercase">
-                                {p.scope}
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="text-[11px] text-teal-700 font-medium mt-0.5">
-                            {p.designation} &bull; <span className="text-slate-500">{p.dept}</span>
-                          </div>
-
-                          <p className="text-[11px] text-slate-600 mt-1 line-clamp-2 leading-relaxed">
-                            {p.duty}
-                          </p>
-
-                          <div className="text-[10px] font-mono text-slate-400 mt-1.5 flex items-center justify-between">
-                            <span>{p.email}</span>
-                            <span className="text-[9px] font-sans font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                              Pass: {p.password}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="flex-shrink-0 pt-1">
-                          {isSelected ? (
-                            <CheckCircle2 className="h-5 w-5 text-teal-600" />
-                          ) : (
-                            <div className="h-4 w-4 rounded-full border border-slate-300" />
-                          )}
-                        </div>
+                        <span className={`text-xs font-bold truncate ${
+                          isSelected ? 'text-slate-900' : 'text-white'
+                        }`}>
+                          {p.name}
+                        </span>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
 
-            {/* Right Column: Authentication Form & Details */}
-            <div className="lg:col-span-5 p-6 sm:p-7 flex flex-col justify-between bg-slate-50/50">
-              <div className="space-y-4">
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-600">
-                    FastAPI REST Authentication
-                  </span>
-                  <h3 className="text-base font-bold text-slate-900 mt-0.5 flex items-center gap-2">
-                    <Lock className="h-4 w-4 text-teal-600" />
-                    Login
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Credentials populate automatically upon clicking any role card.
-                  </p>
-                </div>
-
-                {error && (
-                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-semibold flex items-start gap-2 animate-fade-in">
-                    <AlertCircle className="h-4 w-4 text-rose-600 flex-shrink-0 mt-0.5" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <Mail className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="e.g. user@doa.local"
-                        className="block w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <KeyRound className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="block w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-teal-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50"
-                    >
-                      {isLoading ? (
-                        <span>Authenticating...</span>
+                      {isSelected ? (
+                        <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
                       ) : (
-                        <>
-                          <span>Login</span>
-                          <ArrowRight className="h-4 w-4" />
-                        </>
+                        <div className="h-3.5 w-3.5 rounded-full border border-white/40 shrink-0" />
                       )}
-                    </button>
+                    </div>
+
+                    {/* Middle: Title & Scope */}
+                    <div className="my-0.5">
+                      <div className={`text-[11px] font-semibold truncate ${
+                        isSelected ? 'text-blue-700' : 'text-blue-100'
+                      }`}>
+                        {p.title}
+                      </div>
+                      {p.scope && (
+                        <div className={`text-[10px] truncate font-medium ${
+                          isSelected ? 'text-slate-500' : 'text-blue-200/90'
+                        }`}>
+                          {p.scope}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom: Fast Auth Credential snippet */}
+                    <div className={`flex items-center justify-between text-[10px] font-mono mt-1.5 pt-1.5 border-t ${
+                      isSelected ? 'border-slate-100' : 'border-white/10'
+                    }`}>
+                      <span className={`truncate max-w-[130px] ${
+                        isSelected ? 'text-slate-400' : 'text-blue-200/80'
+                      }`}>
+                        {p.email}
+                      </span>
+                      <span className={`font-sans font-bold px-1.5 py-0.5 rounded text-[9px] ${
+                        isSelected ? 'bg-slate-100 text-slate-600' : 'bg-white/20 text-white'
+                      }`}>
+                        {p.password}
+                      </span>
+                    </div>
                   </div>
-                </form>
-
-
-              </div>
-
-              <div className="pt-5 border-t border-slate-200/80 flex items-center justify-between text-[11px] text-slate-400">
-                <span className="flex items-center gap-1 font-mono">
-                  <Database className="h-3 w-3 text-slate-400" /> SQLite &bull; JWT Bearer
-                </span>
-                <span className="font-semibold text-slate-500">FastAPI Port 8000</span>
-              </div>
-
+                );
+              })}
             </div>
-
           </div>
 
+
         </div>
+
+        {/* Right Column: Clean White Authentication Form sitting directly on page */}
+        <div className="lg:col-span-5 xl:col-span-4 p-4 sm:p-8 md:p-10 flex flex-col justify-center bg-white">
+          <div className="w-full max-w-sm mx-auto space-y-5">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+                <Lock className="h-6 w-6 text-blue-600" />
+                Sign In
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Enter credentials or select any role card to sign in.
+              </p>
+            </div>
+
+            {/* Active Selected Persona Highlight Pill */}
+            {selectedPersona && (
+              <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-100 flex items-center gap-3 shadow-2xs">
+                <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                    {selectedPersona.name}
+                  </div>
+                  <div className="text-[11px] text-blue-700 font-semibold truncate">
+                    {selectedPersona.title}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-semibold flex items-start gap-2.5 animate-fade-in">
+                <AlertCircle className="h-4 w-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. user@doa.local"
+                    className="block w-full pl-10 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="block w-full pl-10 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50"
+                >
+                  {isLoading ? (
+                    <span>Authenticating...</span>
+                  ) : (
+                    <>
+                      <span>Sign In to Governance Workspace</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
       </div>
     </div>
   );

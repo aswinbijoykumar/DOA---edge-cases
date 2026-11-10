@@ -12,6 +12,7 @@ import DoaAdminDashboard from './components/dashboards/DoaAdminDashboard';
 import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
 import ChatbotWidget from './components/ChatbotWidget';
 import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflowInbox';
+import AuthorityChainBuilder from './components/AuthorityChainBuilder';
 import nexusLogo from './assets/nexus-logo.jpg';
 import doaNexusBrand from './assets/doa-nexus-brand.png';
 import { 
@@ -1810,7 +1811,7 @@ export default function App() {
                       <th className="py-3.5 px-4 font-semibold w-24 border-b border-slate-700">Function</th>
                       <th className="py-3.5 px-4 font-semibold w-20 border-b border-slate-700">Type</th>
                       <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
-                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Authority Chain</th>
+                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Approve Authority Chain</th>
                       <th className="py-3.5 px-4 font-semibold text-center w-24 border-b border-slate-700">Actions</th>
                     </tr>
                   </thead>
@@ -1922,8 +1923,7 @@ export default function App() {
 
                                   {/* Authority Chain */}
                                   <td className="py-3 px-4">
-                                    <div className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-                                      <span className="text-teal-600 flex-shrink-0 font-bold">↲</span>
+                                    <div className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-2.5 py-1.5 flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
                                       <span className="truncate" title={formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors)}>
                                         {formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors || 'A')}
                                       </span>
@@ -1973,7 +1973,7 @@ export default function App() {
 
         {/* TAB 3: NEW REQUEST (Authorized Proposers Only) */}
         {activeTab === 'request' && canPropose && (
-          <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+          <div className="w-full space-y-6 animate-fade-in">
             {/* Title Section */}
             <div className="flex items-center justify-between">
               <div>
@@ -1985,7 +1985,7 @@ export default function App() {
             </div>
 
             {/* Action Mode Selector with Explicit Delete Proposal */}
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full border border-slate-200/80 shadow-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl w-full border border-slate-200/80 shadow-xs">
               {[
                 { id: 'Add', label: 'Add Descision Area', icon: Plus, activeBg: 'bg-white text-emerald-600 shadow-sm border border-emerald-100' },
                 { id: 'Modify', label: 'Modify Descision Area', icon: Edit3, activeBg: 'bg-white text-blue-600 shadow-sm border border-blue-100' },
@@ -2116,45 +2116,44 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Decision Area Content */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Decision Area / Authority Description
-                    </label>
-                    <input 
-                      type="text"
-                      value={formData.decisionArea}
-                      onChange={(e) => setFormData(prev => ({ ...prev, decisionArea: e.target.value }))}
-                      placeholder="e.g. Approve single obligor credit limit for wholesale portfolio above USD 50 million"
-                      required={actionMode !== 'Delete'}
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                    />
-                  </div>
+                  {/* Decision Area, Classification, & Regulatory Mandated Aligned Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div className="md:col-span-6 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Decision Area / Authority Description <span className="text-rose-500">*</span>
+                      </label>
+                      <input 
+                        type="text"
+                        value={formData.decisionArea}
+                        onChange={(e) => setFormData(prev => ({ ...prev, decisionArea: e.target.value }))}
+                        placeholder="e.g. Approve single obligor credit limit for wholesale portfolio above USD 50 million"
+                        required={actionMode !== 'Delete'}
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800"
+                      />
+                    </div>
 
-                  {/* Key/Non-Key & Regulatory */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
+                    <div className="md:col-span-3 space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Decision Classification
                       </label>
                       <select
                         value={formData.keyNonKey}
                         onChange={(e) => setFormData(prev => ({ ...prev, keyNonKey: e.target.value }))}
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800"
                       >
                         <option value="Key">Key Decision</option>
                         <option value="Non-Key">Non-Key Decision</option>
                       </select>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="md:col-span-3 space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Regulatory Mandated
                       </label>
                       <select
                         value={formData.regulatory}
                         onChange={(e) => setFormData(prev => ({ ...prev, regulatory: e.target.value }))}
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800"
                       >
                         <option value="N">No (Internal Corporate Governance)</option>
                         <option value="Y">Yes (Central Bank / CBB Mandated)</option>
@@ -2162,168 +2161,81 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Proposed Authority Section with Custom Radio Dropdowns */}
-                  <div className="p-5 bg-gradient-to-br from-slate-50 to-teal-50/20 border border-slate-200 rounded-2xl space-y-4 w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200/80 pb-3">
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                          <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-                          PROPOSED AUTHORITY BUILDER
-                        </span>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Click any dropdown to select an option via radio button, then click the round <span className="font-bold text-teal-700">(+)</span> button to add to the delegation chain.
-                        </p>
-                      </div>
-                      
-                      {/* Round toggle button for builder expansion */}
-                      <button
-                        type="button"
-                        onClick={() => setIsChildOpen(prev => !prev)}
-                        className="self-start sm:self-auto flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white border border-slate-200 text-teal-700 hover:bg-teal-50 rounded-full shadow-xs transition-all"
-                      >
-                        <span className="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
-                        {isChildOpen ? 'Hide Builder Steps' : 'Open Round Stepper (+)'}
-                      </button>
-                    </div>
-
-                    {isChildOpen && (
-                      <div className="space-y-4 animate-fade-in w-full">
-                        {/* 3-Column Radio Dropdowns - Perfectly Aligned with textboxes below */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full items-end">
-                          
-                          {/* Column 1: Authority Body Dropdown */}
-                          <div className="space-y-1.5 w-full">
-                            <label className="text-xs font-bold text-slate-700 block">
-                              Authority Body
-                            </label>
-                            <RadioDropdown
-                              selectedValue={selectedAuthParent}
-                              options={authorityTaxonomy.parents.map(p => ({ value: p.id, label: p.name }))}
-                              onChange={(val) => handleAuthParentChange(val)}
-                              accentColor="teal"
-                            />
-                          </div>
-
-                          {/* Column 2: Specific Body / Role Dropdown */}
-                          <div className="space-y-1.5 w-full">
-                            <label className="text-xs font-bold text-slate-700 block truncate">
-                              {currentAuthParentDef.hasChildDropdown ? currentAuthParentDef.childLabel || 'Specific Body / Role' : 'Specific Body / Role'}
-                            </label>
-                            <RadioDropdown
-                              selectedValue={selectedAuthChild}
-                              options={(currentAuthParentDef.children || []).map(c => ({ value: c.code, label: c.name }))}
-                              onChange={(val) => setSelectedAuthChild(val)}
-                              disabled={!currentAuthParentDef.hasChildDropdown}
-                              disabledPlaceholder={`Direct: ${currentAuthParentDef.name}`}
-                              accentColor="indigo"
-                            />
-                          </div>
-
-                          {/* Column 3: Action Operator Dropdown + Round (+) Button */}
-                          <div className="space-y-1.5 w-full">
-                            <label className="text-xs font-bold text-slate-700 block">
-                              Action Operator
-                            </label>
-                            <div className="flex items-center gap-2 w-full">
-                              <div className="flex-1 min-w-0">
-                                <RadioDropdown
-                                  selectedValue={selectedAuthOperator}
-                                  options={currentAuthParentDef.operators.map(op => ({ value: op.code, label: op.label }))}
-                                  onChange={(val) => setSelectedAuthOperator(val)}
-                                  accentColor="amber"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleAddAuthorityToChain}
-                                title="Add selected authority step to delegation chain"
-                                className="h-[38px] w-[38px] flex-shrink-0 bg-teal-600 hover:bg-teal-700 text-white rounded-full flex items-center justify-center shadow-md transition-all transform hover:scale-105 active:scale-95"
-                              >
-                                <Plus className="h-5 w-5" />
-                              </button>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* Visual Chain representation - Exact Width Alignment */}
-                        <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2 w-full shadow-2xs">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Active Proposed Authority Chain (Click x on any pill to remove)
-                          </span>
-                          
-                          <div className="flex flex-wrap items-center gap-2">
-                            {authorityChain.length === 0 ? (
-                              <span className="text-xs text-slate-400 italic">No authority steps added yet. Click the round (+) button above to add steps.</span>
-                            ) : (
-                              authorityChain.map((item, idx) => (
-                                <React.Fragment key={idx}>
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-50 border border-teal-200 text-teal-800 font-bold text-xs rounded-full shadow-xs">
-                                    <span>{item.display}</span>
-                                    <button 
-                                      type="button" 
-                                      onClick={() => handleRemoveFromChain(idx)}
-                                      className="text-teal-400 hover:text-rose-600 rounded-full"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </span>
-                                  {idx < authorityChain.length - 1 && (
-                                    <ChevronRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                                  )}
-                                </React.Fragment>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                  {/* Authority Hierarchy Studio & Proposed Authority Chain Builder */}
+                  <div className="space-y-4 w-full">
+                    <AuthorityChainBuilder
+                      initialChain={authorityChain.map((item, idx) => ({
+                        id: `init-${idx}`,
+                        authorityBody: item.parentName || 'Board Committees',
+                        entity: item.childName || item.parentName || 'AC – Audit Committee',
+                        code: item.display ? item.display.split(' ')[0] : 'AC',
+                        operator: item.operator || (idx === 0 ? 'P' : idx === 1 ? 'R' : 'A'),
+                        operatorLabel: item.operator === 'P' ? 'Proposer (P)' : item.operator === 'R' ? 'General Reviewer (R)' : item.operator === 'A' ? 'Approver (A)' : `Endorse (${item.operator || 'E1'})`,
+                        roleType: item.operator === 'P' ? 'proposer' : (item.operator === 'R' || item.operator === 'R1' || item.operator === 'R2') ? 'reviewer' : (item.operator === 'A' || item.operator === 'BA') ? 'approver' : 'endorser',
+                        display: item.display
+                      }))}
+                      onChange={(newChain, compositeStr) => {
+                        setAuthorityChain(newChain);
+                        setFormData(prev => ({ ...prev, authority: compositeStr }));
+                      }}
+                      onSave={(newChain, compositeStr) => {
+                        setAuthorityChain(newChain);
+                        setFormData(prev => ({ ...prev, authority: compositeStr }));
+                        addToast('Authority Matrix Validated & Saved', 'success');
+                      }}
+                    />
 
                     {/* Authority preview input (Non-Editable) */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Composite Authority String
-                      </label>
+                    <div className="space-y-1.5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Composite Authority String (Generated Sequence)
+                        </label>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase bg-white px-2 py-0.5 rounded border border-slate-200">
+                          Read-Only
+                        </span>
+                      </div>
                       <input 
                         type="text"
                         readOnly
                         value={formData.authority}
-                        placeholder="e.g. BoD (A) ➔ BRPC (E1) ➔ GCFO (R)"
-                        className="w-full text-xs font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-600 cursor-not-allowed select-none focus:outline-none transition-all"
+                        placeholder="e.g. AC (P) ➔ CRO (R) ➔ BRC (E1) ➔ CEO (A)"
+                        className="w-full text-xs font-mono font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
                       />
                     </div>
                   </div>
 
                 </div>
 
-                {/* Rationale (Mandatory for change control) */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Rationale for Request / Proposal Justification
-                  </label>
-                  <textarea 
-                    rows="2"
-                    value={formData.rationale}
-                    onChange={(e) => setFormData(prev => ({ ...prev, rationale: e.target.value }))}
-                    placeholder="State justification, audit recommendations, risk committee mandates or CBB references..."
-                    required
-                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
-                  ></textarea>
-                </div>
+                {/* Rationale & Operational Impact Assessment 2-Column Responsive Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Rationale for Request / Proposal Justification <span className="text-rose-500">*</span>
+                    </label>
+                    <textarea 
+                      rows="3"
+                      value={formData.rationale}
+                      onChange={(e) => setFormData(prev => ({ ...prev, rationale: e.target.value }))}
+                      placeholder="State justification, audit recommendations, risk committee mandates or CBB references..."
+                      required
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs resize-none"
+                    ></textarea>
+                  </div>
 
-                {/* Operational Impact Analysis (For Process & Dept Owners) */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-                    <span>Operational &amp; Process Impact Assessment</span>
-                    <span className="text-[10px] text-teal-600 font-semibold lowercase">Optional / Process Owner review</span>
-                  </label>
-                  <textarea 
-                    rows="2"
-                    value={formData.operationalImpact || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, operationalImpact: e.target.value }))}
-                    placeholder="Describe how this change affects ERP controls, SLA processing times, segregation of duties, or departmental handovers..."
-                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
-                  ></textarea>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                      <span>Operational &amp; Process Impact Assessment</span>
+                      <span className="text-[10px] text-teal-600 font-semibold lowercase">Optional</span>
+                    </label>
+                    <textarea 
+                      rows="3"
+                      value={formData.operationalImpact || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, operationalImpact: e.target.value }))}
+                      placeholder="Describe how this change affects ERP controls, SLA processing times, segregation of duties, or departmental handovers..."
+                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs resize-none"
+                    ></textarea>
+                  </div>
                 </div>
 
                 {/* Document Upload Feature (Functionality 3) */}
@@ -3605,14 +3517,12 @@ export default function App() {
       {/* Footer Branding */}
       <footer className="bg-white border-t border-slate-200 shadow-sm mt-auto py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <img 
-              src={nexusLogo} 
+              src={doaNexusBrand} 
               alt="DoA Nexus" 
-              className="h-8 w-8 object-contain rounded-lg shadow-xs" 
+              className="h-8 w-auto object-contain" 
             />
-            <div className="h-7 w-[1px] bg-slate-200 mx-0.5"></div>
-            <span className="text-sm font-bold text-slate-800 tracking-tight">DoA Nexus</span>
           </div>
           <p className="text-xs text-slate-400">
             &copy; {new Date().getFullYear()} DoA Nexus. All rights reserved.

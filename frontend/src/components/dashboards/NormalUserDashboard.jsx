@@ -68,10 +68,20 @@ export default function NormalUserDashboard({
 
   const [activeSubTab, setActiveSubTab] = useState(
     isFrontendUser ? 'designations' :
-    currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'designations' :
-    currentUser?.persona_type === 'PROCESS_OWNER' ? 'hr_integration' :
-    currentUser?.persona_type === 'AUDIT_READONLY' ? 'reports' : 'overview'
+    currentUser?.persona_type === 'PROCESS_OWNER' ? 'hr_integration' : 'overview'
   );
+
+  useEffect(() => {
+    if (currentUser?.persona_type) {
+      if (isFrontendUser) {
+        setActiveSubTab('designations');
+      } else if (currentUser?.persona_type === 'PROCESS_OWNER') {
+        setActiveSubTab('hr_integration');
+      } else {
+        setActiveSubTab('overview');
+      }
+    }
+  }, [currentUser?.id, currentUser?.persona_type]);
 
   // Supplementary BRD Modals & Workflow State
   const [showValidatorModal, setShowValidatorModal] = useState(false);
