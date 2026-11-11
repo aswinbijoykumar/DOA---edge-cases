@@ -240,6 +240,9 @@ def apply_doa_read_scope(query, user: User):
 
 def can_user_read_doa(rec: DOARecord, user: User) -> bool:
     """Return True if user is authorized to view the given DOARecord."""
+    # Published DOA matrix explorer records are readable organization-wide by all authenticated users
+    if getattr(rec, "status", None) == "PUBLISHED":
+        return True
     domains = get_allowed_domains(user)
     if len(domains) >= len(ALL_DOMAINS):
         return True

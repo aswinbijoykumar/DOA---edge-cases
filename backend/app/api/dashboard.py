@@ -14,8 +14,9 @@ def get_dashboard_summary(
     current_user: User = Depends(get_current_user)
 ):
     """Calculates KPI statistics across authorized DOA records and Governance Change Requests."""
+    # Published DOA records are visible organization-wide in read-only mode
+    pub_doa = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED")
     base_doa = apply_doa_read_scope(db.query(DOARecord), current_user)
-    pub_doa = base_doa.filter(DOARecord.status == "PUBLISHED")
 
     total_published = pub_doa.count()
     total_records = base_doa.count()

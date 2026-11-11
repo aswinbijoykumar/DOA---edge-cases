@@ -5,7 +5,13 @@ from app.database.models import DOARecord, DOAVersion, User
 from app.schemas.schemas import DOACreate
 from app.services.audit_service import log_audit
 from app.services.version_service import create_published_version_snapshot, record_to_dict
-from app.core.rbac import apply_doa_read_scope, assert_domain_write_access, assert_entity_write_access
+from app.core.rbac import (
+    apply_doa_read_scope,
+    assert_domain_write_access,
+    assert_entity_write_access,
+    get_allowed_domains,
+    ALL_DOMAINS
+)
 
 def get_doa_records(
     db: Session,
@@ -21,9 +27,26 @@ def get_doa_records(
 ) -> List[DOARecord]:
     query = db.query(DOARecord)
 
-    # Enforce user RBAC/ABAC domain visibility boundary
+    # In the DOA Matrix Explorer, published records are readable organization-wide
+    # across all functions for all normal users (e.g. Finance users can view Risk DOA and vice versa).
+    # Draft/non-published records remain strictly scoped to authorized functional domains.
     if current_user is not None:
-        query = apply_doa_read_scope(query, current_user)
+        if status != "PUBLISHED":
+            if status is not None:
+                query = apply_doa_read_scope(query, current_user)
+            else:
+                domains = get_allowed_domains(current_user)
+                if len(domains) < len(ALL_DOMAINS):
+                    domain_clauses = []
+                    for dom in domains:
+                        domain_clauses.append(DOARecord.parent_function.ilike(f"%{dom}%"))
+                        domain_clauses.append(DOARecord.function.ilike(f"%{dom}%"))
+                    query = query.filter(
+                        or_(
+                            DOARecord.status == "PUBLISHED",
+                            *domain_clauses
+                        )
+                    )
     
     if status:
         query = query.filter(DOARecord.status == status)

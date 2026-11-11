@@ -356,9 +356,9 @@ export default function LoginPage({ onLoginSuccess }) {
         </div>
       </header>
 
-      {/* Main Content: Centered Unified Sign In Card (Non-scrollable, fits all viewports) */}
-      <main className="flex-1 flex items-center justify-center p-3 sm:p-4 min-h-0 overflow-hidden">
-        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-5 sm:p-6 space-y-3.5 sm:space-y-4 animate-fade-in my-auto">
+      {/* Main Content: Centered Unified Sign In Card */}
+      <main className="flex-1 flex items-center justify-center p-2 sm:p-3 min-h-0 overflow-y-auto">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-4 sm:p-5 space-y-2.5 sm:space-y-3 animate-fade-in my-auto">
           
           {/* ===================== VIEW 1: SIGN IN ===================== */}
           {viewMode === 'signin' && (
@@ -409,42 +409,37 @@ export default function LoginPage({ onLoginSuccess }) {
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-3 pt-1">
                 
-                {/* 2. EMAIL ADDRESS SECTION WITH PERSONA DROPDOWN (AVATAR ON LEFT, ALL 12 EMAILS) */}
+                {/* 2. EMAIL ADDRESS DROPDOWN (BUILT EXACTLY LIKE SELECT ENTITY) */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Email Address
                   </label>
-                  <div className="p-2 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center gap-3 shadow-2xs hover:border-blue-300 transition-all">
-                    {/* Basic Sign In Logo */}
-                    <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                      <UserCheck className="h-5 w-5" />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                      <UserCheck className="h-4 w-4 text-blue-600" />
                     </div>
-
-                    {/* Dropdown displaying ONLY email address for all 9 normal users + 3 governance & admin */}
-                    <div className="flex-1 min-w-0 relative">
-                      <select
-                        value={selectedPersonaId}
-                        onChange={(e) => handleSelectPersonaById(e.target.value)}
-                        className="w-full py-2.5 pl-3 pr-8 bg-white border border-blue-400 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 shadow-xs appearance-none cursor-pointer truncate"
-                      >
-                        <optgroup label="── Normal Users ──">
-                          {NORMAL_USER_PERSONAS.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.email}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="── Governance & Admin ──">
-                          {ENTERPRISE_ROLES.map((p) => (
-                            <option key={p.id} value={p.id}>
-                              {p.email}
-                            </option>
-                          ))}
-                        </optgroup>
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-blue-500">
-                        <ChevronDown className="h-4 w-4" />
-                      </div>
+                    <select
+                      value={selectedPersonaId}
+                      onChange={(e) => handleSelectPersonaById(e.target.value)}
+                      className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs appearance-none cursor-pointer"
+                    >
+                      <optgroup label="── Normal Users ──">
+                        {NORMAL_USER_PERSONAS.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.email}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="── Governance & Admin ──">
+                        {ENTERPRISE_ROLES.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.email}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                      <ChevronDown className="h-4 w-4" />
                     </div>
                   </div>
                 </div>
@@ -521,17 +516,17 @@ export default function LoginPage({ onLoginSuccess }) {
 
               {/* Error Alert */}
               {forgotError && (
-                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200/80 flex items-start gap-2.5 text-rose-700 text-xs shadow-2xs animate-shake">
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-500" />
-                  <span className="font-semibold">{forgotError}</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-rose-50 border border-rose-200/80 flex items-center gap-2 text-rose-700 text-xs shadow-2xs animate-shake">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+                  <span className="font-semibold leading-tight">{forgotError}</span>
                 </div>
               )}
 
               {/* Success Info Alert */}
               {forgotSuccessMsg && (
-                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-start gap-2.5 text-emerald-800 text-xs shadow-2xs">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
-                  <span className="font-semibold">{forgotSuccessMsg}</span>
+                <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/80 flex items-center gap-2 text-emerald-800 text-xs shadow-2xs">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span className="font-semibold leading-tight">{forgotSuccessMsg}</span>
                 </div>
               )}
 
@@ -593,15 +588,15 @@ export default function LoginPage({ onLoginSuccess }) {
 
               {/* STEP 2: ENTER OTP */}
               {forgotStep === 2 && (
-                <div className="space-y-3 pt-1">
+                <div className="space-y-2 sm:space-y-2.5">
                   <div>
-                    <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center mb-3 shadow-2xs">
-                      <Lock className="h-5 w-5" />
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center mb-1.5 shadow-2xs">
+                      <Lock className="h-4 w-4" />
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                    <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                       Enter Verification Code
                     </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">
                       A 6-digit verification code has been generated for{' '}
                       <span className="font-bold text-slate-800">{forgotEmail}</span>.
                     </p>
@@ -609,23 +604,23 @@ export default function LoginPage({ onLoginSuccess }) {
 
                   {/* Auto-fill Code on Left, Verification Code on Right */}
                   {devOtpCode && (
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 shadow-2xs">
                       <button
                         type="button"
                         onClick={() => setForgotOtp(devOtpCode)}
-                        className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                        className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
                       >
                         Auto-fill Code
                       </button>
-                      <div className="px-3 py-1 bg-white border border-slate-300 rounded-lg font-mono text-sm font-black tracking-widest text-slate-900 shadow-2xs">
+                      <div className="px-2.5 py-0.5 bg-white border border-slate-300 rounded-lg font-mono text-sm font-black tracking-widest text-slate-900 shadow-2xs">
                         {devOtpCode}
                       </div>
                     </div>
                   )}
 
-                  <form onSubmit={handleVerifyOtp} className="space-y-4">
+                  <form onSubmit={handleVerifyOtp} className="space-y-2.5 sm:space-y-3">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                      <label className="block text-2xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                         6-Digit Verification Code
                       </label>
                       <div className="relative">
@@ -636,18 +631,18 @@ export default function LoginPage({ onLoginSuccess }) {
                           value={forgotOtp}
                           onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ''))}
                           placeholder="000000"
-                          className="block w-full text-center tracking-widest font-mono text-xl py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 placeholder-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                          className="block w-full text-center tracking-widest font-mono text-lg py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 placeholder-slate-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
                         />
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs pt-1">
+                    <div className="flex items-center justify-between text-xs pt-0.5">
                       <span className="text-slate-500">Didn't receive the code?</span>
                       <button
                         type="button"
                         onClick={handleSendOtp}
                         disabled={forgotLoading}
-                        className="font-bold text-blue-600 hover:text-blue-700 hover:underline disabled:opacity-50 cursor-pointer"
+                        className="font-bold text-blue-600 hover:text-blue-700 hover:underline disabled:opacity-50 cursor-pointer text-xs"
                       >
                         Resend Code
                       </button>
@@ -656,7 +651,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     <button
                       type="submit"
                       disabled={forgotLoading || forgotOtp.length !== 6}
-                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
                     >
                       {forgotLoading ? (
                         <>
@@ -791,7 +786,7 @@ export default function LoginPage({ onLoginSuccess }) {
       </main>
 
       {/* Footer: Pro Nexus Copyright */}
-      <footer className="py-3 text-center text-xs text-slate-500 font-medium bg-transparent shrink-0">
+      <footer className="py-2 text-center text-xs text-slate-500 font-medium bg-transparent shrink-0">
         &copy; {new Date().getFullYear()} Pro Nexus. All rights reserved.
       </footer>
 

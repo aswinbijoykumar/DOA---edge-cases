@@ -337,7 +337,7 @@ export default function App() {
   const [diffRejectComment, setDiffRejectComment] = useState('');
 
   // Search & Filtering State (Parent / Child Function Filters)
-  const [filterParentFunction, setFilterParentFunction] = useState('Finance'); // 'Finance' | 'Risk' | 'All'
+  const [filterParentFunction, setFilterParentFunction] = useState('All'); // 'All' | 'Finance' | 'Risk'
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -660,8 +660,8 @@ export default function App() {
   // Refresh active datasets on mount and role change
   useEffect(() => {
     if (currentUser) {
-      const defaultDomain = allowedDomains.length === 1 ? allowedDomains[0] : 'All';
-      setFilterParentFunction(defaultDomain);
+      // Explorer tab provides read-only view of all rules across all functions
+      setFilterParentFunction('All');
       const formDomain = allowedDomains[0] || 'Finance';
       setFormData(prev => ({
         ...prev,
@@ -736,19 +736,41 @@ export default function App() {
   }, [doaRecords, backendSummary, changeRequests]);
 
 
-  // Active child business lines for Search Filter
+  // All business line functions available across the DOA Matrix (Read-Only Explorer)
+  const allAvailableFunctions = useMemo(() => {
+    const funcs = new Set(Object.keys(functionTaxonomy));
+    doaRecords.forEach(r => {
+      const f = r.parentFunction || r.function;
+      if (f) funcs.add(f);
+    });
+    return Array.from(funcs);
+  }, [doaRecords]);
+
+  // Active child business lines for Search Filter mapped to selected Function
   const availableChildCategoriesForFilter = useMemo(() => {
-    if (filterParentFunction === 'Finance') {
-      return functionTaxonomy.Finance || [];
+    if (filterParentFunction && filterParentFunction !== 'All') {
+      const cats = new Set(functionTaxonomy[filterParentFunction] || []);
+      doaRecords.forEach(r => {
+        const parent = r.parentFunction || r.function;
+        if (parent && parent.toLowerCase() === filterParentFunction.toLowerCase()) {
+          const cat = r.category || r.businessLine;
+          if (cat) cats.add(cat);
+          const bl = r.businessLine || r.category;
+          if (bl) cats.add(bl);
+        }
+      });
+      return Array.from(cats).filter(Boolean);
     }
-    if (filterParentFunction === 'Risk') {
-      return functionTaxonomy.Risk || [];
-    }
-    return [
-      ...(functionTaxonomy.Finance || []),
-      ...(functionTaxonomy.Risk || [])
-    ];
-  }, [filterParentFunction]);
+    const allTaxonomyCats = Object.values(functionTaxonomy).flat();
+    const allCats = new Set(allTaxonomyCats);
+    doaRecords.forEach(r => {
+      const cat = r.category || r.businessLine;
+      if (cat) allCats.add(cat);
+      const bl = r.businessLine || r.category;
+      if (bl) allCats.add(bl);
+    });
+    return Array.from(allCats).filter(Boolean);
+  }, [filterParentFunction, doaRecords]);
 
   // Active child business lines for New Request Form
   const availableChildCategoriesForForm = useMemo(() => {
@@ -833,7 +855,8 @@ export default function App() {
       // Filter 2: Child Business Line / Category
       if (filterChildBusinessLine !== '') {
         const recCat = record.category || record.businessLine || '';
-        if (recCat !== filterChildBusinessLine) {
+        const recBLine = record.businessLine || record.category || '';
+        if (recCat !== filterChildBusinessLine && recBLine !== filterChildBusinessLine) {
           return false;
         }
       }
@@ -868,7 +891,7 @@ export default function App() {
 
   // Clear all filters within user's authorized domain scope
   const handleClearFilters = () => {
-    setFilterParentFunction(allowedDomains.length === 1 ? allowedDomains[0] : 'All');
+    setFilterParentFunction('All');
     setFilterChildBusinessLine('');
     setSearchQuery('');
     addToast('Filters reset to authorized scope', 'info');
@@ -1715,7 +1738,7 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Function Dropdown (Risk / Finance / All) */}
+                {/* Function Dropdown (All Business Line Functions Visible for Read-Only Exploration) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Function
@@ -1726,15 +1749,16 @@ export default function App() {
                       setFilterParentFunction(e.target.value);
                       setFilterChildBusinessLine(''); // reset child when parent changes
                     }}
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
                   >
-                    {allowedDomains.length > 1 && <option value="All">All Functions</option>}
-                    {allowedDomains.includes('Finance') && <option value="Finance">Finance</option>}
-                    {allowedDomains.includes('Risk') && <option value="Risk">Risk</option>}
+                    <option value="All">All Functions</option>
+                    {allAvailableFunctions.map(fn => (
+                      <option key={fn} value={fn}>{fn}</option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Business Line / Category Dropdown */}
+                {/* Business Line / Category Dropdown Mapped to Function */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Business Line / Risk Factor
@@ -1742,9 +1766,9 @@ export default function App() {
                   <select 
                     value={filterChildBusinessLine}
                     onChange={(e) => setFilterChildBusinessLine(e.target.value)}
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
                   >
-                    <option value="">All Categories under {filterParentFunction === 'All' ? 'All Functions' : filterParentFunction}</option>
+                    <option value="">{filterParentFunction === 'All' ? 'All Categories / Business Lines' : `All Categories under ${filterParentFunction}`}</option>
                     {availableChildCategoriesForFilter.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
