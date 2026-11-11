@@ -1674,9 +1674,9 @@ export default function App() {
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Delegation Matrix Explorer</h2>
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">DOA Matrix Explorer</h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  Explore and filter authorities across the Delegation of Authority framework
+                  Explore and filter authorities across the corporate DOA Matrix
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -1696,38 +1696,6 @@ export default function App() {
                 )}
               </div>
             </div>
-
-            {/* Requestor Simple Status Tracker (Requirement 1 & Task Alignment) */}
-            {currentUser?.persona_type === 'FRONTEND_USER' && changeRequests.length > 0 && (
-              <div className="bg-gradient-to-r from-teal-900 to-slate-900 text-white p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-teal-800">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-teal-500/20 border border-teal-500/40 rounded-xl text-teal-300">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-300">
-                        Your Authored Request Tracker
-                      </span>
-                      <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-white/10 text-white">
-                        {changeRequests[0].id}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-200 font-medium mt-0.5">
-                      Proposal: <strong>"{changeRequests[0].rationale || 'Authority update'}"</strong> &bull; Status: <span className="text-teal-300 font-bold">{changeRequests[0].status}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleInspectDiff(changeRequests[0])}
-                  className="px-3.5 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>Check Submission Comparison</span>
-                </button>
-              </div>
-            )}
 
             {/* Filter Section - Function & Business Line Dropdowns */}
             <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-sm space-y-4">
@@ -1801,23 +1769,23 @@ export default function App() {
             </div>
 
             {/* Data Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto max-h-[620px] sticky-scrollbar">
-                <table className="w-full border-collapse text-left text-sm text-slate-600">
-                  <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider sticky top-0 z-10">
+            <div className="bg-slate-800 border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto overflow-y-auto max-h-[620px] relative">
+                <table className="w-full border-separate border-spacing-0 text-left text-sm text-slate-600 bg-white">
+                  <thead className="sticky top-0 z-20 bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
                     <tr>
-                      <th className="py-3.5 px-4 font-semibold text-center w-12 border-b border-slate-700">No.</th>
-                      <th className="py-3.5 px-4 font-semibold w-24 border-b border-slate-700">Function</th>
-                      <th className="py-3.5 px-4 font-semibold w-20 border-b border-slate-700">Type</th>
-                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
-                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Approve Authority Chain</th>
-                      <th className="py-3.5 px-4 font-semibold text-center w-24 border-b border-slate-700">Actions</th>
+                      <th className="sticky top-0 z-20 bg-slate-800 py-3.5 px-4 font-semibold text-center w-12 border-b border-slate-700">No.</th>
+                      <th className="sticky top-0 z-20 bg-slate-800 py-3.5 px-4 font-semibold w-24 border-b border-slate-700">Function</th>
+                      <th className="sticky top-0 z-20 bg-slate-800 py-3.5 px-4 font-semibold w-20 border-b border-slate-700">Type</th>
+                      <th className="sticky top-0 z-20 bg-slate-800 py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
+                      <th className="sticky top-0 z-20 bg-slate-800 py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Approve Authority Chain</th>
+                      <th className="sticky top-0 z-20 bg-slate-800 py-3.5 px-4 font-semibold text-center w-32 border-b border-slate-700">LUD</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="bg-white">
                     {filteredRecords.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="py-12 text-center text-slate-400 font-medium">
+                        <td colSpan="6" className="py-12 text-center text-slate-400 font-medium border-b border-slate-100">
                           <div className="flex flex-col items-center justify-center gap-2">
                             <Info className="h-8 w-8 text-slate-300" />
                             <span>No records match your selected criteria</span>
@@ -1840,8 +1808,8 @@ export default function App() {
                         return (
                           <React.Fragment key={category}>
                             {/* Category Grouping Header */}
-                            <tr className={isRiskCat ? "bg-teal-50/70 border-y border-teal-100/60" : "bg-blue-50/70 border-y border-blue-100/60"}>
-                              <td colSpan="6" className="py-2.5 px-4 font-bold text-slate-700 text-xs tracking-wide">
+                            <tr className={isRiskCat ? "bg-teal-50 border-y border-teal-200/80" : "bg-blue-50 border-y border-blue-200/80"}>
+                              <td colSpan="6" className={`py-2.5 px-4 font-bold text-slate-700 text-xs tracking-wide border-b border-slate-200 ${isRiskCat ? 'bg-teal-50' : 'bg-blue-50'}`}>
                                 <span className={`uppercase text-[10px] mr-2 font-extrabold tracking-widest ${isRiskCat ? 'text-teal-700' : 'text-blue-700'}`}>
                                   {isRiskCat ? 'Risk Domain:' : 'Finance Domain:'}
                                 </span>
@@ -1862,12 +1830,12 @@ export default function App() {
                                   className="hover:bg-slate-50/80 cursor-pointer transition-colors duration-150 group"
                                 >
                                   {/* ID / No. */}
-                                  <td className="py-3 px-4 text-center font-bold text-slate-400 text-xs border-r border-slate-100">
+                                  <td className="py-3 px-4 text-center font-bold text-slate-400 text-xs border-r border-b border-slate-100">
                                     #{record.id}
                                   </td>
                                   
                                   {/* Function */}
-                                  <td className="py-3 px-4 font-semibold text-xs">
+                                  <td className="py-3 px-4 font-semibold text-xs border-b border-slate-100">
                                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] ${
                                       isRisk 
                                         ? 'bg-teal-50 text-teal-700 border border-teal-200/50' 
@@ -1878,7 +1846,7 @@ export default function App() {
                                   </td>
 
                                   {/* Key/Non-Key */}
-                                  <td className="py-3 px-4 text-xs font-semibold">
+                                  <td className="py-3 px-4 text-xs font-semibold border-b border-slate-100">
                                     <span className={`px-2 py-0.5 rounded-full text-[10px] ${
                                       record.keyNonKey === 'Key' 
                                         ? 'bg-amber-50 text-amber-700 border border-amber-200/50' 
@@ -1889,7 +1857,7 @@ export default function App() {
                                   </td>
 
                                   {/* Decision Area */}
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 border-b border-slate-100">
                                     <div className="flex flex-col gap-0.5">
                                       <span className="font-semibold text-slate-800 text-xs sm:text-sm line-clamp-2 group-hover:text-teal-600 transition-colors">
                                         {record.decisionArea}
@@ -1916,16 +1884,12 @@ export default function App() {
                                             Modified
                                           </span>
                                         )}
-                                        <span className="inline-flex items-center gap-1 text-[9px] font-mono font-semibold text-slate-600 bg-slate-100 border border-slate-200/80 px-1.5 py-0.2 rounded" title="Last Update Date (LUD)">
-                                          <Clock className="h-2.5 w-2.5 text-slate-400" />
-                                          <span>LUD: {record.lastUpdateDate || record.effective_date || '2026-02-15'}</span>
-                                        </span>
                                       </div>
                                     </div>
                                   </td>
 
                                   {/* Authority Chain */}
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 border-b border-slate-100">
                                     <div className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-2.5 py-1.5 flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
                                       <span className="truncate" title={formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors)}>
                                         {formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors || 'A')}
@@ -1933,32 +1897,12 @@ export default function App() {
                                     </div>
                                   </td>
 
-                                  {/* Actions: Role-based Operations */}
-                                  <td className="py-3 px-4 text-center">
-                                    <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                      {canMutateRecord(record) ? (
-                                        <button
-                                          title="Propose Rule Modification"
-                                          onClick={() => {
-                                            setActionMode('Modify');
-                                            setSelectedModifyId(record.id);
-                                            handleModifySelect(record.id);
-                                            setActiveTab('request');
-                                          }}
-                                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                        >
-                                          <Edit3 className="h-4 w-4" />
-                                        </button>
-                                      ) : (
-                                        <button
-                                          title="Read-Only Access (Inspect Governance Rule)"
-                                          onClick={() => setSelectedRecord(record)}
-                                          className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500 bg-slate-100 hover:text-teal-700 hover:bg-teal-50 transition-colors flex items-center gap-1"
-                                        >
-                                          <Eye className="h-3.5 w-3.5" /> View
-                                        </button>
-                                      )}
-                                    </div>
+                                  {/* LUD: Last Update Date */}
+                                  <td className="py-3 px-4 text-center whitespace-nowrap border-b border-slate-100">
+                                    <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200/90 px-2.5 py-1 rounded-md" title="Last Update Date (LUD)">
+                                      <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+                                      <span>{record.lastUpdateDate || record.effective_date || '2026-02-15'}</span>
+                                    </span>
                                   </td>
                                 </tr>
                               );
