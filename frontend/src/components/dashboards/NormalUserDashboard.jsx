@@ -40,7 +40,54 @@ import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport
 import ExceptionRequestModal from '../supplementary/ExceptionRequestModal';
 import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
 import GovernanceKpiCardsView from './GovernanceKpiCardsView';
+import doaHeroBg from '../../assets/doa-hero-harbour.svg';
 
+
+// Demo / View-only Latest Amendments to the Delegation of Authority Matrix
+const DEMO_LATEST_AMENDMENTS = [
+  {
+    id: '# 342',
+    decisionArea: 'Approval of Bank mandates',
+    updateType: 'New/Amended',
+    department: 'Finance',
+    lastUpdateDate: '10-Nov-26'
+  },
+  {
+    id: '# 341',
+    decisionArea: 'Capital Expenditure & Asset Disposal Authority',
+    updateType: 'Modified',
+    department: 'Finance & Treasury',
+    lastUpdateDate: '08-Nov-26'
+  },
+  {
+    id: '# 340',
+    decisionArea: 'Credit Facility & Wholesale Lending Approvals (> $5M)',
+    updateType: 'New/Amended',
+    department: 'Credit Risk',
+    lastUpdateDate: '05-Nov-26'
+  },
+  {
+    id: '# 339',
+    decisionArea: 'Procurement of Enterprise Cloud & IT Infrastructure',
+    updateType: 'Threshold Revision',
+    department: 'Procurement & IT',
+    lastUpdateDate: '02-Nov-26'
+  },
+  {
+    id: '# 338',
+    decisionArea: 'Executive Remuneration & Incentive Structure Sign-off',
+    updateType: 'Modified',
+    department: 'Human Resources',
+    lastUpdateDate: '29-Oct-26'
+  },
+  {
+    id: '# 337',
+    decisionArea: 'Legal Settlement Endorsement & Regulatory Representation',
+    updateType: 'New/Amended',
+    department: 'Legal & Compliance',
+    lastUpdateDate: '25-Oct-26'
+  }
+];
 
 export default function NormalUserDashboard({ 
   userStats, 
@@ -351,140 +398,43 @@ export default function NormalUserDashboard({
   return (
     <div className="space-y-7 animate-fade-in font-sans">
       
-      {/* Dynamic Role & Persona Banner */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-slate-800">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Dynamic Role & Persona Banner / KPI Card */}
+      <div className="relative rounded-3xl p-6 sm:p-8 text-white shadow-2xl overflow-hidden border border-teal-500/30 bg-[#071C2B]">
+        {/* Dynamic Animated Harbour SVG Background */}
+        <img 
+          src={doaHeroBg}
+          alt="DOA Hero Matrix"
+          className="absolute inset-0 w-full h-full object-cover object-right pointer-events-none select-none"
+        />
+
+        {/* Soft Dark Gradient Overlay for optimal text and button contrast on left */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071C2B]/95 via-[#071C2B]/60 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                {currentUser?.designation || currentPersona.badge || 'Authority Custodian'}
-              </span>
-              <span className="text-xs text-slate-300 font-medium">
-                &bull; {currentUser?.department || 'Operations'}
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-800/80 text-slate-300 border border-slate-700/80 font-semibold">
-                {scopeEntityLabel}
-              </span>
-            </div>
 
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+          <div className="space-y-1 max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 drop-shadow-md">
               <span>Welcome back, {currentUser?.full_name || 'Stakeholder'}</span>
             </h2>
-            
-            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed">
-              Institutional delegation intelligence: navigate authority boundaries, streamline dual-control reviews, and enforce corporate governance mandates in real time.
-            </p>
-          </div>
-
-          {/* Animated Dual-Control Governance Pipeline Widget */}
-          <div className="relative shrink-0 flex items-center justify-start lg:justify-end">
-            <div className="relative w-full sm:w-[360px] h-32 flex items-center justify-center">
-              {/* Outer Ambient Glow Mesh */}
-              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 via-cyan-500/15 to-indigo-500/20 rounded-2xl blur-xl animate-pulse pointer-events-none" />
-              
-              {/* Glassmorphic Pipeline Card */}
-              <div className="relative w-full h-full rounded-2xl bg-slate-900/90 backdrop-blur-md border border-slate-700/70 p-3.5 flex flex-col justify-between overflow-hidden shadow-2xl">
-                {/* Subtle animated orbital background line */}
-                <div className="absolute -right-10 -bottom-10 w-32 h-32 border border-teal-500/15 rounded-full border-dashed animate-spin [animation-duration:35s] pointer-events-none" />
-                <div className="absolute -left-8 -top-8 w-24 h-24 border border-indigo-500/15 rounded-full animate-ping [animation-duration:6s] pointer-events-none" />
-
-                {/* Top Header: Live Governance Pipeline Status */}
-                <div className="flex items-center justify-between z-10">
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-teal-300">
-                      Dual-Control Pipeline
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                    <ShieldCheck className="w-2.5 h-2.5 text-emerald-400" />
-                    4-Eye Enforced
-                  </span>
-                </div>
-
-                {/* Middle: 3-Stage Authority Pipeline Flow with Animated Tracers */}
-                <div className="relative z-10 py-1 px-1">
-                  <div className="flex items-center justify-between relative">
-                    {/* Background Connecting Line */}
-                    <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-0.5 bg-slate-800 z-0" />
-                    {/* Animated Tracer Pulse */}
-                    <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-0.5 bg-gradient-to-r from-teal-400 via-cyan-400 to-indigo-400 animate-pulse z-0" />
-
-                    {/* Step 1: Initiate */}
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="w-7 h-7 rounded-lg bg-slate-800 border border-teal-500/60 flex items-center justify-center shadow-md shadow-teal-500/20">
-                        <Edit3 className="w-3.5 h-3.5 text-teal-300" />
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-300 mt-1">Initiate</span>
-                    </div>
-
-                    {/* Animated Arrow Connector 1 */}
-                    <div className="relative z-10 text-teal-400/80 animate-pulse">
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-
-                    {/* Step 2: 2LoD Review */}
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="w-7 h-7 rounded-lg bg-slate-800 border border-cyan-500/60 flex items-center justify-center shadow-md shadow-cyan-500/20">
-                        <CheckSquare className="w-3.5 h-3.5 text-cyan-300" />
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-300 mt-1">2LoD Review</span>
-                    </div>
-
-                    {/* Animated Arrow Connector 2 */}
-                    <div className="relative z-10 text-cyan-400/80 animate-pulse">
-                      <ArrowRight className="w-3 h-3" />
-                    </div>
-
-                    {/* Step 3: Executive Sign-Off */}
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="w-7 h-7 rounded-lg bg-slate-800 border border-indigo-500/60 flex items-center justify-center shadow-md shadow-indigo-500/20">
-                        <UserCheck className="w-3.5 h-3.5 text-indigo-300" />
-                      </div>
-                      <span className="text-[9px] font-bold text-slate-300 mt-1">Sign-Off</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bottom Footer: Real-time Governance Status Chips */}
-                <div className="flex items-center justify-between text-[9px] text-slate-400 border-t border-white/10 pt-1.5 z-10 font-mono">
-                  <span className="text-teal-300 font-semibold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                    SoD Verified (VAL-06)
-                  </span>
-                  <span className="text-slate-400 font-medium">
-                    Audit-Logged
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Action > Core Governance Operations */}
-        <div className="mt-6 pt-5 border-t border-white/10">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded-md">
+        {/* Action > Buttons Aligned in the Same Line */}
+        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 relative z-10">
+          <div className="shrink-0 flex items-center">
+            <span className="h-10 px-3 rounded-xl inline-flex items-center justify-center text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 shadow-xs">
               Action &gt;
             </span>
-            <span className="text-[11px] text-slate-400 font-medium">Core Governance Operations</span>
           </div>
 
-          <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-3 w-full`}>
+          <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-2.5 flex-1 w-full`}>
             {/* 1. Overview */}
             <button
               onClick={() => {
                 onNavigateTab('overview');
                 setActiveSubTab('overview');
               }}
-              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                 activeTab === 'overview' && activeSubTab === 'overview'
                   ? 'bg-indigo-600 text-white border-indigo-400 shadow-indigo-600/30 ring-2 ring-indigo-400/30 font-black'
                   : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border-indigo-400/30'
@@ -498,7 +448,7 @@ export default function NormalUserDashboard({
             {/* 2. Search DoA */}
             <button
               onClick={() => onNavigateTab('search')}
-              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                 activeTab === 'search'
                   ? 'bg-blue-600 text-white border-blue-400 shadow-blue-600/30 ring-2 ring-blue-400/30 font-black'
                   : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 border-blue-400/30'
@@ -513,7 +463,7 @@ export default function NormalUserDashboard({
             {!canPropose ? (
               <button
                 disabled
-                className="h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
+                className="h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
                 title="Proposal authoring disabled for your role/persona"
               >
                 <Edit3 className="h-4 w-4 text-slate-500 shrink-0" />
@@ -522,7 +472,7 @@ export default function NormalUserDashboard({
             ) : (
               <button
                 onClick={onNewRequest}
-                className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                   activeTab === 'request'
                     ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-600/30 ring-2 ring-cyan-400/30 font-black'
                     : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border-cyan-400/30'
@@ -537,7 +487,7 @@ export default function NormalUserDashboard({
             {/* 4. Change Queue */}
             <button
               onClick={() => onNavigateTab('queue')}
-              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                 activeTab === 'queue'
                   ? 'bg-teal-600 text-white border-teal-400 shadow-teal-600/30 ring-2 ring-teal-400/30 font-black'
                   : 'bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border-teal-400/30'
@@ -556,7 +506,7 @@ export default function NormalUserDashboard({
             {/* 5. Exception Workflow */}
             <button
               onClick={() => onNavigateTab('exceptions')}
-              className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                 activeTab === 'exceptions'
                   ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-600/30 ring-2 ring-emerald-400/30 font-black'
                   : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30'
@@ -571,7 +521,7 @@ export default function NormalUserDashboard({
             {canViewAudit && (
               <button
                 onClick={() => onNavigateTab('audit')}
-                className={`h-11 w-full px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                   activeTab === 'audit'
                     ? 'bg-teal-400 text-slate-950 border-teal-300 ring-2 ring-teal-400/40 font-black shadow-lg shadow-teal-500/25'
                     : 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-black border-teal-400 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5'
@@ -586,7 +536,7 @@ export default function NormalUserDashboard({
         </div>
 
         {/* View > Perspectives & Detailed Reports */}
-        <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap gap-2 items-center">
+        <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap gap-2 items-center relative z-10">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded-md mr-2">
             View &gt;
           </span>
@@ -625,196 +575,75 @@ export default function NormalUserDashboard({
       {/* ========================================================================= */}
       {activeSubTab === 'overview' && (
         <div className="space-y-7">
-          {/* Key KPI Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">My Authored Submissions</span>
-                <div className="p-2.5 bg-slate-50 rounded-xl text-slate-700">
-                  <FileText className="h-4 w-4" />
+          {/* Latest amendments to the Delegation of Authority Matrix (Excel Demo Model) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+            {/* Table Header Bar */}
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="h-4 w-4 text-teal-300" />
                 </div>
-              </div>
-              <div className="text-3xl font-black text-slate-900 mt-3">
-                {userStats?.total_my_requests ?? 0}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1 font-medium truncate">
-                Authored by {currentUser?.email}
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">In Review Queue</span>
-                <div className="p-2.5 bg-amber-50 rounded-xl text-amber-600">
-                  <Clock className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-amber-600 mt-3">
-                {userStats?.my_pending ?? 0}
-              </div>
-              <div className="text-[11px] text-amber-700 mt-1 font-medium">
-                Awaiting 2LoD validation
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Approved Proposals</span>
-                <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
-                  <CheckCircle className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-blue-600 mt-3">
-                {userStats?.my_approved ?? 0}
-              </div>
-              <div className="text-[11px] text-blue-700 mt-1 font-medium">
-                Ready for v2 master publication
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Active Published Rules</span>
-                <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-emerald-600 mt-3">
-                {userStats?.total_published_doa ?? kpis?.sourceRecords ?? 53}
-              </div>
-              <div className="text-[11px] text-emerald-700 mt-1 font-medium">
-                Live corporate governance matrix
-              </div>
-            </div>
-          </div>
-
-          {/* Submissions & Role Guidance Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 bg-white border border-slate-200/90 rounded-2xl shadow-2xs p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div>
-                  <h3 className="font-bold text-slate-800 text-base">
-                    {currentUser?.persona_type === 'APPROVER' ? 'Pending Approval Queue & Recent Proposals' : 'My Recent Change Proposals'}
+                  <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                    Latest amendments to the Delegation of Authority Matrix
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    {currentUser?.persona_type === 'APPROVER' ? 'Inspect change submissions requiring executive endorsement' : 'Track status of your drafted or submitted delegation rules'}
+                  <p className="text-[11px] text-slate-300">
+                    Audit trail of recent institutional authority policy revisions &amp; approved thresholds
                   </p>
                 </div>
-                <button
-                  onClick={() => onNavigateTab('queue')}
-                  className="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"
-                >
-                  View All in Queue <ArrowRight className="h-3.5 w-3.5" />
-                </button>
               </div>
-
-              {(!userStats?.recent_submissions || userStats.recent_submissions.length === 0) ? (
-                <div className="py-12 text-center text-slate-400">
-                  <FileCheck className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-slate-600">No change proposals authored yet.</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Click below to draft your first authority modification proposal.</p>
-                  <button
-                    onClick={onNewRequest}
-                    className="mt-4 px-4 py-2 bg-teal-50 text-teal-700 border border-teal-200 rounded-xl text-xs font-bold hover:bg-teal-100 transition-all"
-                  >
-                    Draft First Proposal
-                  </button>
-                </div>
-              ) : (
-                <div className="divide-y divide-slate-100">
-                  {userStats.recent_submissions.map(sub => (
-                    <div key={sub.id} className="py-3.5 flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-slate-900">#{sub.id}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                            sub.request_type === 'ADD' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                            sub.request_type === 'MODIFY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                            'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}>
-                            {sub.request_type}
-                          </span>
-                          <span className="text-xs font-bold text-slate-700 truncate">
-                            {sub.department} &bull; {sub.process || 'DOA Authority'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1 italic truncate">
-                          "{sub.rationale || 'Rule proposal'}"
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                          sub.status === 'SUBMITTED' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                          sub.status === 'APPROVED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                          sub.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                          'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}>
-                          {sub.status}
-                        </span>
-                        <button
-                          onClick={() => onNavigateTab('queue')}
-                          className="text-xs text-slate-400 hover:text-slate-700 p-1"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-center gap-2 self-start sm:self-center">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-500/20 text-teal-300 border border-teal-500/30">
+                  Live Matrix Feed
+                </span>
+              </div>
             </div>
 
-            {/* Persona Action Center */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldCheck className="h-4 w-4 text-teal-600" />
-                    Role Responsibilities
-                  </h4>
-                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                    {currentPersona.badge}
-                  </span>
-                </div>
-                
-                <div className="space-y-2 text-xs">
-                  {(currentPersona.responsibilities || [
-                    'Search, filter, and view designation-wise authorities',
-                    'Inspect policy, charter, and regulatory citations',
-                    'Generate live pre-set management reports',
-                    'View HR hierarchy & acting delegation routing'
-                  ]).map((resp, i) => (
-                    <div key={i} className="flex items-start gap-2 text-slate-700">
-                      <span className="font-bold text-teal-600 flex-shrink-0">✓</span>
-                      <span className="leading-snug">{resp}</span>
-                    </div>
+            {/* Table Content */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                    <th className="py-3 px-4 sm:px-6 w-24">#</th>
+                    <th className="py-3 px-4 sm:px-6">Decision area</th>
+                    <th className="py-3 px-4 sm:px-6">Update Type</th>
+                    <th className="py-3 px-4 sm:px-6">Department</th>
+                    <th className="py-3 px-4 sm:px-6 text-right">Last update date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {DEMO_LATEST_AMENDMENTS.map((item, idx) => (
+                    <tr 
+                      key={idx}
+                      className="hover:bg-teal-50/30 transition-colors"
+                    >
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-900">
+                        {item.id}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
+                        {item.decisionArea}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                          item.updateType === 'New/Amended' 
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                            : item.updateType === 'Modified'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        }`}>
+                          {item.updateType}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
+                        {item.department}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium">
+                        {item.lastUpdateDate}
+                      </td>
+                    </tr>
                   ))}
-                  
-                  {currentUser?.persona_type === 'AUDIT_READONLY' && (
-                    <div className="flex items-start gap-2 text-amber-700 pt-1 border-t border-slate-200">
-                      <span className="font-bold flex-shrink-0">ℹ</span>
-                      <span>Assurance Read-Only mode: proposal modification locked</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Feature Callouts */}
-              <div className="bg-gradient-to-br from-teal-50 to-indigo-50 border border-teal-200/70 rounded-2xl p-5 space-y-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 flex items-center gap-1">
-                  <Award className="h-3.5 w-3.5" /> High-Impact Features
-                </span>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Need to check all authorities of the CEO or Board? Switch to the <strong>Designation-Wise Authorities</strong> tab above to view them grouped with exact action codes.
-                </p>
-                <button
-                  onClick={() => setActiveSubTab('designations')}
-                  className="mt-2 text-xs font-bold text-teal-700 hover:text-teal-900 underline flex items-center gap-1"
-                >
-                  View Designation Matrix <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

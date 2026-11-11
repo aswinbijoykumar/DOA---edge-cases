@@ -12,11 +12,13 @@ import {
   Sparkles,
   RefreshCw,
   Eye,
-  EyeOff
+  EyeOff,
+  UserCheck
 } from 'lucide-react';
 import { api } from '../services/api';
 import proNexusBrand from '../assets/pro-nexus-brand.png';
 import doaNexusBrand from '../assets/doa-nexus-brand.png';
+import loginBg from '../assets/login-bg.jpg';
 
 // Admin AI Avatars (Cropped edge-to-edge)
 import avatarGovernance from '../assets/avatar-governance.jpg';
@@ -333,10 +335,13 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50/60 flex flex-col justify-between font-sans text-slate-900">
+    <div 
+      className="h-screen w-full flex flex-col justify-between font-sans text-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden"
+      style={{ backgroundImage: `url(${loginBg})` }}
+    >
       
       {/* Top Navbar: Sleek Navbar with Large Pro Nexus Brand Logo */}
-      <header className="w-full bg-white border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-1.5 sm:py-2 shadow-2xs">
+      <header className="w-full bg-white/95 backdrop-blur-xs border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-1.5 shadow-2xs shrink-0">
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center">
             <img 
@@ -346,14 +351,14 @@ export default function LoginPage({ onLoginSuccess }) {
             />
           </div>
           <div className="text-xs sm:text-sm font-semibold text-slate-500">
-            Enterprise Governance &amp; Delegation of Authority
+            Delegation of Authority Matrix
           </div>
         </div>
       </header>
 
-      {/* Main Content: Centered Unified Sign In Card */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-auto">
-        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8 space-y-5 animate-fade-in">
+      {/* Main Content: Centered Unified Sign In Card (Non-scrollable, fits all viewports) */}
+      <main className="flex-1 flex items-center justify-center p-3 sm:p-4 min-h-0 overflow-hidden">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-5 sm:p-6 space-y-3.5 sm:space-y-4 animate-fade-in my-auto">
           
           {/* ===================== VIEW 1: SIGN IN ===================== */}
           {viewMode === 'signin' && (
@@ -364,9 +369,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   <Lock className="h-6 w-6 text-blue-600" />
                   Sign In
                 </h2>
-                <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Select your entity and credentials from the dropdown to sign in.
-                </p>
+
               </div>
 
               {/* 1. SELECT ENTITY DROPDOWN */}
@@ -381,7 +384,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   <select
                     value={selectedEntity}
                     onChange={(e) => setSelectedEntity(e.target.value)}
-                    className="block w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs appearance-none cursor-pointer"
+                    className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs appearance-none cursor-pointer"
                   >
                     {ENTITIES.map((ent) => (
                       <option key={ent} value={ent}>
@@ -404,21 +407,17 @@ export default function LoginPage({ onLoginSuccess }) {
               )}
 
               {/* Login Form */}
-              <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+              <form onSubmit={handleSubmit} className="space-y-3 pt-1">
                 
                 {/* 2. EMAIL ADDRESS SECTION WITH PERSONA DROPDOWN (AVATAR ON LEFT, ALL 12 EMAILS) */}
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                     Email Address
                   </label>
-                  <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center gap-3 shadow-2xs hover:border-blue-300 transition-all">
-                    {/* Avatar on Left: Fits flush in box, no inner white space or overflow */}
-                    <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200/90 shadow-xs bg-slate-100 flex items-center justify-center">
-                      <img 
-                        src={currentPersona.avatar} 
-                        alt="Avatar" 
-                        className="w-full h-full object-cover block"
-                      />
+                  <div className="p-2 rounded-2xl bg-slate-50 border border-slate-200/90 flex items-center gap-3 shadow-2xs hover:border-blue-300 transition-all">
+                    {/* Basic Sign In Logo */}
+                    <div className="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <UserCheck className="h-5 w-5" />
                     </div>
 
                     {/* Dropdown displaying ONLY email address for all 9 normal users + 3 governance & admin */}
@@ -465,7 +464,7 @@ export default function LoginPage({ onLoginSuccess }) {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="block w-full pl-10 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                      className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
                     />
                   </div>
                   {/* Under the password field: Forgot Password Option */}
@@ -485,7 +484,7 @@ export default function LoginPage({ onLoginSuccess }) {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
                   >
                     {isLoading ? (
                       <span>Authenticating...</span>
@@ -538,7 +537,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
               {/* STEP 1: ENTER WORK EMAIL */}
               {forgotStep === 1 && (
-                <div className="space-y-4 pt-1">
+                <div className="space-y-3 pt-1">
                   <div>
                     <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200/80 text-blue-600 flex items-center justify-center mb-3 shadow-2xs">
                       <KeyRound className="h-5 w-5" />
@@ -566,7 +565,7 @@ export default function LoginPage({ onLoginSuccess }) {
                           value={forgotEmail}
                           onChange={(e) => setForgotEmail(e.target.value)}
                           placeholder="e.g. dept.owner@doa.local"
-                          className="block w-full pl-10 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                          className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
                         />
                       </div>
                     </div>
@@ -574,7 +573,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     <button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
                     >
                       {forgotLoading ? (
                         <>
@@ -594,7 +593,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
               {/* STEP 2: ENTER OTP */}
               {forgotStep === 2 && (
-                <div className="space-y-4 pt-1">
+                <div className="space-y-3 pt-1">
                   <div>
                     <div className="w-11 h-11 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center mb-3 shadow-2xs">
                       <Lock className="h-5 w-5" />
@@ -608,26 +607,17 @@ export default function LoginPage({ onLoginSuccess }) {
                     </p>
                   </div>
 
-                  {/* Dev Sandbox OTP Helper Banner */}
+                  {/* Auto-fill Code on Left, Verification Code on Right */}
                   {devOtpCode && (
-                    <div className="p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 shadow-2xs text-xs space-y-2">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-1.5 text-amber-900 font-bold">
-                          <Sparkles className="h-4 w-4 text-amber-600 shrink-0" />
-                          <span>Sandbox Mode: Verification Code</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setForgotOtp(devOtpCode)}
-                          className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-2xs tracking-wide shadow-xs transition-colors shrink-0 cursor-pointer"
-                        >
-                          Auto-fill Code
-                        </button>
-                      </div>
-                      <p className="text-amber-800 text-2xs leading-relaxed">
-                        Since <strong className="font-semibold text-amber-900">{forgotEmail}</strong> is a demo account, your verification code is:
-                      </p>
-                      <div className="inline-block px-3 py-1 bg-white border border-amber-300 rounded-lg font-mono text-sm font-black tracking-widest text-amber-950 shadow-2xs">
+                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setForgotOtp(devOtpCode)}
+                        className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                      >
+                        Auto-fill Code
+                      </button>
+                      <div className="px-3 py-1 bg-white border border-slate-300 rounded-lg font-mono text-sm font-black tracking-widest text-slate-900 shadow-2xs">
                         {devOtpCode}
                       </div>
                     </div>
@@ -666,7 +656,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     <button
                       type="submit"
                       disabled={forgotLoading || forgotOtp.length !== 6}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
                     >
                       {forgotLoading ? (
                         <>
@@ -686,7 +676,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
               {/* STEP 3: CREATE NEW PASSWORD */}
               {forgotStep === 3 && (
-                <div className="space-y-4 pt-1">
+                <div className="space-y-3 pt-1">
                   <div>
                     <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-200/80 text-indigo-600 flex items-center justify-center mb-3 shadow-2xs">
                       <KeyRound className="h-5 w-5" />
@@ -714,7 +704,7 @@ export default function LoginPage({ onLoginSuccess }) {
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           placeholder="At least 6 characters"
-                          className="block w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                          className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
                         />
                         <button
                           type="button"
@@ -740,7 +730,7 @@ export default function LoginPage({ onLoginSuccess }) {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Re-enter new password"
-                          className="block w-full pl-10 pr-3.5 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+                          className="block w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
                         />
                       </div>
                     </div>
@@ -748,7 +738,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     <button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 disabled:opacity-50 cursor-pointer"
                     >
                       {forgotLoading ? (
                         <>
@@ -785,7 +775,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     <button
                       type="button"
                       onClick={handleReturnToSignIn}
-                      className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xl shadow-blue-600/25 transition-all duration-200 transform active:scale-98 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-lg shadow-blue-600/25 transition-all duration-200 transform active:scale-98 cursor-pointer"
                     >
                       <span>Sign In with New Password</span>
                       <ArrowRight className="h-4 w-4" />
@@ -801,7 +791,7 @@ export default function LoginPage({ onLoginSuccess }) {
       </main>
 
       {/* Footer: Pro Nexus Copyright */}
-      <footer className="py-4 text-center text-xs text-slate-400">
+      <footer className="py-3 text-center text-xs text-slate-500 font-medium bg-transparent shrink-0">
         &copy; {new Date().getFullYear()} Pro Nexus. All rights reserved.
       </footer>
 
