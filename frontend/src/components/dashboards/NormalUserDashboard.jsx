@@ -47,42 +47,42 @@ import doaHeroBg from '../../assets/doa-hero-harbour.svg';
 // Demo / View-only Latest Amendments to the Delegation of Authority Matrix
 const DEMO_LATEST_AMENDMENTS = [
   {
-    id: '# 342',
+    id: '#342',
     decisionArea: 'Approval of Bank mandates',
     updateType: 'New/Amended',
     department: 'Finance',
     lastUpdateDate: '10-Nov-26'
   },
   {
-    id: '# 341',
+    id: '#341',
     decisionArea: 'Capital Expenditure & Asset Disposal Authority',
     updateType: 'Modified',
     department: 'Finance & Treasury',
     lastUpdateDate: '08-Nov-26'
   },
   {
-    id: '# 340',
+    id: '#340',
     decisionArea: 'Credit Facility & Wholesale Lending Approvals (> $5M)',
     updateType: 'New/Amended',
     department: 'Credit Risk',
     lastUpdateDate: '05-Nov-26'
   },
   {
-    id: '# 339',
+    id: '#339',
     decisionArea: 'Procurement of Enterprise Cloud & IT Infrastructure',
     updateType: 'Threshold Revision',
     department: 'Procurement & IT',
     lastUpdateDate: '02-Nov-26'
   },
   {
-    id: '# 338',
+    id: '#338',
     decisionArea: 'Executive Remuneration & Incentive Structure Sign-off',
     updateType: 'Modified',
     department: 'Human Resources',
     lastUpdateDate: '29-Oct-26'
   },
   {
-    id: '# 337',
+    id: '#337',
     decisionArea: 'Legal Settlement Endorsement & Regulatory Representation',
     updateType: 'New/Amended',
     department: 'Legal & Compliance',
@@ -93,42 +93,42 @@ const DEMO_LATEST_AMENDMENTS = [
 // Demo / View-only Frequently Visited Decision Areas (UI view purpose only, not stored in DB)
 const DEMO_FREQUENTLY_VISITED_AREAS = [
   {
-    no: '# 225',
+    no: '#225',
     decisionArea: 'Approve increase or reduction of share capital',
     function: 'Finance',
     authorityChain: 'Shareholders (A) ← BoD (E2) ← AC (E1) ← ExCom (E) ← GCEO (R2) ← CEO (R1)',
     lastUpdateDate: '10-Nov-26'
   },
   {
-    no: '# 243',
+    no: '#243',
     decisionArea: 'Approve annual budget and five-year financial plan',
     function: 'Finance',
     authorityChain: 'BoD (A) ← ExCom (E2) ← GCEO (E1) ← CEO (E) ← GCFO (R) ← CFO (P)',
     lastUpdateDate: '08-Nov-26'
   },
   {
-    no: '# 301',
+    no: '#301',
     decisionArea: 'Approve wholesale single obligor credit limit above USD 50 million up to regulatory cap',
     function: 'Risk',
     authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (R1)',
     lastUpdateDate: '05-Nov-26'
   },
   {
-    no: '# 305',
+    no: '#305',
     decisionArea: 'Approve Value-at-Risk (VaR) limits, Stressed VaR limits, and Stop-Loss thresholds for Trading Book',
     function: 'Risk',
     authorityChain: 'BoD (A) ← BRPC (E1) ← GRC (E) ← ALCO(G) (R1) ← GCRO (R)',
     lastUpdateDate: '01-Nov-26'
   },
   {
-    no: '# 251',
+    no: '#251',
     decisionArea: 'Approve tier one (1) or tier two (2) capital issue',
     function: 'Finance',
     authorityChain: 'Shareholders (Y, A1) ← BoD (A) ← AC (E1) ← BRPC (E) ← GCCO (R) ← GCFO (P)',
     lastUpdateDate: '28-Oct-26'
   },
   {
-    no: '# 308',
+    no: '#308',
     decisionArea: 'Approve Group Risk Appetite Statement (RAS) and Group Risk Tolerance Matrix',
     function: 'Risk',
     authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (P)',
@@ -655,7 +655,7 @@ export default function NormalUserDashboard({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6 w-24">#</th>
+                    <th className="py-3 px-4 sm:px-6 w-24 text-center">NO.</th>
                     <th className="py-3 px-4 sm:px-6">Decision area</th>
                     <th className="py-3 px-4 sm:px-6">Update Type</th>
                     <th className="py-3 px-4 sm:px-6">Function</th>
@@ -668,7 +668,7 @@ export default function NormalUserDashboard({
                       key={idx}
                       className="hover:bg-teal-50/30 transition-colors"
                     >
-                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-900">
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-400 text-center">
                         {item.id}
                       </td>
                       <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
@@ -717,7 +717,7 @@ export default function NormalUserDashboard({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6 w-24">No</th>
+                    <th className="py-3 px-4 sm:px-6 w-24 text-center">NO.</th>
                     <th className="py-3 px-4 sm:px-6">Decision area</th>
                     <th className="py-3 px-4 sm:px-6 w-32">Function</th>
                     <th className="py-3 px-4 sm:px-6">Authority Chain</th>
@@ -730,7 +730,7 @@ export default function NormalUserDashboard({
                       key={idx}
                       className="hover:bg-indigo-50/30 transition-colors"
                     >
-                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-900">
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-400 text-center">
                         {item.no}
                       </td>
                       <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
