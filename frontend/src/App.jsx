@@ -2178,35 +2178,19 @@ export default function App() {
 
                 </div>
 
-                {/* Rationale & Operational Impact Assessment 2-Column Responsive Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Rationale for Request / Proposal Justification <span className="text-rose-500">*</span>
-                    </label>
-                    <textarea 
-                      rows="3"
-                      value={formData.rationale}
-                      onChange={(e) => setFormData(prev => ({ ...prev, rationale: e.target.value }))}
-                      placeholder="State justification, audit recommendations, risk committee mandates or CBB references..."
-                      required
-                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs resize-none"
-                    ></textarea>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-                      <span>Operational &amp; Process Impact Assessment</span>
-                      <span className="text-[10px] text-teal-600 font-semibold lowercase">Optional</span>
-                    </label>
-                    <textarea 
-                      rows="3"
-                      value={formData.operationalImpact || ''}
-                      onChange={(e) => setFormData(prev => ({ ...prev, operationalImpact: e.target.value }))}
-                      placeholder="Describe how this change affects ERP controls, SLA processing times, segregation of duties, or departmental handovers..."
-                      className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs resize-none"
-                    ></textarea>
-                  </div>
+                                {/* Rationale for Request */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Rationale for Request / Proposal Justification <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea 
+                    rows="3"
+                    value={formData.rationale}
+                    onChange={(e) => setFormData(prev => ({ ...prev, rationale: e.target.value }))}
+                    placeholder="State justification, audit recommendations, risk committee mandates or CBB references..."
+                    required
+                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs resize-none"
+                  ></textarea>
                 </div>
 
                 {/* Document Upload Feature (Functionality 3) */}
@@ -2214,7 +2198,7 @@ export default function App() {
                   <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Paperclip className="h-3.5 w-3.5 text-teal-600" />
-                      Attach Governance Evidence / Policy Document
+                      Attach Governance Evidence / Policy Document <span className="text-rose-500 font-bold">*</span>
                     </span>
                     <span className="text-[10px] text-slate-400 font-normal">PDF / Board Resolution / Charter Excerpt</span>
                   </label>
@@ -2260,7 +2244,7 @@ export default function App() {
                       type="submit"
                       className="w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm tracking-wide bg-emerald-600 hover:bg-emerald-700 shadow-md transition-all flex items-center justify-center gap-2"
                     >
-                      <Plus className="h-4 w-4" /> Submit Add Proposal
+                      <Plus className="h-4 w-4" /> Submit
                     </button>
                   )}
 
