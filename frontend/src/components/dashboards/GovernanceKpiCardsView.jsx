@@ -690,7 +690,7 @@ export default function GovernanceKpiCardsView({
                       <th className="py-3 px-6">Decision Area / Authority Mandate</th>
                       <th className="py-3 px-4 text-center">Specific Action</th>
                       <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
-                      <th className="py-3 px-3 text-center">Last Update Date</th>
+                      <th className="py-3 px-3 text-center whitespace-nowrap">Last Update Date</th>
                       <th className="py-3 px-4">Composite Flow</th>
                     </tr>
                   </thead>
@@ -818,16 +818,7 @@ export default function GovernanceKpiCardsView({
                           </td>
                         </tr>
                       ))}
-                      {filteredAuthorities.length > 0 && (
-                        <tr>
-                          <td colSpan="7" className="py-4 text-center text-xs text-slate-400 bg-slate-50/70 border-t border-slate-200/80">
-                            <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
-                              <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
-                              All {filteredAuthorities.length} authorities loaded &bull; End of matrix
-                            </span>
-                          </td>
-                        </tr>
-                      )}
+
                     </tbody>
                   </table>
                 </div>
@@ -840,19 +831,12 @@ export default function GovernanceKpiCardsView({
                       Displaying <strong className="text-slate-800 font-bold">{filteredAuthorities.length}</strong> of {authoritiesList.length} authorities
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => governanceTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-teal-700 bg-white hover:bg-teal-50 border border-slate-200 hover:border-teal-300 transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
-                  >
-                    <span>Back to Top</span>
-                    <ArrowUp className="h-3 w-3" />
-                  </button>
+
                 </div>
               </div>
             </div>
 
-            {/* Floating "Back to Top" Quick Action Pill */}
+            {/* Floating "Top" Quick Action Pill Pop-up */}
             {isTableScrolled && (
               <button
                 type="button"

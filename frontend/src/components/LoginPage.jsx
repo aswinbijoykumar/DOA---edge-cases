@@ -336,7 +336,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
   return (
     <div 
-      className="h-screen w-full flex flex-col justify-between font-sans text-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden"
+      className="fixed inset-0 h-full w-full flex flex-col justify-between font-sans text-slate-900 bg-cover bg-center bg-no-repeat overflow-hidden overscroll-none select-none"
       style={{ backgroundImage: `url(${loginBg})` }}
     >
       
@@ -357,7 +357,7 @@ export default function LoginPage({ onLoginSuccess }) {
       </header>
 
       {/* Main Content: Centered Unified Sign In Card */}
-      <main className="flex-1 flex items-center justify-center p-2 sm:p-3 min-h-0 overflow-y-auto">
+      <main className="flex-1 flex items-center justify-center p-2 sm:p-3 min-h-0 overflow-y-auto overscroll-contain">
         <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 shadow-xl p-4 sm:p-5 space-y-2.5 sm:space-y-3 animate-fade-in my-auto">
           
           {/* ===================== VIEW 1: SIGN IN ===================== */}

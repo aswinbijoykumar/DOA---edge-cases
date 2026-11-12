@@ -343,7 +343,65 @@ export default function App() {
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const searchTableBodyRef = useRef(null);
+  const searchTableWrapperRef = useRef(null);
+  const searchTableScrollContainerRef = useRef(null);
+  const stickyHeaderScrollRef = useRef(null);
+  const mainHeaderRef = useRef(null);
   const [searchTableScrolled, setSearchTableScrolled] = useState(false);
+  const [isOuterHeaderSticky, setIsOuterHeaderSticky] = useState(false);
+  const [stickyHeaderMetrics, setStickyHeaderMetrics] = useState({ width: 0, left: 0, top: 0 });
+
+  // Outer Page Scroll Listener to keep Search DOA table header sticky when scrolling page
+  useEffect(() => {
+    if (activeTab !== 'search') {
+      setIsOuterHeaderSticky(false);
+      return;
+    }
+
+    const updateStickyMetrics = () => {
+      if (!searchTableWrapperRef.current) return;
+      const rect = searchTableWrapperRef.current.getBoundingClientRect();
+      const navbarHeight = mainHeaderRef.current ? mainHeaderRef.current.offsetHeight : 88;
+      
+      const shouldStick = rect.top <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      setIsOuterHeaderSticky(shouldStick);
+      
+      if (shouldStick) {
+        setStickyHeaderMetrics({
+          width: rect.width,
+          left: rect.left,
+          top: navbarHeight
+        });
+
+        if (searchTableScrollContainerRef.current && stickyHeaderScrollRef.current) {
+          if (stickyHeaderScrollRef.current.scrollLeft !== searchTableScrollContainerRef.current.scrollLeft) {
+            stickyHeaderScrollRef.current.scrollLeft = searchTableScrollContainerRef.current.scrollLeft;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', updateStickyMetrics, { passive: true });
+    window.addEventListener('resize', updateStickyMetrics, { passive: true });
+    updateStickyMetrics();
+
+    return () => {
+      window.removeEventListener('scroll', updateStickyMetrics);
+      window.removeEventListener('resize', updateStickyMetrics);
+    };
+  }, [activeTab]);
+
+  const handleTableHorizontalScroll = (e) => {
+    if (stickyHeaderScrollRef.current && stickyHeaderScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      stickyHeaderScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleStickyHorizontalScroll = (e) => {
+    if (searchTableScrollContainerRef.current && searchTableScrollContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      searchTableScrollContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
 
   // Executive Decision Modal State (Obligatory Rationale Dialog)
   const [decisionModal, setDecisionModal] = useState({
@@ -1491,7 +1549,7 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans select-none antialiased">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans select-none antialiased overscroll-none">
       {/* Toast Notification Container */}
       <div className="fixed top-5 right-5 z-50 flex flex-col gap-2">
         {toasts.map(toast => (
@@ -1518,7 +1576,7 @@ export default function App() {
       </div>
 
       {/* Main Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <header ref={mainHeaderRef} className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-4">
             
@@ -1794,9 +1852,52 @@ export default function App() {
               </div>
             </div>
 
+            {/* Sticky Floating Table Header for Outer Page Scrolling */}
+            {isOuterHeaderSticky && (
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: `${stickyHeaderMetrics.top}px`,
+                  left: `${stickyHeaderMetrics.left}px`,
+                  width: `${stickyHeaderMetrics.width}px`,
+                  zIndex: 25
+                }}
+                className="bg-slate-900 border-x border-b border-slate-700 shadow-xl overflow-hidden animate-fade-in"
+              >
+                <div 
+                  ref={stickyHeaderScrollRef}
+                  onScroll={handleStickyHorizontalScroll}
+                  className="overflow-x-auto no-scrollbar"
+                >
+                  <div className="min-w-[900px]">
+                    <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
+                      <colgroup>
+                        <col className="w-[7%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[36%]" />
+                        <col className="w-[21%]" />
+                        <col className="w-[14%]" />
+                      </colgroup>
+                      <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
+                        <tr>
+                          <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700">No.</th>
+                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Function</th>
+                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Type</th>
+                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
+                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Approval Authority Chain</th>
+                          <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700 whitespace-nowrap">Last Update Date</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Data Table */}
-            <div className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
+            <div ref={searchTableWrapperRef} className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+              <div ref={searchTableScrollContainerRef} onScroll={handleTableHorizontalScroll} className="overflow-x-auto">
                 <div className="min-w-[900px]">
                   {/* Fixed Table Header (No vertical scrollbar overlapping it) */}
                   <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
@@ -1804,9 +1905,9 @@ export default function App() {
                       <col className="w-[7%]" />
                       <col className="w-[12%]" />
                       <col className="w-[10%]" />
-                      <col className="w-[37%]" />
-                      <col className="w-[22%]" />
-                      <col className="w-[12%]" />
+                      <col className="w-[36%]" />
+                      <col className="w-[21%]" />
+                      <col className="w-[14%]" />
                     </colgroup>
                     <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
                       <tr>
@@ -1815,7 +1916,7 @@ export default function App() {
                         <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Type</th>
                         <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
                         <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Approval Authority Chain</th>
-                        <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700">Last Update Date</th>
+                        <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700 whitespace-nowrap">Last Update Date</th>
                       </tr>
                     </thead>
                   </table>
@@ -1831,9 +1932,9 @@ export default function App() {
                         <col className="w-[7%]" />
                         <col className="w-[12%]" />
                         <col className="w-[10%]" />
-                        <col className="w-[37%]" />
-                        <col className="w-[22%]" />
-                        <col className="w-[12%]" />
+                        <col className="w-[36%]" />
+                        <col className="w-[21%]" />
+                        <col className="w-[14%]" />
                       </colgroup>
                       <tbody className="divide-y divide-slate-100">
                         {filteredRecords.length === 0 ? (
@@ -1964,17 +2065,7 @@ export default function App() {
                             );
                           })
                         )}
-                        {/* End of list confirmation indicator */}
-                        {filteredRecords.length > 0 && (
-                          <tr>
-                            <td colSpan="6" className="py-4 text-center text-xs text-slate-400 bg-slate-50/70 border-t border-slate-200/80">
-                              <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
-                                All {filteredRecords.length} records loaded &bull; End of DOA Matrix
-                              </span>
-                            </td>
-                          </tr>
-                        )}
+
                       </tbody>
                     </table>
                   </div>
@@ -1987,19 +2078,12 @@ export default function App() {
                         Displaying <strong className="text-slate-800 font-bold">{filteredRecords.length}</strong> of {doaRecords.length} authorities
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => searchTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-teal-700 bg-white hover:bg-teal-50 border border-slate-200 hover:border-teal-300 transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
-                    >
-                      <span>Back to Top</span>
-                      <ArrowUp className="h-3 w-3" />
-                    </button>
+
                   </div>
                 </div>
               </div>
 
-              {/* Floating "Back to Top" Quick Action Pill */}
+              {/* Floating "Top" Quick Action Pill Pop-up */}
               {searchTableScrolled && (
                 <button
                   type="button"
