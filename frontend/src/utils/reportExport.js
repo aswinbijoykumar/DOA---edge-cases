@@ -14,7 +14,7 @@ function formatCellValue(val) {
       return String(val);
     }
   }
-  return String(val);
+  return String(val).replace(/[➔→]|->/g, '←');
 }
 
 /**

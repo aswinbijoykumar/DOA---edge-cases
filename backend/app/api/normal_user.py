@@ -90,6 +90,11 @@ def get_user_doa_matrix(
         search=search
     )
 
+def format_authority_flow(flow_str: Optional[str]) -> str:
+    if not flow_str:
+        return ""
+    return re.sub(r'[➔→]|->', '←', flow_str)
+
 @router.get("/designation-matrix")
 def get_designation_wise_authorities(
     designation_key: Optional[str] = Query(None, description="Column key e.g. board_of_directors, gceo, ceo, chairman, c_level1, board_committees"),
@@ -230,7 +235,7 @@ def get_designation_wise_authorities(
                     "key_non_key": r.key_non_key,
                     "authority_code": val or "Delegated",
                     "action_type": action_type,
-                    "composite_authority": r.composite_authority,
+                    "composite_authority": format_authority_flow(r.composite_authority),
                     "policy_reference": getattr(r, "policy_reference", ""),
                     "charter_section": getattr(r, "charter_section", ""),
                     "regulatory_requirement": getattr(r, "regulatory_requirement", ""),
@@ -271,7 +276,7 @@ def get_designation_wise_authorities(
                 "key_non_key": r.key_non_key,
                 "authority_code": val,
                 "action_type": action_type,
-                "composite_authority": r.composite_authority,
+                "composite_authority": format_authority_flow(r.composite_authority),
                 "policy_reference": getattr(r, "policy_reference", ""),
                 "charter_section": getattr(r, "charter_section", ""),
                 "regulatory_requirement": getattr(r, "regulatory_requirement", ""),
@@ -285,6 +290,12 @@ def get_designation_wise_authorities(
         "total_authorities": len(results),
         "authorities": results
     }
+
+def format_record_dict_for_report(r):
+    d = record_to_dict(r)
+    if "composite_authority" in d and d["composite_authority"]:
+        d["composite_authority"] = format_authority_flow(d["composite_authority"])
+    return d
 
 @router.get("/reports/management")
 def get_management_reports(
@@ -312,7 +323,7 @@ def get_management_reports(
             "title": "Recently Modified Authorities (Version 2+ Updates)",
             "count": len(records),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "data": [record_to_dict(r) for r in records]
+            "data": [format_record_dict_for_report(r) for r in records]
         }
     elif report_type == "regulatory_mandated":
         records = db.query(DOARecord).filter(DOARecord.regulatory == "Y").all()
@@ -320,7 +331,7 @@ def get_management_reports(
             "title": "Regulatory Mandated Authorities Register",
             "count": len(records),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "data": [record_to_dict(r) for r in records]
+            "data": [format_record_dict_for_report(r) for r in records]
         }
     elif report_type == "high_risk":
         records = db.query(DOARecord).filter(DOARecord.key_non_key == "Key").all()
@@ -328,7 +339,7 @@ def get_management_reports(
             "title": "High-Risk & Key Strategic Decisions DOA Report",
             "count": len(records),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "data": [record_to_dict(r) for r in records]
+            "data": [format_record_dict_for_report(r) for r in records]
         }
     else: # active_by_dept
         all_published = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED").all()
@@ -341,7 +352,7 @@ def get_management_reports(
             "count": len(all_published),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "summary_by_function": by_function,
-            "data": [record_to_dict(r) for r in all_published]
+            "data": [format_record_dict_for_report(r) for r in all_published]
         }
 
 @router.get("/hr-integration")

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   FileText, 
   Plus, 
@@ -33,7 +33,8 @@ import {
   AlertOctagon,
   History,
   Edit3,
-  Bookmark
+  Bookmark,
+  ArrowUp
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
@@ -207,6 +208,72 @@ export default function NormalUserDashboard({
   const [hrData, setHrData] = useState(null);
   const [isLoadingHr, setIsLoadingHr] = useState(false);
   const [reportsSubView, setReportsSubView] = useState('preset');
+
+  // Management Report Sticky Header State and Refs
+  const reportTableWrapperRef = useRef(null);
+  const reportTableScrollContainerRef = useRef(null);
+  const reportStickyHeaderScrollRef = useRef(null);
+  const [isReportHeaderSticky, setIsReportHeaderSticky] = useState(false);
+  const [reportStickyHeaderMetrics, setReportStickyHeaderMetrics] = useState({ width: 0, left: 0, top: 0, tableWidth: 0, colWidths: [] });
+
+  useEffect(() => {
+    const updateStickyMetrics = () => {
+      if (!reportTableWrapperRef.current || !reportTableScrollContainerRef.current) {
+        setIsReportHeaderSticky(false);
+        return;
+      }
+      const rect = reportTableWrapperRef.current.getBoundingClientRect();
+      const mainHeader = document.querySelector('header');
+      const navbarHeight = mainHeader ? mainHeader.offsetHeight : 88;
+      
+      const shouldStick = rect.top <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      setIsReportHeaderSticky(shouldStick);
+      
+      if (shouldStick) {
+        const table = reportTableScrollContainerRef.current.querySelector('table');
+        const ths = table ? table.querySelectorAll('thead th') : [];
+        const colWidths = Array.from(ths).map(th => th.getBoundingClientRect().width);
+        const tableWidth = table ? table.offsetWidth : rect.width;
+
+        setReportStickyHeaderMetrics({
+          width: rect.width,
+          left: rect.left,
+          top: navbarHeight,
+          tableWidth,
+          colWidths
+        });
+
+        if (reportStickyHeaderScrollRef.current) {
+          if (reportStickyHeaderScrollRef.current.scrollLeft !== reportTableScrollContainerRef.current.scrollLeft) {
+            reportStickyHeaderScrollRef.current.scrollLeft = reportTableScrollContainerRef.current.scrollLeft;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', updateStickyMetrics, { passive: true });
+    window.addEventListener('resize', updateStickyMetrics, { passive: true });
+    updateStickyMetrics();
+
+    return () => {
+      window.removeEventListener('scroll', updateStickyMetrics);
+      window.removeEventListener('resize', updateStickyMetrics);
+    };
+  }, [reportData, activeSubTab]);
+
+  const handleReportTableHorizontalScroll = (e) => {
+    if (reportStickyHeaderScrollRef.current && reportStickyHeaderScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      reportStickyHeaderScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleReportStickyHorizontalScroll = (e) => {
+    if (reportTableScrollContainerRef.current && reportTableScrollContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      reportTableScrollContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+
 
   // Persona configurations
   const PERSONA_CONFIGS = {
@@ -808,35 +875,16 @@ export default function NormalUserDashboard({
               </button>
             </div>
 
-            <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block">
-              Corporate Governance Telemetry &bull; Modules 7 &amp; 9
-            </span>
+
           </div>
 
           {reportsSubView === 'hr_org' ? (
             /* Integrated HR Org & Acting Authorities Section */
             <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded text-[10px] font-extrabold uppercase">
-                      Module 9
-                    </span>
-                    <h3 className="text-xl font-bold text-slate-900">
-                      HR System Integration &amp; Acting Authority Hub
-                    </h3>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                    Real-time synchronization with enterprise HR systems (SAP SuccessFactors / Workday) to auto-update designations, reporting lines, detect vacancies, and route approvals to acting authorities.
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Live HR Connector: ACTIVE
-                  </span>
-                </div>
+              <div className="border-b border-slate-100 pb-5">
+                <h3 className="text-xl font-bold text-slate-900">
+                  HR System Integration &amp; Acting Authority Hub
+                </h3>
               </div>
 
               {isLoadingHr ? (
@@ -932,20 +980,9 @@ export default function NormalUserDashboard({
             <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 rounded text-[10px] font-extrabold uppercase">
-                  Functionality 7
-                </span>
-                <span className={`px-2.5 py-0.5 border rounded text-[10px] font-extrabold uppercase ${currentPersona.color}`}>
-                  {currentPersona.badge}
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  Management Governance Reports Hub
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                Generate pre-set reports on active delegations, pending approval requests, recently modified rules, and regulatory mandated authorities tailored to your role.
-              </p>
+              <h3 className="text-xl font-bold text-slate-900">
+                Management Governance Reports Hub
+              </h3>
             </div>
 
             {/* Export Buttons: Download in .pdf or in .xlsx */}
@@ -1065,8 +1102,54 @@ export default function NormalUserDashboard({
               </div>
 
               {/* Table rendering of report data */}
-              <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                <div className="max-h-[520px] overflow-x-auto overflow-y-auto overscroll-contain">
+              <div ref={reportTableWrapperRef} className="relative border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                {/* Sticky Floating Table Header for Outer Page Scrolling */}
+                {isReportHeaderSticky && (
+                  <div 
+                    style={{
+                      position: 'fixed',
+                      top: `${reportStickyHeaderMetrics.top}px`,
+                      left: `${reportStickyHeaderMetrics.left}px`,
+                      width: `${reportStickyHeaderMetrics.width}px`,
+                      zIndex: 25
+                    }}
+                    className="bg-slate-100 border-x border-b border-slate-300 shadow-lg overflow-hidden animate-fade-in"
+                  >
+                    <div 
+                      ref={reportStickyHeaderScrollRef}
+                      onScroll={handleReportStickyHorizontalScroll}
+                      className="overflow-x-auto no-scrollbar"
+                    >
+                      <table 
+                        style={{ width: reportStickyHeaderMetrics.tableWidth ? `${reportStickyHeaderMetrics.tableWidth}px` : '100%' }}
+                        className="w-full text-left text-xs table-fixed border-collapse"
+                      >
+                        <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                          <tr>
+                            {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col, idx) => (
+                              <th 
+                                key={col} 
+                                style={{ 
+                                  width: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined,
+                                  minWidth: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined
+                                }}
+                                className="py-3 px-4 whitespace-nowrap"
+                              >
+                                {col.replace(/_/g, ' ')}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div 
+                  ref={reportTableScrollContainerRef}
+                  onScroll={handleReportTableHorizontalScroll}
+                  className="max-h-[520px] overflow-x-auto overflow-y-auto overscroll-contain"
+                >
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200 z-10">
                       <tr>
@@ -1096,6 +1179,12 @@ export default function NormalUserDashboard({
                                 const isStatus = colKey.toLowerCase().includes('status') || colKey === 'decision';
                                 const isAlert = colKey.toLowerCase().includes('alert');
 
+                                const isAuthorityFlow = colKey.toLowerCase().includes('composite') || colKey.toLowerCase().includes('authority') || colKey.toLowerCase().includes('chain') || colKey.toLowerCase().includes('flow');
+                                let displayVal = renderedVal;
+                                if (typeof val === 'string' && (isAuthorityFlow || /[➔→]|->/.test(val))) {
+                                  displayVal = val.replace(/[➔→]|->/g, '←');
+                                }
+
                                 return (
                                   <td key={colKey + cIdx} className={`py-3 px-4 ${isId ? 'font-mono font-bold text-slate-900' : 'text-slate-700'}`}>
                                     {isStatus ? (
@@ -1117,7 +1206,7 @@ export default function NormalUserDashboard({
                                         {renderedVal}
                                       </span>
                                     ) : (
-                                      <span className="line-clamp-2 max-w-xs">{renderedVal}</span>
+                                      <span className="line-clamp-2 max-w-xs font-mono text-[11px]" title={displayVal}>{displayVal}</span>
                                     )}
                                   </td>
                                 );
@@ -1129,6 +1218,22 @@ export default function NormalUserDashboard({
                     </tbody>
                   </table>
                 </div>
+
+                {/* Floating "Top" Quick Action Pill Pop-up */}
+                {isReportHeaderSticky && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      reportTableScrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="absolute bottom-6 right-6 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-teal-700 text-white text-xs font-bold shadow-xl border border-white/10 transition-all transform hover:scale-105 backdrop-blur-xs cursor-pointer animate-fade-in"
+                    title="Scroll back to top"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5 text-teal-300" />
+                    <span>Top</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1140,27 +1245,10 @@ export default function NormalUserDashboard({
       {/* Legacy fallback if activeSubTab === 'hr_integration' */}
       {activeSubTab === 'hr_integration' && (
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded text-[10px] font-extrabold uppercase">
-                  Functionality 9
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  HR System Integration &amp; Acting Authority Hub
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                Real-time synchronization with enterprise HR systems (SAP SuccessFactors / Workday) to auto-update designations, reporting lines, detect vacancies, and route approvals to acting authorities.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live HR Connector: ACTIVE
-              </span>
-            </div>
+          <div className="border-b border-slate-100 pb-5">
+            <h3 className="text-xl font-bold text-slate-900">
+              HR System Integration &amp; Acting Authority Hub
+            </h3>
           </div>
 
           {isLoadingHr ? (

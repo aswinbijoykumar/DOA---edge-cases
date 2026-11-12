@@ -161,6 +161,12 @@ export const GOVERNANCE_KPI_CONFIG = [
   }
 ];
 
+// Helper to format authority chains with right-to-left flow arrows (←)
+function formatAuthorityFlow(str) {
+  if (!str) return '—';
+  return str.replace(/[➔→]|->/g, '←');
+}
+
 export default function GovernanceKpiCardsView({
   currentUser,
   activeCategoryId = 'c_level',
@@ -176,8 +182,15 @@ export default function GovernanceKpiCardsView({
   const [regulatoryFilter, setRegulatoryFilter] = useState('ALL'); // ALL, REGULATORY, NON_REGULATORY
   const [selectedLinkageItem, setSelectedLinkageItem] = useState(null);
   const [isTableScrolled, setIsTableScrolled] = useState(false);
+  const [isOuterHeaderSticky, setIsOuterHeaderSticky] = useState(false);
+  const [stickyHeaderMetrics, setStickyHeaderMetrics] = useState({ width: 0, left: 0, top: 0 });
   const containerRef = useRef(null);
   const governanceTableBodyRef = useRef(null);
+  const tableWrapperRef = useRef(null);
+  const tableScrollContainerRef = useRef(null);
+  const stickyHeaderScrollRef = useRef(null);
+
+
 
   // Close dropdown on outside click or Escape key
   useEffect(() => {
@@ -268,6 +281,54 @@ export default function GovernanceKpiCardsView({
     );
   });
 
+  // Outer Page Scroll Listener to keep Designation View table header sticky when scrolling page
+  useEffect(() => {
+    const updateStickyMetrics = () => {
+      if (!tableWrapperRef.current) return;
+      const rect = tableWrapperRef.current.getBoundingClientRect();
+      const mainHeader = document.querySelector('header');
+      const navbarHeight = mainHeader ? mainHeader.offsetHeight : 88;
+      
+      const shouldStick = rect.top <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      setIsOuterHeaderSticky(shouldStick);
+      
+      if (shouldStick) {
+        setStickyHeaderMetrics({
+          width: rect.width,
+          left: rect.left,
+          top: navbarHeight
+        });
+
+        if (tableScrollContainerRef.current && stickyHeaderScrollRef.current) {
+          if (stickyHeaderScrollRef.current.scrollLeft !== tableScrollContainerRef.current.scrollLeft) {
+            stickyHeaderScrollRef.current.scrollLeft = tableScrollContainerRef.current.scrollLeft;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', updateStickyMetrics, { passive: true });
+    window.addEventListener('resize', updateStickyMetrics, { passive: true });
+    updateStickyMetrics();
+
+    return () => {
+      window.removeEventListener('scroll', updateStickyMetrics);
+      window.removeEventListener('resize', updateStickyMetrics);
+    };
+  }, [filteredAuthorities.length]);
+
+  const handleTableHorizontalScroll = (e) => {
+    if (stickyHeaderScrollRef.current && stickyHeaderScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      stickyHeaderScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleStickyHorizontalScroll = (e) => {
+    if (tableScrollContainerRef.current && tableScrollContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      tableScrollContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
   // Export to Excel / CSV
   const handleExportExcel = () => {
     if (!filteredAuthorities.length) return;
@@ -294,7 +355,7 @@ export default function GovernanceKpiCardsView({
       `"${(item.policy_reference || '').replace(/"/g, '""')}"`,
       `"${(item.regulatory_requirement || '').replace(/"/g, '""')}"`,
       `"${item.last_update_date || item.effective_date || '2026-02-15'}"`,
-      `"${(item.composite_authority || '').replace(/"/g, '""')}"`
+      `"${(formatAuthorityFlow(item.composite_authority) || '').replace(/"/g, '""')}"`
     ]);
 
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
@@ -366,7 +427,7 @@ export default function GovernanceKpiCardsView({
                   <td><span class="badge ${item.action_type === 'APPROVE' ? 'badge-approve' : item.action_type === 'ENDORSE' ? 'badge-endorse' : 'badge-recommend'}">${item.authority_code}</span></td>
                   <td>${item.policy_reference || item.regulatory_requirement || '<span style="color:#94a3b8;">Internal Standard</span>'}</td>
                   <td class="date">${item.last_update_date || item.effective_date || '2026-02-15'}</td>
-                  <td style="font-family: monospace; font-size: 9px;">${item.composite_authority || '—'}</td>
+                  <td style="font-family: monospace; font-size: 9px;">${formatAuthorityFlow(item.composite_authority) || '—'}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -662,15 +723,55 @@ export default function GovernanceKpiCardsView({
             </p>
           </div>
         ) : (
-          <div className="relative border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
-            <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between text-xs">
-              <span className="font-extrabold text-slate-700">
-                Displaying <span className="text-teal-700">{filteredAuthorities.length}</span> of{' '}
-                {authoritiesList.length} authorities
-              </span>
-            </div>
+          <div ref={tableWrapperRef} className="relative border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
+            {/* Sticky Floating Table Header for Outer Page Scrolling */}
+            {isOuterHeaderSticky && (
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: `${stickyHeaderMetrics.top}px`,
+                  left: `${stickyHeaderMetrics.left}px`,
+                  width: `${stickyHeaderMetrics.width}px`,
+                  zIndex: 25
+                }}
+                className="bg-slate-100 border-x border-b border-slate-300 shadow-lg overflow-hidden animate-fade-in"
+              >
+                <div 
+                  ref={stickyHeaderScrollRef}
+                  onScroll={handleStickyHorizontalScroll}
+                  className="overflow-x-auto no-scrollbar"
+                >
+                  <div className="min-w-[940px]">
+                    <table className="w-full text-left text-xs table-fixed border-collapse">
+                      <colgroup>
+                        <col className="w-[7%]" />
+                        <col className="w-[16%]" />
+                        <col className="w-[28%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[16%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[11%]" />
+                      </colgroup>
+                      <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                        <tr>
+                          <th className="py-3 px-4">Ref #</th>
+                          <th className="py-3 px-4">Function &bull; Business Line</th>
+                          <th className="py-3 px-6">Decision Area / Authority Mandate</th>
+                          <th className="py-3 px-4 text-center">Specific Action</th>
+                          <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
+                          <th className="py-3 px-3 text-center whitespace-nowrap">Last Update Date</th>
+                          <th className="py-3 px-4">Composite Flow</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <div className="overflow-x-auto">
+
+
+            <div ref={tableScrollContainerRef} onScroll={handleTableHorizontalScroll} className="overflow-x-auto">
               <div className="min-w-[940px]">
                 {/* Fixed Table Header (Scrollbar starts strictly below this header) */}
                 <table className="w-full text-left text-xs table-fixed border-collapse">
@@ -812,8 +913,8 @@ export default function GovernanceKpiCardsView({
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <span className="text-xs font-mono font-medium text-slate-700 block max-w-xs truncate" title={item.composite_authority}>
-                              {item.composite_authority || '—'}
+                            <span className="text-xs font-mono font-medium text-slate-700 block max-w-xs truncate" title={formatAuthorityFlow(item.composite_authority)}>
+                              {formatAuthorityFlow(item.composite_authority)}
                             </span>
                           </td>
                         </tr>
@@ -823,24 +924,18 @@ export default function GovernanceKpiCardsView({
                   </table>
                 </div>
 
-                {/* Table Bottom Action / Status Bar */}
-                <div className="bg-slate-50/95 px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
-                    <span className="font-medium text-slate-600">
-                      Displaying <strong className="text-slate-800 font-bold">{filteredAuthorities.length}</strong> of {authoritiesList.length} authorities
-                    </span>
-                  </div>
 
-                </div>
               </div>
             </div>
 
             {/* Floating "Top" Quick Action Pill Pop-up */}
-            {isTableScrolled && (
+            {(isTableScrolled || isOuterHeaderSticky) && (
               <button
                 type="button"
-                onClick={() => governanceTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => {
+                  governanceTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className="absolute bottom-16 right-6 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-teal-700 text-white text-xs font-bold shadow-xl border border-white/10 transition-all transform hover:scale-105 backdrop-blur-xs cursor-pointer animate-fade-in"
                 title="Scroll back to top of table"
               >
@@ -856,8 +951,14 @@ export default function GovernanceKpiCardsView({
       {/* POLICY & REGULATORY LINKAGE DETAILS MODAL */}
       {/* ========================================================================= */}
       {selectedLinkageItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up">
+        <div 
+          onClick={() => setSelectedLinkageItem(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in cursor-pointer"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-scale-up cursor-default"
+          >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
@@ -966,16 +1067,9 @@ export default function GovernanceKpiCardsView({
 
             {/* Footer */}
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 font-mono truncate max-w-[320px]">
-                Flow: {selectedLinkageItem.composite_authority}
+              <span className="text-[11px] text-slate-400 font-mono truncate max-w-full">
+                Flow: {formatAuthorityFlow(selectedLinkageItem.composite_authority)}
               </span>
-              <button
-                type="button"
-                onClick={() => setSelectedLinkageItem(null)}
-                className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
