@@ -55,7 +55,9 @@ import {
   Paperclip,
   BookOpen,
   AlertOctagon,
-  Download
+  Download,
+  ArrowUp,
+  CheckCircle2
 } from 'lucide-react';
 
 
@@ -340,6 +342,8 @@ export default function App() {
   const [filterParentFunction, setFilterParentFunction] = useState('All'); // 'All' | 'Finance' | 'Risk'
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const searchTableBodyRef = useRef(null);
+  const [searchTableScrolled, setSearchTableScrolled] = useState(false);
 
   // Executive Decision Modal State (Obligatory Rationale Dialog)
   const [decisionModal, setDecisionModal] = useState({
@@ -1777,25 +1781,37 @@ export default function App() {
             </div>
 
             {/* Data Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <div className="min-w-[900px]">
                   {/* Fixed Table Header (No vertical scrollbar overlapping it) */}
                   <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
+                    <colgroup>
+                      <col className="w-[7%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[10%]" />
+                      <col className="w-[37%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[12%]" />
+                    </colgroup>
                     <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
                       <tr>
-                        <th className="py-3.5 px-4 font-semibold text-center w-[7%] border-b border-slate-700">No.</th>
-                        <th className="py-3.5 px-4 font-semibold w-[12%] border-b border-slate-700">Function</th>
-                        <th className="py-3.5 px-4 font-semibold w-[10%] border-b border-slate-700">Type</th>
-                        <th className="py-3.5 px-4 font-semibold w-[37%] border-b border-slate-700">Decision Area</th>
-                        <th className="py-3.5 px-4 font-semibold w-[22%] border-b border-slate-700">Approval Authority Chain</th>
-                        <th className="py-3.5 px-4 font-semibold text-center w-[12%] border-b border-slate-700">Last Update Date</th>
+                        <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700">No.</th>
+                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Function</th>
+                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Type</th>
+                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
+                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Approval Authority Chain</th>
+                        <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700">Last Update Date</th>
                       </tr>
                     </thead>
                   </table>
                   
                   {/* Scrollable Table Body (Scrollbar starts ONLY below the header!) */}
-                  <div className="max-h-[580px] overflow-y-auto">
+                  <div 
+                    ref={searchTableBodyRef}
+                    onScroll={(e) => setSearchTableScrolled(e.currentTarget.scrollTop > 120)}
+                    className="max-h-[580px] overflow-y-auto overscroll-contain scroll-smooth"
+                  >
                     <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
                       <colgroup>
                         <col className="w-[7%]" />
@@ -1934,11 +1950,53 @@ export default function App() {
                             );
                           })
                         )}
+                        {/* End of list confirmation indicator */}
+                        {filteredRecords.length > 0 && (
+                          <tr>
+                            <td colSpan="6" className="py-4 text-center text-xs text-slate-400 bg-slate-50/70 border-t border-slate-200/80">
+                              <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
+                                All {filteredRecords.length} records loaded &bull; End of DOA Matrix
+                              </span>
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Table Bottom Action / Status Bar */}
+                  <div className="bg-slate-50/95 px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="font-medium text-slate-600">
+                        Displaying <strong className="text-slate-800 font-bold">{filteredRecords.length}</strong> of {doaRecords.length} authorities
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => searchTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-teal-700 bg-white hover:bg-teal-50 border border-slate-200 hover:border-teal-300 transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
+                    >
+                      <span>Back to Top</span>
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Floating "Back to Top" Quick Action Pill */}
+              {searchTableScrolled && (
+                <button
+                  type="button"
+                  onClick={() => searchTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="absolute bottom-16 right-6 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-teal-700 text-white text-xs font-bold shadow-xl border border-white/10 transition-all transform hover:scale-105 backdrop-blur-xs cursor-pointer animate-fade-in"
+                  title="Scroll back to top of table"
+                >
+                  <ArrowUp className="h-3.5 w-3.5 text-teal-300" />
+                  <span>Top</span>
+                </button>
+              )}
             </div>
           </div>
         )}

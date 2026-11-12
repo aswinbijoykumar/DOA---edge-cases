@@ -1066,7 +1066,7 @@ export default function NormalUserDashboard({
 
               {/* Table rendering of report data */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                <div className="max-h-[520px] overflow-x-auto overflow-y-auto">
+                <div className="max-h-[520px] overflow-x-auto overflow-y-auto overscroll-contain">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200 z-10">
                       <tr>

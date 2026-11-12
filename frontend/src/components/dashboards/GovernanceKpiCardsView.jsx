@@ -23,7 +23,9 @@ import {
   X,
   Clock,
   ExternalLink,
-  ShieldAlert
+  ShieldAlert,
+  ArrowUp,
+  CheckCircle2
 } from 'lucide-react';
 
 /**
@@ -173,7 +175,9 @@ export default function GovernanceKpiCardsView({
   const [departmentFilter, setDepartmentFilter] = useState('ALL'); // ALL, Finance, Risk, Treasury, Operations, Legal
   const [regulatoryFilter, setRegulatoryFilter] = useState('ALL'); // ALL, REGULATORY, NON_REGULATORY
   const [selectedLinkageItem, setSelectedLinkageItem] = useState(null);
+  const [isTableScrolled, setIsTableScrolled] = useState(false);
   const containerRef = useRef(null);
+  const governanceTableBodyRef = useRef(null);
 
   // Close dropdown on outside click or Escape key
   useEffect(() => {
@@ -658,7 +662,7 @@ export default function GovernanceKpiCardsView({
             </p>
           </div>
         ) : (
-          <div className="border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
+          <div className="relative border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
             <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between text-xs">
               <span className="font-extrabold text-slate-700">
                 Displaying <span className="text-teal-700">{filteredAuthorities.length}</span> of{' '}
@@ -670,21 +674,34 @@ export default function GovernanceKpiCardsView({
               <div className="min-w-[940px]">
                 {/* Fixed Table Header (Scrollbar starts strictly below this header) */}
                 <table className="w-full text-left text-xs table-fixed border-collapse">
+                  <colgroup>
+                    <col className="w-[7%]" />
+                    <col className="w-[16%]" />
+                    <col className="w-[28%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[16%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[11%]" />
+                  </colgroup>
                   <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
-                      <th className="py-3 px-4 w-[7%]">Ref #</th>
-                      <th className="py-3 px-4 w-[16%]">Function &bull; Business Line</th>
-                      <th className="py-3 px-6 w-[28%]">Decision Area / Authority Mandate</th>
-                      <th className="py-3 px-4 text-center w-[11%]">Specific Action</th>
-                      <th className="py-3 px-4 w-[16%]">Policy &amp; Regulatory Linkage</th>
-                      <th className="py-3 px-3 text-center w-[11%]">Last Update Date</th>
-                      <th className="py-3 px-4 w-[11%]">Composite Flow</th>
+                      <th className="py-3 px-4">Ref #</th>
+                      <th className="py-3 px-4">Function &bull; Business Line</th>
+                      <th className="py-3 px-6">Decision Area / Authority Mandate</th>
+                      <th className="py-3 px-4 text-center">Specific Action</th>
+                      <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
+                      <th className="py-3 px-3 text-center">Last Update Date</th>
+                      <th className="py-3 px-4">Composite Flow</th>
                     </tr>
                   </thead>
                 </table>
 
                 {/* Scrollable Table Body: Scrollbar starts ONLY below the header */}
-                <div className="max-h-[580px] overflow-y-auto">
+                <div 
+                  ref={governanceTableBodyRef}
+                  onScroll={(e) => setIsTableScrolled(e.currentTarget.scrollTop > 120)}
+                  className="max-h-[580px] overflow-y-auto overscroll-contain scroll-smooth"
+                >
                   <table className="w-full text-left text-xs table-fixed border-collapse">
                     <colgroup>
                       <col className="w-[7%]" />
@@ -801,11 +818,52 @@ export default function GovernanceKpiCardsView({
                           </td>
                         </tr>
                       ))}
+                      {filteredAuthorities.length > 0 && (
+                        <tr>
+                          <td colSpan="7" className="py-4 text-center text-xs text-slate-400 bg-slate-50/70 border-t border-slate-200/80">
+                            <span className="inline-flex items-center gap-1.5 font-medium text-slate-500">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-teal-600" />
+                              All {filteredAuthorities.length} authorities loaded &bull; End of matrix
+                            </span>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Table Bottom Action / Status Bar */}
+                <div className="bg-slate-50/95 px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+                    <span className="font-medium text-slate-600">
+                      Displaying <strong className="text-slate-800 font-bold">{filteredAuthorities.length}</strong> of {authoritiesList.length} authorities
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => governanceTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-teal-700 bg-white hover:bg-teal-50 border border-slate-200 hover:border-teal-300 transition-all shadow-2xs hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <span>Back to Top</span>
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Floating "Back to Top" Quick Action Pill */}
+            {isTableScrolled && (
+              <button
+                type="button"
+                onClick={() => governanceTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="absolute bottom-16 right-6 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-teal-700 text-white text-xs font-bold shadow-xl border border-white/10 transition-all transform hover:scale-105 backdrop-blur-xs cursor-pointer animate-fade-in"
+                title="Scroll back to top of table"
+              >
+                <ArrowUp className="h-3.5 w-3.5 text-teal-300" />
+                <span>Top</span>
+              </button>
+            )}
           </div>
         )}
       </div>
