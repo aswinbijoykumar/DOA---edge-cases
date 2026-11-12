@@ -607,7 +607,7 @@ export default function NormalUserDashboard({
                     <th className="py-3 px-4 sm:px-6 w-24">#</th>
                     <th className="py-3 px-4 sm:px-6">Decision area</th>
                     <th className="py-3 px-4 sm:px-6">Update Type</th>
-                    <th className="py-3 px-4 sm:px-6">Department</th>
+                    <th className="py-3 px-4 sm:px-6">Function</th>
                     <th className="py-3 px-4 sm:px-6 text-right">Last update date</th>
                   </tr>
                 </thead>
@@ -1096,7 +1096,7 @@ export default function NormalUserDashboard({
                   <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="py-3 px-4">Emp Code</th>
-                      <th className="py-3 px-4">Designation &bull; Department</th>
+                      <th className="py-3 px-4">Designation &bull; Function</th>
                       <th className="py-3 px-4">Active Incumbent</th>
                       <th className="py-3 px-4">Reporting Hierarchy</th>
                       <th className="py-3 px-4">Acting Authority Routing</th>

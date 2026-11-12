@@ -63,7 +63,7 @@ export const GOVERNANCE_KPI_CONFIG = [
     badgeColor: 'bg-blue-50 text-blue-600 border-blue-200/60',
     iconBg: 'bg-blue-50 border-blue-100',
     iconColor: 'text-blue-600',
-    dropdownHeader: 'SELECT DEPARTMENT',
+    dropdownHeader: 'SELECT FUNCTION',
     triggerLabel: 'Select function',
     dropdownOptions: [
       { id: 'ops_logistics', label: 'Operations & Logistics', badge: '96% Compliant' },
@@ -338,7 +338,7 @@ export default function GovernanceKpiCardsView({
           <div class="meta">
             <div><strong>Total Lines:</strong> ${filteredAuthorities.length}</div>
             <div><strong>Action Filter:</strong> ${actionFilter}</div>
-            <div><strong>Department:</strong> ${departmentFilter}</div>
+            <div><strong>Function:</strong> ${departmentFilter}</div>
             <div><strong>Regulatory Scope:</strong> ${regulatoryFilter}</div>
           </div>
           <table>
@@ -349,7 +349,7 @@ export default function GovernanceKpiCardsView({
                 <th>Decision Area Mandate</th>
                 <th style="width: 75px;">Action</th>
                 <th style="width: 120px;">Policy & Regulatory</th>
-                <th style="width: 75px;">LUD</th>
+                <th style="width: 100px;">Last Update Date</th>
                 <th style="width: 140px;">Composite Flow</th>
               </tr>
             </thead>
@@ -554,17 +554,17 @@ export default function GovernanceKpiCardsView({
           {/* Row 2: Department View, Regulatory Mandate Filters & Export Options */}
           <div className="pt-2.5 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-3">
-              {/* Department View Filter */}
+              {/* Function View Filter */}
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-slate-500 uppercase text-[10px]">
-                  Dept View:
+                  Function View:
                 </span>
                 <select
                   value={departmentFilter}
                   onChange={(e) => setDepartmentFilter(e.target.value)}
                   className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 >
-                  <option value="ALL">All Departments</option>
+                  <option value="ALL">All Functions</option>
                   <option value="Finance">Finance &amp; Treasury</option>
                   <option value="Risk">Enterprise Risk</option>
                   <option value="Procurement">Procurement &amp; Ops</option>
@@ -667,126 +667,144 @@ export default function GovernanceKpiCardsView({
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="py-3 px-4">Ref #</th>
-                    <th className="py-3 px-4">Function &bull; Business Line</th>
-                    <th className="py-3 px-6">Decision Area / Authority Mandate</th>
-                    <th className="py-3 px-4 text-center">Specific Action</th>
-                    <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
-                    <th className="py-3 px-3 text-center">LUD</th>
-                    <th className="py-3 px-4">Composite Flow</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {filteredAuthorities.map((item) => (
-                    <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                        #{item.id}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                            item.function === 'Risk'
-                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                              : 'bg-teal-50 text-teal-700 border border-teal-200'
-                          }`}
-                        >
-                          {item.function}
-                        </span>
-                        <div className="text-[11px] text-slate-600 font-semibold mt-1 truncate max-w-[180px]">
-                          {item.business_line}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-6">
-                        <p className="font-bold text-slate-800 leading-snug">
-                          {item.decision_area}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span
-                            className={`text-[10px] font-semibold px-2 py-0.2 rounded ${
-                              item.key_non_key === 'Key'
-                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                : 'bg-slate-100 text-slate-600'
-                            }`}
-                          >
-                            {item.key_non_key} Decision
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-lg font-black text-xs border ${
-                            item.action_type === 'APPROVE'
-                              ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                              : item.action_type === 'ENDORSE'
-                              ? 'bg-blue-100 text-blue-900 border-blue-300'
-                              : item.action_type === 'RECOMMEND'
-                              ? 'bg-amber-100 text-amber-900 border-amber-300'
-                              : 'bg-purple-100 text-purple-900 border-purple-300'
-                          }`}
-                        >
-                          {item.authority_code} ({item.action_type})
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="space-y-1">
-                          {item.policy_reference && (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedLinkageItem(item)}
-                              className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline text-left cursor-pointer group"
-                              title="Click to view full Policy &amp; Charter mandate details"
-                            >
-                              <BookOpen className="h-3 w-3 text-teal-600 shrink-0 group-hover:scale-110 transition-transform" />
-                              <span className="truncate max-w-[160px]">{item.policy_reference}</span>
-                              <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
-                            </button>
-                          )}
-                          {item.regulatory_requirement && (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedLinkageItem(item)}
-                              className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700 hover:text-rose-900 hover:underline text-left cursor-pointer group"
-                              title="Click to view statutory requirement &amp; regulatory code"
-                            >
-                              <ShieldCheck className="h-3 w-3 text-rose-500 shrink-0 group-hover:scale-110 transition-transform" />
-                              <span className="truncate max-w-[160px]">{item.regulatory_requirement}</span>
-                              <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
-                            </button>
-                          )}
-                          {!item.policy_reference && !item.regulatory_requirement && (
-                            <button
-                              type="button"
-                              onClick={() => setSelectedLinkageItem(item)}
-                              className="text-slate-400 text-[11px] italic hover:text-teal-700 hover:underline flex items-center gap-1 text-left cursor-pointer"
-                              title="Click to inspect internal DOA standard details"
-                            >
-                              <span>Internal DOA Standard</span>
-                              <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* LUD (Last Update Date) */}
-                      <td className="py-3.5 px-3 text-center whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                          <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
-                          <span>{item.last_update_date || item.effective_date || '2026-02-15'}</span>
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4">
-                        <span className="text-xs font-mono font-medium text-slate-700 block max-w-xs truncate" title={item.composite_authority}>
-                          {item.composite_authority || '—'}
-                        </span>
-                      </td>
+              <div className="min-w-[940px]">
+                {/* Fixed Table Header (Scrollbar starts strictly below this header) */}
+                <table className="w-full text-left text-xs table-fixed border-collapse">
+                  <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                    <tr>
+                      <th className="py-3 px-4 w-[7%]">Ref #</th>
+                      <th className="py-3 px-4 w-[16%]">Function &bull; Business Line</th>
+                      <th className="py-3 px-6 w-[28%]">Decision Area / Authority Mandate</th>
+                      <th className="py-3 px-4 text-center w-[11%]">Specific Action</th>
+                      <th className="py-3 px-4 w-[16%]">Policy &amp; Regulatory Linkage</th>
+                      <th className="py-3 px-3 text-center w-[11%]">Last Update Date</th>
+                      <th className="py-3 px-4 w-[11%]">Composite Flow</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                </table>
+
+                {/* Scrollable Table Body: Scrollbar starts ONLY below the header */}
+                <div className="max-h-[580px] overflow-y-auto">
+                  <table className="w-full text-left text-xs table-fixed border-collapse">
+                    <colgroup>
+                      <col className="w-[7%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[28%]" />
+                      <col className="w-[11%]" />
+                      <col className="w-[16%]" />
+                      <col className="w-[11%]" />
+                      <col className="w-[11%]" />
+                    </colgroup>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredAuthorities.map((item) => (
+                        <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                            #{item.id}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                                item.function === 'Risk'
+                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                  : 'bg-teal-50 text-teal-700 border border-teal-200'
+                              }`}
+                            >
+                              {item.function}
+                            </span>
+                            <div className="text-[11px] text-slate-600 font-semibold mt-1 truncate max-w-[180px]">
+                              {item.business_line}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-6">
+                            <p className="font-bold text-slate-800 leading-snug">
+                              {item.decision_area}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span
+                                className={`text-[10px] font-semibold px-2 py-0.2 rounded ${
+                                  item.key_non_key === 'Key'
+                                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}
+                              >
+                                {item.key_non_key} Decision
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-lg font-black text-xs border ${
+                                item.action_type === 'APPROVE'
+                                  ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                  : item.action_type === 'ENDORSE'
+                                  ? 'bg-blue-100 text-blue-900 border-blue-300'
+                                  : item.action_type === 'RECOMMEND'
+                                  ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                  : 'bg-purple-100 text-purple-900 border-purple-300'
+                              }`}
+                            >
+                              {item.authority_code} ({item.action_type})
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <div className="space-y-1">
+                              {item.policy_reference && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedLinkageItem(item)}
+                                  className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline text-left cursor-pointer group"
+                                  title="Click to view full Policy &amp; Charter mandate details"
+                                >
+                                  <BookOpen className="h-3 w-3 text-teal-600 shrink-0 group-hover:scale-110 transition-transform" />
+                                  <span className="truncate max-w-[160px]">{item.policy_reference}</span>
+                                  <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
+                                </button>
+                              )}
+                              {item.regulatory_requirement && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedLinkageItem(item)}
+                                  className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700 hover:text-rose-900 hover:underline text-left cursor-pointer group"
+                                  title="Click to view statutory requirement &amp; regulatory code"
+                                >
+                                  <ShieldCheck className="h-3 w-3 text-rose-500 shrink-0 group-hover:scale-110 transition-transform" />
+                                  <span className="truncate max-w-[160px]">{item.regulatory_requirement}</span>
+                                  <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
+                                </button>
+                              )}
+                              {!item.policy_reference && !item.regulatory_requirement && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedLinkageItem(item)}
+                                  className="text-slate-400 text-[11px] italic hover:text-teal-700 hover:underline flex items-center gap-1 text-left cursor-pointer"
+                                  title="Click to inspect internal DOA standard details"
+                                >
+                                  <span>Internal DOA Standard</span>
+                                  <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Last Update Date */}
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                              <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
+                              <span>{item.last_update_date || item.effective_date || '2026-02-15'}</span>
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <span className="text-xs font-mono font-medium text-slate-700 block max-w-xs truncate" title={item.composite_authority}>
+                              {item.composite_authority || '—'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}
