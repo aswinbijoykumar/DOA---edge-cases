@@ -363,48 +363,6 @@ export default function AuthorityChainBuilder({
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Studio Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
-        <div>
-          <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-            Authority Hierarchy Studio
-          </h3>
-          <p className="text-xs text-slate-500">
-            Corporate Delegation of Authority (DoA) & Approval Matrix
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <a
-            href="/authority-chain-builder.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Open Full-Screen Standalone Prototype"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg shadow-xs transition-colors"
-          >
-            <ExternalLink className="h-3.5 w-3.5 text-slate-500" />
-            <span>Standalone View</span>
-          </a>
-          <button
-            type="button"
-            onClick={handleLoadPreset}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg shadow-xs transition-colors"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5 text-teal-600" />
-            <span>Load Standard Preset</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleReset}
-            disabled={chain.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold rounded-lg shadow-xs transition-colors"
-          >
-            <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-            <span>Reset Chain</span>
-          </button>
-        </div>
-      </div>
-
       {/* Status Feedback Toast/Banner */}
       {statusMessage && (
         <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 border animate-fade-in ${
@@ -422,116 +380,12 @@ export default function AuthorityChainBuilder({
         </div>
       )}
 
-      {/* 1. HIERARCHICAL RULESET (Sequential Approval Protocol) */}
-      <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
-          <div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-              HIERARCHICAL RULESET
-            </span>
-            <h4 className="text-sm sm:text-base font-bold text-slate-800">
-              Sequential Approval Protocol
-            </h4>
-          </div>
-
-        </div>
-
-        {/* 4 Protocol Step Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* STEP 1: Proposer */}
-          <div className={`p-4 rounded-xl border transition-all ${
-            currentPhase === 1 ? 'bg-blue-50/70 border-blue-400 shadow-xs ring-1 ring-blue-400/20' :
-            hasProposer ? 'bg-slate-50 border-slate-200 text-slate-700' :
-            'bg-white border-slate-200/80 opacity-70'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wider">
-                STEP 1 • MANDATORY
-              </span>
-              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                hasProposer ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'
-              }`}>
-                {hasProposer ? '✓' : '1'}
-              </span>
-            </div>
-            <h5 className="text-sm font-bold text-slate-800">Proposer (P)</h5>
-            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              Originating committee or authority proposing the action.
-            </p>
-          </div>
-
-          {/* STEP 2: Reviewer */}
-          <div className={`p-4 rounded-xl border transition-all ${
-            currentPhase === 2 ? 'bg-purple-50/70 border-purple-400 shadow-xs ring-1 ring-purple-400/20' :
-            hasReviewer ? 'bg-slate-50 border-slate-200 text-slate-700' :
-            'bg-white border-slate-200/80 opacity-70'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-extrabold text-purple-700 uppercase tracking-wider">
-                STEP 2 • MANDATORY
-              </span>
-              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                hasReviewer ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-600'
-              }`}>
-                {hasReviewer ? '✓' : '2'}
-              </span>
-            </div>
-            <h5 className="text-sm font-bold text-slate-800">Initial Reviewer (R)</h5>
-            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              First line technical scrutiny or governance gatekeeper.
-            </p>
-          </div>
-
-          {/* STEP 3: Endorsements */}
-          <div className={`p-4 rounded-xl border transition-all ${
-            currentPhase === 3 ? 'bg-amber-50/70 border-amber-400 shadow-xs ring-1 ring-amber-400/20' :
-            (hasProposer && hasReviewer && !hasApprover) ? 'bg-slate-50 border-slate-200 text-slate-700' :
-            'bg-white border-slate-200/80 opacity-70'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
-                STEP 3 • FLEXIBLE
-              </span>
-              <span className="h-5 w-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] font-bold">
-                3
-              </span>
-            </div>
-            <h5 className="text-sm font-bold text-slate-800">Endorsements (E1-E3)</h5>
-            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              Optional multi-tier stakeholder concurrence & sub-reviews.
-            </p>
-          </div>
-
-          {/* STEP 4: Approver */}
-          <div className={`p-4 rounded-xl border transition-all ${
-            currentPhase === 4 ? 'bg-emerald-50/70 border-emerald-400 shadow-xs ring-1 ring-emerald-400/20' :
-            hasApprover ? 'bg-slate-50 border-slate-200 text-slate-700' :
-            'bg-white border-slate-200/80 opacity-70'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">
-                STEP 4 • FINAL SIGNOFF
-              </span>
-              <span className={`h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                hasApprover ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
-              }`}>
-                {hasApprover ? '✓' : '4'}
-              </span>
-            </div>
-            <h5 className="text-sm font-bold text-slate-800">Approver (A / BA)</h5>
-            <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-              Final binding statutory or board authority decision maker.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Proposed Authority Builder (Card with dark navy header) */}
+      {/* Authority Builder */}
       <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-white">
         {/* Navy Header */}
         <div className="bg-slate-900 px-5 py-4 flex items-center text-white">
           <h4 className="text-sm font-bold text-white tracking-tight">
-            Proposed Authority Builder
+            Authority Builder
           </h4>
         </div>
 
@@ -543,7 +397,7 @@ export default function AuthorityChainBuilder({
             <div className="md:col-span-4 space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700">
-                  1. AUTHORITY BODY
+                  AUTHORITY BODY
                 </label>
                 <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/60">
                   CATEGORY
@@ -567,7 +421,7 @@ export default function AuthorityChainBuilder({
             <div className="md:col-span-4 space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700 truncate">
-                  2. SELECT COMMITTEE / ENTITY
+                  SELECT COMMITTEE / ENTITY
                 </label>
                 <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                   {availableEntities.length} OPTIONS
@@ -591,7 +445,7 @@ export default function AuthorityChainBuilder({
             <div className="md:col-span-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700">
-                  3. ACTION OPERATOR
+                  ACTION OPERATOR
                 </label>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                   currentPhase === 1 ? 'bg-blue-50 text-blue-700 border-blue-200' :
@@ -640,17 +494,6 @@ export default function AuthorityChainBuilder({
             </div>
 
           </div>
-
-          {/* Sub-row helper banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-blue-50/70 border border-blue-200/70 rounded-xl text-xs text-blue-800">
-            <div className="flex items-center gap-2">
-              <Info className="h-4 w-4 text-blue-600 flex-shrink-0" />
-              <span>{subBannerMessage}</span>
-            </div>
-            <span className="text-[11px] text-blue-600 font-medium self-end sm:self-auto">
-              Press <kbd className="px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-mono shadow-2xs">Enter ↵</kbd> to append
-            </span>
-          </div>
         </div>
       </div>
 
@@ -665,9 +508,6 @@ export default function AuthorityChainBuilder({
               {chain.length} Nodes
             </span>
           </div>
-          <span className="text-xs text-slate-400">
-            Click ← → to reorder, or × to remove a node.
-          </span>
         </div>
 
         {/* Pipeline Canvas Container */}
@@ -691,31 +531,25 @@ export default function AuthorityChainBuilder({
               <div className="flex items-center gap-3 min-w-max pb-2">
                 {chain.map((node, index) => {
                   const style = ROLE_STYLES[node.roleType] || ROLE_STYLES.proposer;
-                  const isFirst = index === 0;
                   const isLast = index === chain.length - 1;
 
                   return (
                     <React.Fragment key={node.id}>
                       {/* Node Card */}
                       <div className={`w-[220px] rounded-xl border ${style.border} ${style.bg} p-3.5 shadow-xs flex flex-col justify-between space-y-2.5 transition-all hover:shadow-sm`}>
-                        {/* Header: Step + Role Badge + Remove Button */}
+                        {/* Header: Role Badge (Left) + Remove Button (Right) */}
                         <div className="flex items-center justify-between gap-1">
-                          <span className={`text-[10px] font-extrabold uppercase tracking-wider ${style.stepColor}`}>
-                            STEP #{index + 1}
+                          <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${style.badgeBg}`}>
+                            {node.operatorLabel}
                           </span>
-                          <div className="flex items-center gap-1.5">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${style.badgeBg}`}>
-                              {node.operatorLabel}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveNode(index)}
-                              title="Remove step"
-                              className="h-5 w-5 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveNode(index)}
+                            title="Remove step"
+                            className="h-5 w-5 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
                         </div>
 
                         {/* Body: Entity Name + Authority Body */}
@@ -727,36 +561,9 @@ export default function AuthorityChainBuilder({
                             {node.authorityBody}
                           </p>
                         </div>
-
-                        {/* Footer: Reorder Controls */}
-                        <div className="flex items-center justify-between pt-1 border-t border-slate-200/50">
-                          <span className="text-[10px] font-mono text-slate-500">
-                            {node.display}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleReorder(index, index - 1)}
-                              disabled={isFirst}
-                              title="Move step left"
-                              className="h-6 w-6 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-                            >
-                              <ArrowLeft className="h-3 w-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleReorder(index, index + 1)}
-                              disabled={isLast}
-                              title="Move step right"
-                              className="h-6 w-6 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
-                            >
-                              <ArrowRight className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
                       </div>
 
-                      {/* Sequential Pipeline Arrow */}
+                      {/* Sequential Pipeline Arrow (Pointing Right: →) */}
                       {!isLast && (
                         <div className="flex items-center justify-center px-1 text-slate-400">
                           <ArrowRight className="h-5 w-5 stroke-[2.5]" />
@@ -794,14 +601,6 @@ export default function AuthorityChainBuilder({
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 self-end md:self-auto">
-            <button
-              type="button"
-              onClick={() => setJsonModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-colors"
-            >
-              <Download className="h-3.5 w-3.5 text-slate-500" />
-              <span>Export Scheme JSON</span>
-            </button>
 
             <button
               type="button"

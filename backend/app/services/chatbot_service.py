@@ -116,11 +116,8 @@ def check_guardrails(query: str) -> Optional[str]:
     return None
 
 def retrieve_relevant_records(db: Session, query: str, limit: int = 4, current_user: Optional[User] = None) -> List[DOARecord]:
-    """Search published DOA records matching query terms within user's authorized domain scope."""
-    from app.core.rbac import apply_doa_read_scope
+    """Search published DOA records matching query terms across corporate governance domain."""
     base_q = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED")
-    if current_user is not None:
-        base_q = apply_doa_read_scope(base_q, current_user)
 
     terms = [t.strip() for t in query.split() if len(t.strip()) > 2]
     if not terms:

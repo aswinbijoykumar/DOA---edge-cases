@@ -32,7 +32,8 @@ import {
   GitPullRequest,
   AlertOctagon,
   History,
-  Edit3
+  Edit3,
+  Bookmark
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
@@ -86,6 +87,52 @@ const DEMO_LATEST_AMENDMENTS = [
     updateType: 'New/Amended',
     department: 'Legal & Compliance',
     lastUpdateDate: '25-Oct-26'
+  }
+];
+
+// Demo / View-only Frequently Visited Decision Areas (UI view purpose only, not stored in DB)
+const DEMO_FREQUENTLY_VISITED_AREAS = [
+  {
+    no: '# 225',
+    decisionArea: 'Approve increase or reduction of share capital',
+    function: 'Finance',
+    authorityChain: 'Shareholders (A) ← BoD (E2) ← AC (E1) ← ExCom (E) ← GCEO (R2) ← CEO (R1)',
+    lastUpdateDate: '10-Nov-26'
+  },
+  {
+    no: '# 243',
+    decisionArea: 'Approve annual budget and five-year financial plan',
+    function: 'Finance',
+    authorityChain: 'BoD (A) ← ExCom (E2) ← GCEO (E1) ← CEO (E) ← GCFO (R) ← CFO (P)',
+    lastUpdateDate: '08-Nov-26'
+  },
+  {
+    no: '# 301',
+    decisionArea: 'Approve wholesale single obligor credit limit above USD 50 million up to regulatory cap',
+    function: 'Risk',
+    authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (R1)',
+    lastUpdateDate: '05-Nov-26'
+  },
+  {
+    no: '# 305',
+    decisionArea: 'Approve Value-at-Risk (VaR) limits, Stressed VaR limits, and Stop-Loss thresholds for Trading Book',
+    function: 'Risk',
+    authorityChain: 'BoD (A) ← BRPC (E1) ← GRC (E) ← ALCO(G) (R1) ← GCRO (R)',
+    lastUpdateDate: '01-Nov-26'
+  },
+  {
+    no: '# 251',
+    decisionArea: 'Approve tier one (1) or tier two (2) capital issue',
+    function: 'Finance',
+    authorityChain: 'Shareholders (Y, A1) ← BoD (A) ← AC (E1) ← BRPC (E) ← GCCO (R) ← GCFO (P)',
+    lastUpdateDate: '28-Oct-26'
+  },
+  {
+    no: '# 308',
+    decisionArea: 'Approve Group Risk Appetite Statement (RAS) and Group Risk Tolerance Matrix',
+    function: 'Risk',
+    authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (P)',
+    lastUpdateDate: '22-Oct-26'
   }
 ];
 
@@ -419,11 +466,11 @@ export default function NormalUserDashboard({
           </div>
         </div>
 
-        {/* Action > Buttons Aligned in the Same Line */}
+        {/* Action Buttons Aligned in the Same Line */}
         <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 relative z-10">
           <div className="shrink-0 flex items-center">
-            <span className="h-10 px-3 rounded-xl inline-flex items-center justify-center text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 shadow-xs">
-              Action &gt;
+            <span className="h-10 w-20 rounded-xl inline-flex items-center justify-center text-center text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 shadow-xs">
+              Action
             </span>
           </div>
 
@@ -439,7 +486,6 @@ export default function NormalUserDashboard({
                   ? 'bg-indigo-600 text-white border-indigo-400 shadow-indigo-600/30 ring-2 ring-indigo-400/30 font-black'
                   : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border-indigo-400/30'
               }`}
-              title="Overview Dashboard"
             >
               <Layers className="h-4 w-4 text-indigo-300 shrink-0" />
               <span className="truncate">Overview</span>
@@ -453,7 +499,6 @@ export default function NormalUserDashboard({
                   ? 'bg-blue-600 text-white border-blue-400 shadow-blue-600/30 ring-2 ring-blue-400/30 font-black'
                   : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 border-blue-400/30'
               }`}
-              title="Search DOA Matrix"
             >
               <Search className="h-4 w-4 text-blue-300 shrink-0" />
               <span className="truncate">Search DoA</span>
@@ -463,24 +508,28 @@ export default function NormalUserDashboard({
             {!canPropose ? (
               <button
                 disabled
-                className="h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
-                title="Proposal authoring disabled for your role/persona"
+                className="h-10 w-full px-2.5 py-1 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
               >
                 <Edit3 className="h-4 w-4 text-slate-500 shrink-0" />
-                <span className="truncate">Initiate Proposal</span>
+                <div className="flex flex-col items-center justify-center min-w-0">
+                  <span className="truncate text-xs font-bold leading-tight">Initiate Proposal</span>
+                  <span className="text-[10px] font-medium text-slate-500 leading-tight">(new/amendment)</span>
+                </div>
               </button>
             ) : (
               <button
                 onClick={onNewRequest}
-                className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                className={`h-10 w-full px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
                   activeTab === 'request'
                     ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-600/30 ring-2 ring-cyan-400/30 font-black'
                     : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border-cyan-400/30'
                 }`}
-                title="Initiate Proposal"
               >
                 <Edit3 className="h-4 w-4 text-cyan-300 shrink-0" />
-                <span className="truncate">Initiate Proposal</span>
+                <div className="flex flex-col items-center justify-center min-w-0">
+                  <span className="truncate text-xs font-bold leading-tight">Initiate Proposal</span>
+                  <span className="text-[10px] font-medium text-cyan-200/90 leading-tight">(new/amendment)</span>
+                </div>
               </button>
             )}
 
@@ -492,7 +541,6 @@ export default function NormalUserDashboard({
                   ? 'bg-teal-600 text-white border-teal-400 shadow-teal-600/30 ring-2 ring-teal-400/30 font-black'
                   : 'bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border-teal-400/30'
               }`}
-              title="View Change Queue"
             >
               <GitPullRequest className="h-4 w-4 text-teal-300 shrink-0" />
               <span className="truncate">Change Queue</span>
@@ -511,7 +559,6 @@ export default function NormalUserDashboard({
                   ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-600/30 ring-2 ring-emerald-400/30 font-black'
                   : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30'
               }`}
-              title="Exception Workflow"
             >
               <AlertOctagon className="h-4 w-4 text-emerald-300 shrink-0" />
               <span className="truncate">Exception Workflow</span>
@@ -526,7 +573,6 @@ export default function NormalUserDashboard({
                     ? 'bg-teal-400 text-slate-950 border-teal-300 ring-2 ring-teal-400/40 font-black shadow-lg shadow-teal-500/25'
                     : 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-black border-teal-400 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5'
                 }`}
-                title="Audit Trail Logs"
               >
                 <History className="h-4 w-4 text-slate-950 shrink-0" />
                 <span className="truncate">Audit Trail</span>
@@ -535,38 +581,53 @@ export default function NormalUserDashboard({
           </div>
         </div>
 
-        {/* View > Perspectives & Detailed Reports */}
-        <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap gap-2 items-center relative z-10">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 px-2.5 py-0.5 rounded-md mr-2">
-            View &gt;
-          </span>
-          {[
-            { id: 'designations', label: 'Designation View', icon: Award, highlight: true },
-            { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeSubTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  onNavigateTab('overview');
-                  setActiveSubTab(tab.id);
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  isActive
-                    ? 'bg-teal-500 text-slate-950 shadow-md font-black'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10'
-                }`}
-              >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-slate-950' : 'text-teal-400'}`} />
-                <span>{tab.label}</span>
-                {tab.highlight && !isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                )}
-              </button>
-            );
-          })}
+        {/* View Buttons Aligned in the Same Line - Same Size as Action Card & Buttons */}
+        <div className="mt-3 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 relative z-10">
+          <div className="shrink-0 flex items-center">
+            <span className="h-10 w-20 rounded-xl inline-flex items-center justify-center text-center text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 shadow-xs">
+              View
+            </span>
+          </div>
+
+          <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-2.5 flex-1 w-full`}>
+            {/* 1. Designation View */}
+            <button
+              onClick={() => {
+                onNavigateTab('overview');
+                setActiveSubTab('designations');
+              }}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeSubTab === 'designations'
+                  ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-teal-500/30 ring-2 ring-teal-400/30 font-black'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
+              }`}
+            >
+              <Award className={`h-4 w-4 shrink-0 ${activeSubTab === 'designations' ? 'text-slate-950' : 'text-teal-400'}`} />
+              <span className="truncate">Designation View</span>
+              {activeSubTab !== 'designations' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse shrink-0" />
+              )}
+            </button>
+
+            {/* 2. Management Reports */}
+            <button
+              onClick={() => {
+                onNavigateTab('overview');
+                setActiveSubTab('reports');
+              }}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeSubTab === 'reports'
+                  ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-teal-500/30 ring-2 ring-teal-400/30 font-black'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
+              }`}
+            >
+              <FileSpreadsheet className={`h-4 w-4 shrink-0 ${activeSubTab === 'reports' ? 'text-slate-950' : 'text-teal-400'}`} />
+              <span className="truncate">Management Reports</span>
+              {activeSubTab !== 'reports' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse shrink-0" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -578,24 +639,14 @@ export default function NormalUserDashboard({
           {/* Latest amendments to the Delegation of Authority Matrix (Excel Demo Model) */}
           <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
             {/* Table Header Bar */}
-            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-700">
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
                   <FileSpreadsheet className="h-4 w-4 text-teal-300" />
                 </div>
-                <div>
-                  <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
-                    Latest amendments to the Delegation of Authority Matrix
-                  </h3>
-                  <p className="text-[11px] text-slate-300">
-                    Audit trail of recent institutional authority policy revisions &amp; approved thresholds
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 self-start sm:self-center">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                  Live Matrix Feed
-                </span>
+                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                  Latest amendments to the Delegation of Authority Matrix
+                </h3>
               </div>
             </div>
 
@@ -637,7 +688,61 @@ export default function NormalUserDashboard({
                       <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
                         {item.department}
                       </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium">
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium whitespace-nowrap">
+                        {item.lastUpdateDate}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Frequently visited decision areas (View-only Demo Card) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+            {/* Table Header Bar */}
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0">
+                  <Bookmark className="h-4 w-4 text-indigo-300" />
+                </div>
+                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                  Frequently visited decision areas
+                </h3>
+              </div>
+            </div>
+
+            {/* Table Content */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                    <th className="py-3 px-4 sm:px-6 w-24">No</th>
+                    <th className="py-3 px-4 sm:px-6">Decision area</th>
+                    <th className="py-3 px-4 sm:px-6 w-32">Function</th>
+                    <th className="py-3 px-4 sm:px-6">Authority Chain</th>
+                    <th className="py-3 px-4 sm:px-6 text-right whitespace-nowrap">Last Update Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {DEMO_FREQUENTLY_VISITED_AREAS.map((item, idx) => (
+                    <tr 
+                      key={idx}
+                      className="hover:bg-indigo-50/30 transition-colors"
+                    >
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-900">
+                        {item.no}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
+                        {item.decisionArea}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
+                        {item.function}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-mono text-[11px] text-slate-700 font-medium">
+                        {item.authorityChain}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium whitespace-nowrap">
                         {item.lastUpdateDate}
                       </td>
                     </tr>

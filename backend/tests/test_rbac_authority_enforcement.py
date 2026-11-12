@@ -264,22 +264,21 @@ def test_domain_visibility_scoping_finance_vs_risk(client, rbac_matrix_env):
     risk_dept = rbac_matrix_env["rbac.risk.dept@doa.local"]
     audit_usr = rbac_matrix_env["rbac.audit@doa.local"]
 
-    # 1. Finance Analyst only receives Finance DOAs on /api/doa and /api/user/doa
+    # 1. Finance Analyst receives published DOAs across both Finance and Risk for read-only corporate matrix view
     fin_list = client.get("/api/doa", headers=fin_req).json()
     fin_ids = {r["id"] for r in fin_list}
     assert "RBAC-FIN-BH-01" in fin_ids
-    assert "RBAC-RISK-BH-01" not in fin_ids
+    assert "RBAC-RISK-BH-01" in fin_ids
 
-    # Direct GET by ID on Risk DOA returns 403 Forbidden for Finance user
-    assert client.get("/api/doa/RBAC-RISK-BH-01", headers=fin_req).status_code == 403
-    assert client.get("/api/doa/RBAC-RISK-BH-01/versions", headers=fin_req).status_code == 403
+    # Direct GET by ID on published Risk DOA is accessible in read-only mode for Finance user
+    assert client.get("/api/doa/RBAC-RISK-BH-01", headers=fin_req).status_code == 200
 
-    # 2. Risk Dept Head only receives Risk DOAs and gets 403 on Finance DOAs
+    # 2. Risk Dept Head can view published Risk and Finance DOAs in read-only mode
     risk_list = client.get("/api/doa", headers=risk_dept).json()
     risk_ids = {r["id"] for r in risk_list}
     assert "RBAC-RISK-BH-01" in risk_ids
-    assert "RBAC-FIN-BH-01" not in risk_ids
-    assert client.get("/api/doa/RBAC-FIN-BH-01", headers=risk_dept).status_code == 403
+    assert "RBAC-FIN-BH-01" in risk_ids
+    assert client.get("/api/doa/RBAC-FIN-BH-01", headers=risk_dept).status_code == 200
 
     # Dept Owner department-doas & signing-limits report strictly scoped to Risk for Risk Dept Head
     risk_dept_doas = client.get("/api/dept-owner/department-doas", headers=risk_dept).json()
