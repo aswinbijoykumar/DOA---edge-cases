@@ -36,6 +36,7 @@ export default function ExceptionWorkflowInbox({
 
   const loadExceptions = async () => {
     setLoading(true);
+    const start = Date.now();
     try {
       const data = await api.getExceptionRequests();
       setExceptions(data || []);
@@ -50,7 +51,13 @@ export default function ExceptionWorkflowInbox({
     } catch (err) {
       console.error('Failed to load exceptions:', err);
     } finally {
-      setLoading(false);
+      const elapsed = Date.now() - start;
+      const minDuration = 600;
+      if (elapsed < minDuration) {
+        setTimeout(() => setLoading(false), minDuration - elapsed);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -160,7 +167,8 @@ export default function ExceptionWorkflowInbox({
 
         <button 
           onClick={loadExceptions}
-          className="px-3.5 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors border border-white/10"
+          disabled={loading}
+          className="px-3.5 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors border border-white/10 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           <span>Refresh Queue</span>

@@ -557,13 +557,20 @@ export default function App() {
   const loadChangeRequests = async () => {
     if (!currentUser) return;
     setIsLoadingQueue(true);
+    const start = Date.now();
     try {
       const list = await api.getChangeRequests();
       setChangeRequests(list || []);
     } catch (e) {
       console.warn("Could not fetch change requests:", e);
     } finally {
-      setIsLoadingQueue(false);
+      const elapsed = Date.now() - start;
+      const minDuration = 600;
+      if (elapsed < minDuration) {
+        setTimeout(() => setIsLoadingQueue(false), minDuration - elapsed);
+      } else {
+        setIsLoadingQueue(false);
+      }
     }
   };
 
@@ -625,13 +632,20 @@ export default function App() {
   const loadAuditLogs = async () => {
     if (!isAuditRole) return;
     setIsLoadingAudit(true);
+    const start = Date.now();
     try {
       const logs = await api.getAuditLogs();
       setAuditLogs(logs || []);
     } catch (e) {
       console.warn("Could not fetch audit logs:", e);
     } finally {
-      setIsLoadingAudit(false);
+      const elapsed = Date.now() - start;
+      const minDuration = 600;
+      if (elapsed < minDuration) {
+        setTimeout(() => setIsLoadingAudit(false), minDuration - elapsed);
+      } else {
+        setIsLoadingAudit(false);
+      }
     }
   };
 
@@ -828,7 +842,7 @@ export default function App() {
     setAuthorityChain(newChain);
     
     // Update formData authority string
-    const chainStr = newChain.map(c => c.display).join(' ➔ ');
+    const chainStr = [...newChain].reverse().map(c => c.display).join(' ← ');
     setFormData(prev => ({ ...prev, authority: chainStr }));
     addToast(`Added '${display}' to proposed authority chain`, 'info');
   };
@@ -837,7 +851,7 @@ export default function App() {
   const handleRemoveFromChain = (indexToRemove) => {
     const newChain = authorityChain.filter((_, idx) => idx !== indexToRemove);
     setAuthorityChain(newChain);
-    const chainStr = newChain.length > 0 ? newChain.map(c => c.display).join(' ➔ ') : '';
+    const chainStr = newChain.length > 0 ? [...newChain].reverse().map(c => c.display).join(' ← ') : '';
     setFormData(prev => ({ ...prev, authority: chainStr }));
   };
 
@@ -2171,7 +2185,7 @@ export default function App() {
                         type="text"
                         readOnly
                         value={formData.authority}
-                        placeholder="e.g. AC (P) ➔ CRO (R) ➔ BRC (E1) ➔ CEO (A)"
+                        placeholder="e.g. CEO (A) ← BRC (E1) ← CRO (R) ← AC (P)"
                         className="w-full text-xs font-mono font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
                       />
                     </div>
@@ -2289,9 +2303,10 @@ export default function App() {
                 </span>
                 <button
                   onClick={loadChangeRequests}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all"
+                  disabled={isLoadingQueue}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all disabled:opacity-75 disabled:cursor-not-allowed"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" /> Refresh
+                  <RefreshCw className={`h-3.5 w-3.5 ${isLoadingQueue ? 'animate-spin' : ''}`} /> Refresh
                 </button>
               </div>
             </div>
@@ -2558,9 +2573,10 @@ export default function App() {
               </div>
               <button
                 onClick={loadAuditLogs}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all self-start sm:self-auto"
+                disabled={isLoadingAudit}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all self-start sm:self-auto disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh Logs
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoadingAudit ? 'animate-spin' : ''}`} /> Refresh Logs
               </button>
             </div>
 

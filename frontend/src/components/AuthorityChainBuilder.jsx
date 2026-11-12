@@ -191,7 +191,7 @@ export default function AuthorityChainBuilder({
   const notifyChange = (updatedChain) => {
     setChain(updatedChain);
     if (onChange) {
-      const compositeString = updatedChain.map(n => n.display).join(' ➔ ');
+      const compositeString = [...updatedChain].reverse().map(n => n.display).join(' ← ');
       onChange(updatedChain, compositeString);
     }
   };
@@ -324,7 +324,7 @@ export default function AuthorityChainBuilder({
       generatedAt: new Date().toISOString(),
       status: (hasProposer && hasReviewer && hasApprover) ? 'COMPLIANT' : 'INCOMPLETE',
       totalSteps: chain.length,
-      compositeString: chain.map(n => n.display).join(' ➔ '),
+      compositeString: [...chain].reverse().map(n => n.display).join(' ← '),
       nodes: chain.map((n, idx) => ({
         step: idx + 1,
         authorityBody: n.authorityBody,
@@ -353,7 +353,7 @@ export default function AuthorityChainBuilder({
       return;
     }
 
-    const compositeString = chain.map(n => n.display).join(' ➔ ');
+    const compositeString = [...chain].reverse().map(n => n.display).join(' ← ');
     if (onSave) {
       onSave(chain, compositeString);
     }
