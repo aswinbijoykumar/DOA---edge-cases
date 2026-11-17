@@ -289,7 +289,7 @@ export default function GovernanceKpiCardsView({
       const mainHeader = document.querySelector('header');
       const navbarHeight = mainHeader ? mainHeader.offsetHeight : 88;
       
-      const shouldStick = rect.top <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      const shouldStick = (rect.top + 56) <= navbarHeight && rect.bottom > (navbarHeight + 60);
       setIsOuterHeaderSticky(shouldStick);
       
       if (shouldStick) {
@@ -741,23 +741,23 @@ export default function GovernanceKpiCardsView({
                   onScroll={handleStickyHorizontalScroll}
                   className="overflow-x-auto no-scrollbar"
                 >
-                  <div className="min-w-[940px]">
+                  <div className="min-w-[1180px]">
                     <table className="w-full text-left text-xs table-fixed border-collapse">
                       <colgroup>
-                        <col className="w-[7%]" />
-                        <col className="w-[16%]" />
-                        <col className="w-[28%]" />
-                        <col className="w-[11%]" />
-                        <col className="w-[16%]" />
-                        <col className="w-[11%]" />
-                        <col className="w-[11%]" />
+                        <col className="w-[5%]" />
+                        <col className="w-[13%]" />
+                        <col className="w-[23%]" />
+                        <col className="w-[18%]" />
+                        <col className="w-[19%]" />
+                        <col className="w-[9%]" />
+                        <col className="w-[13%]" />
                       </colgroup>
-                      <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                      <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                         <tr>
-                          <th className="py-3 px-4">Ref #</th>
-                          <th className="py-3 px-4">Function &bull; Business Line</th>
-                          <th className="py-3 px-6">Decision Area / Authority Mandate</th>
-                          <th className="py-3 px-4 text-center">Specific Action</th>
+                          <th className="py-3 px-4 text-center">NO.</th>
+                          <th className="py-3 px-4">Function</th>
+                          <th className="py-3 px-6">Decision Area</th>
+                          <th className="py-3 px-4 text-center whitespace-nowrap">Specific Action</th>
                           <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
                           <th className="py-3 px-3 text-center whitespace-nowrap">Last Update Date</th>
                           <th className="py-3 px-4">Composite Flow</th>
@@ -771,25 +771,37 @@ export default function GovernanceKpiCardsView({
 
 
 
+            {/* Table Header Bar */}
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                </div>
+                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                  Delegation of Authority Matrix
+                </h3>
+              </div>
+            </div>
+
             <div ref={tableScrollContainerRef} onScroll={handleTableHorizontalScroll} className="overflow-x-auto">
-              <div className="min-w-[940px]">
+              <div className="min-w-[1180px]">
                 {/* Fixed Table Header (Scrollbar starts strictly below this header) */}
                 <table className="w-full text-left text-xs table-fixed border-collapse">
                   <colgroup>
-                    <col className="w-[7%]" />
-                    <col className="w-[16%]" />
-                    <col className="w-[28%]" />
-                    <col className="w-[11%]" />
-                    <col className="w-[16%]" />
-                    <col className="w-[11%]" />
-                    <col className="w-[11%]" />
+                    <col className="w-[5%]" />
+                    <col className="w-[13%]" />
+                    <col className="w-[23%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[19%]" />
+                    <col className="w-[9%]" />
+                    <col className="w-[13%]" />
                   </colgroup>
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3 px-4">Ref #</th>
-                      <th className="py-3 px-4">Function &bull; Business Line</th>
-                      <th className="py-3 px-6">Decision Area / Authority Mandate</th>
-                      <th className="py-3 px-4 text-center">Specific Action</th>
+                      <th className="py-3 px-4 text-center">NO.</th>
+                      <th className="py-3 px-4">Function</th>
+                      <th className="py-3 px-6">Decision Area</th>
+                      <th className="py-3 px-4 text-center whitespace-nowrap">Specific Action</th>
                       <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
                       <th className="py-3 px-3 text-center whitespace-nowrap">Last Update Date</th>
                       <th className="py-3 px-4">Composite Flow</th>
@@ -805,18 +817,18 @@ export default function GovernanceKpiCardsView({
                 >
                   <table className="w-full text-left text-xs table-fixed border-collapse">
                     <colgroup>
-                      <col className="w-[7%]" />
-                      <col className="w-[16%]" />
-                      <col className="w-[28%]" />
-                      <col className="w-[11%]" />
-                      <col className="w-[16%]" />
-                      <col className="w-[11%]" />
-                      <col className="w-[11%]" />
+                      <col className="w-[5%]" />
+                      <col className="w-[13%]" />
+                      <col className="w-[23%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[19%]" />
+                      <col className="w-[9%]" />
+                      <col className="w-[13%]" />
                     </colgroup>
                     <tbody className="divide-y divide-slate-100">
                       {filteredAuthorities.map((item) => (
                         <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
+                          <td className="py-3.5 px-4 font-mono font-bold text-slate-400 text-center">
                             #{item.id}
                           </td>
                           <td className="py-3.5 px-4">
@@ -849,32 +861,32 @@ export default function GovernanceKpiCardsView({
                               </span>
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-center">
+                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
                             <span
-                              className={`inline-block px-3 py-1 rounded-lg font-black text-xs border ${
+                              className={`inline-flex items-center justify-center px-3 py-1 rounded-lg font-bold text-[11px] border whitespace-nowrap shadow-2xs ${
                                 item.action_type === 'APPROVE'
-                                  ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                  ? 'bg-emerald-100/90 text-emerald-900 border-emerald-300'
                                   : item.action_type === 'ENDORSE'
-                                  ? 'bg-blue-100 text-blue-900 border-blue-300'
+                                  ? 'bg-blue-100/90 text-blue-900 border-blue-300'
                                   : item.action_type === 'RECOMMEND'
-                                  ? 'bg-amber-100 text-amber-900 border-amber-300'
-                                  : 'bg-purple-100 text-purple-900 border-purple-300'
+                                  ? 'bg-amber-100/90 text-amber-900 border-amber-300'
+                                  : 'bg-purple-100/90 text-purple-900 border-purple-300'
                               }`}
                             >
                               {item.authority_code} ({item.action_type})
                             </span>
                           </td>
-                          <td className="py-3.5 px-4">
-                            <div className="space-y-1">
+                          <td className="py-3.5 px-3 overflow-hidden">
+                            <div className="space-y-1 max-w-full">
                               {item.policy_reference && (
                                 <button
                                   type="button"
                                   onClick={() => setSelectedLinkageItem(item)}
-                                  className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline text-left cursor-pointer group"
+                                  className="flex items-center gap-1.5 text-[11px] font-bold text-teal-700 hover:text-teal-900 hover:underline text-left cursor-pointer group max-w-full"
                                   title="Click to view full Policy &amp; Charter mandate details"
                                 >
                                   <BookOpen className="h-3 w-3 text-teal-600 shrink-0 group-hover:scale-110 transition-transform" />
-                                  <span className="truncate max-w-[160px]">{item.policy_reference}</span>
+                                  <span className="truncate max-w-[150px]">{item.policy_reference}</span>
                                   <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
                                 </button>
                               )}
@@ -882,11 +894,11 @@ export default function GovernanceKpiCardsView({
                                 <button
                                   type="button"
                                   onClick={() => setSelectedLinkageItem(item)}
-                                  className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700 hover:text-rose-900 hover:underline text-left cursor-pointer group"
+                                  className="flex items-center gap-1.5 text-[11px] font-bold text-rose-700 hover:text-rose-900 hover:underline text-left cursor-pointer group max-w-full"
                                   title="Click to view statutory requirement &amp; regulatory code"
                                 >
                                   <ShieldCheck className="h-3 w-3 text-rose-500 shrink-0 group-hover:scale-110 transition-transform" />
-                                  <span className="truncate max-w-[160px]">{item.regulatory_requirement}</span>
+                                  <span className="truncate max-w-[150px]">{item.regulatory_requirement}</span>
                                   <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
                                 </button>
                               )}
@@ -894,7 +906,7 @@ export default function GovernanceKpiCardsView({
                                 <button
                                   type="button"
                                   onClick={() => setSelectedLinkageItem(item)}
-                                  className="text-slate-400 text-[11px] italic hover:text-teal-700 hover:underline flex items-center gap-1 text-left cursor-pointer"
+                                  className="text-slate-400 text-[11px] italic hover:text-teal-700 hover:underline flex items-center gap-1 text-left cursor-pointer max-w-full"
                                   title="Click to inspect internal DOA standard details"
                                 >
                                   <span>Internal DOA Standard</span>
@@ -905,15 +917,15 @@ export default function GovernanceKpiCardsView({
                           </td>
 
                           {/* Last Update Date */}
-                          <td className="py-3.5 px-3 text-center whitespace-nowrap">
+                          <td className="py-3.5 px-2 text-center whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                               <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
                               <span>{item.last_update_date || item.effective_date || '2026-02-15'}</span>
                             </span>
                           </td>
 
-                          <td className="py-3.5 px-4">
-                            <span className="text-xs font-mono font-medium text-slate-700 block max-w-xs truncate" title={formatAuthorityFlow(item.composite_authority)}>
+                          <td className="py-3.5 px-3">
+                            <span className="text-xs font-mono font-medium text-slate-700 block max-w-[140px] truncate" title={formatAuthorityFlow(item.composite_authority)}>
                               {formatAuthorityFlow(item.composite_authority)}
                             </span>
                           </td>

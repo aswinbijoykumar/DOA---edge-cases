@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timezone
 import json
+import re
 
 from app.database.database import get_db
 from app.database.models import User, DOARecord, ChangeRequest

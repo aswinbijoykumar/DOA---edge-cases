@@ -18,6 +18,7 @@ import OrgChartModal from './components/common/OrgChartModal';
 import nexusLogo from './assets/nexus-logo.jpg';
 import proNexusBrand from './assets/pro-nexus-brand.png';
 import { 
+  FileSpreadsheet,
   Search, 
   Plus, 
   Trash2, 
@@ -363,7 +364,7 @@ export default function App() {
       const rect = searchTableWrapperRef.current.getBoundingClientRect();
       const navbarHeight = mainHeaderRef.current ? mainHeaderRef.current.offsetHeight : 88;
       
-      const shouldStick = rect.top <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      const shouldStick = (rect.top + 56) <= navbarHeight && rect.bottom > (navbarHeight + 60);
       setIsOuterHeaderSticky(shouldStick);
       
       if (shouldStick) {
@@ -1862,31 +1863,31 @@ export default function App() {
                   width: `${stickyHeaderMetrics.width}px`,
                   zIndex: 25
                 }}
-                className="bg-slate-900 border-x border-b border-slate-700 shadow-xl overflow-hidden animate-fade-in"
+                className="bg-slate-100 border-x border-b border-slate-300 shadow-lg overflow-hidden animate-fade-in"
               >
                 <div 
                   ref={stickyHeaderScrollRef}
                   onScroll={handleStickyHorizontalScroll}
                   className="overflow-x-auto no-scrollbar"
                 >
-                  <div className="min-w-[900px]">
+                  <div className="min-w-[1050px]">
                     <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
                       <colgroup>
                         <col className="w-[7%]" />
                         <col className="w-[12%]" />
-                        <col className="w-[10%]" />
-                        <col className="w-[36%]" />
-                        <col className="w-[21%]" />
-                        <col className="w-[14%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[35%]" />
+                        <col className="w-[22%]" />
+                        <col className="w-[13%]" />
                       </colgroup>
-                      <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
+                      <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                         <tr>
-                          <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700">No.</th>
-                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Function</th>
-                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Type</th>
-                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
-                          <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Approval Authority Chain</th>
-                          <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700 whitespace-nowrap">Last Update Date</th>
+                          <th className="py-3 px-4 text-center">NO.</th>
+                          <th className="py-3 px-4">FUNCTION</th>
+                          <th className="py-3 px-4 text-center">UPDATE TYPE</th>
+                          <th className="py-3 px-6">DECISION AREA</th>
+                          <th className="py-3 px-4">APPROVAL AUTHORITY CHAIN</th>
+                          <th className="py-3 px-4 text-center whitespace-nowrap">LAST UPDATE DATE</th>
                         </tr>
                       </thead>
                     </table>
@@ -1896,27 +1897,39 @@ export default function App() {
             )}
 
             {/* Data Table */}
-            <div ref={searchTableWrapperRef} className="relative bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div ref={searchTableWrapperRef} className="relative bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+              {/* Table Header Bar */}
+              <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                  </div>
+                  <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                    Delegation of Authority Matrix
+                  </h3>
+                </div>
+              </div>
+
               <div ref={searchTableScrollContainerRef} onScroll={handleTableHorizontalScroll} className="overflow-x-auto">
-                <div className="min-w-[900px]">
+                <div className="min-w-[1050px]">
                   {/* Fixed Table Header (No vertical scrollbar overlapping it) */}
                   <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
                     <colgroup>
                       <col className="w-[7%]" />
                       <col className="w-[12%]" />
-                      <col className="w-[10%]" />
-                      <col className="w-[36%]" />
-                      <col className="w-[21%]" />
-                      <col className="w-[14%]" />
+                      <col className="w-[11%]" />
+                      <col className="w-[35%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[13%]" />
                     </colgroup>
-                    <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
+                    <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                       <tr>
-                        <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700">No.</th>
-                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Function</th>
-                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Type</th>
-                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
-                        <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Approval Authority Chain</th>
-                        <th className="py-3.5 px-4 font-semibold text-center border-b border-slate-700 whitespace-nowrap">Last Update Date</th>
+                        <th className="py-3 px-4 text-center">NO.</th>
+                        <th className="py-3 px-4">FUNCTION</th>
+                        <th className="py-3 px-4 text-center">UPDATE TYPE</th>
+                        <th className="py-3 px-6">DECISION AREA</th>
+                        <th className="py-3 px-4">APPROVAL AUTHORITY CHAIN</th>
+                        <th className="py-3 px-4 text-center whitespace-nowrap">LAST UPDATE DATE</th>
                       </tr>
                     </thead>
                   </table>
@@ -1931,10 +1944,10 @@ export default function App() {
                       <colgroup>
                         <col className="w-[7%]" />
                         <col className="w-[12%]" />
-                        <col className="w-[10%]" />
-                        <col className="w-[36%]" />
-                        <col className="w-[21%]" />
-                        <col className="w-[14%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[35%]" />
+                        <col className="w-[22%]" />
+                        <col className="w-[13%]" />
                       </colgroup>
                       <tbody className="divide-y divide-slate-100">
                         {filteredRecords.length === 0 ? (
@@ -1984,7 +1997,7 @@ export default function App() {
                                       className="hover:bg-slate-50/80 cursor-pointer transition-colors duration-150 group"
                                     >
                                       {/* ID / No. */}
-                                      <td className="py-3 px-4 text-center font-bold text-slate-400 text-xs border-r border-slate-100">
+                                      <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400 text-xs border-r border-slate-100">
                                         #{record.id}
                                       </td>
                                       
@@ -2000,7 +2013,7 @@ export default function App() {
                                       </td>
 
                                       {/* Key/Non-Key */}
-                                      <td className="py-3 px-4 text-xs font-semibold">
+                                      <td className="py-3.5 px-4 text-center text-xs font-semibold">
                                         <span className={`px-2 py-0.5 rounded-full text-[10px] ${
                                           record.keyNonKey === 'Key' 
                                             ? 'bg-amber-50 text-amber-700 border border-amber-200/50' 
@@ -2454,17 +2467,30 @@ export default function App() {
             </div>
 
             {/* Change Requests Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            {/* Change Requests Table */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+              {/* Table Header Bar */}
+              <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                  </div>
+                  <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                    Delegation of Authority Change Queue
+                  </h3>
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-sm text-slate-600">
-                  <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3.5 px-4 font-semibold w-24">CR ID</th>
-                      <th className="py-3.5 px-4 font-semibold w-24">Type</th>
-                      <th className="py-3.5 px-4 font-semibold w-24">Target DOA</th>
-                      <th className="py-3.5 px-4 font-semibold">Requester &amp; Details</th>
-                      <th className="py-3.5 px-4 font-semibold w-32 text-center">Status</th>
-                      <th className="py-3.5 px-4 font-semibold text-center w-48">Governance Action</th>
+                      <th className="py-3 px-4 text-center w-24">NO.</th>
+                      <th className="py-3 px-4 text-center w-28">UPDATE TYPE</th>
+                      <th className="py-3 px-4 text-center w-28">TARGET DOA</th>
+                      <th className="py-3 px-6">REQUESTER &amp; DETAILS</th>
+                      <th className="py-3 px-4 text-center w-36">STATUS</th>
+                      <th className="py-3 px-4 text-center w-48">GOVERNANCE ACTION</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -2498,10 +2524,10 @@ export default function App() {
 
                         return (
                           <tr key={cr.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3 px-4 font-bold text-slate-700 text-xs">
-                              {cr.id}
+                            <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400 text-xs">
+                              #{cr.id}
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3.5 px-4 text-center">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                                 cr.request_type === 'ADD' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                                 cr.request_type === 'MODIFY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
@@ -2510,10 +2536,10 @@ export default function App() {
                                 {cr.request_type}
                               </span>
                             </td>
-                            <td className="py-3 px-4 font-semibold text-xs text-slate-700">
+                            <td className="py-3.5 px-4 text-center font-mono font-semibold text-xs text-slate-700">
                               {cr.doa_id ? `#${cr.doa_id}` : 'New Record'}
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3.5 px-6">
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-semibold text-xs text-slate-800">
                                   {cr.proposed_value?.decision_area || cr.proposed_value?.decisionArea || cr.rationale || 'Change Request proposal'}
@@ -2523,7 +2549,7 @@ export default function App() {
                                 </span>
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-center">
+                            <td className="py-3.5 px-4 text-center">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
                                 cr.status === 'PENDING_PROCESS_OWNER' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
                                 cr.status === 'PENDING_DEPT_OWNER' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
