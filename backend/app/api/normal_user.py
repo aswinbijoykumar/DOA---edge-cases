@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Response, Body
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
 import json
 import re
@@ -11,6 +11,7 @@ from app.core.dependencies import get_current_user, require_roles
 from app.schemas.schemas import DOARead, ChangeRequestRead, ChangeRequestCreate
 from app.services import doa_service, change_request_service
 from app.services.version_service import record_to_dict
+from app.services.excel_export_service import generate_doa_master_excel
 from app.api.change_requests import format_cr_response
 
 router = APIRouter(prefix="/user", tags=["Normal User Workspace"])
@@ -355,6 +356,72 @@ def get_management_reports(
             "summary_by_function": by_function,
             "data": [format_record_dict_for_report(r) for r in all_published]
         }
+
+@router.post("/reports/management/export-excel")
+def export_management_reports_excel_post(
+    payload: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_normal_user)
+):
+    """
+    Export Management Report to formatted Excel matching Master DOA Matrix format.
+    Accepts customized data payload or falls back to querying the database.
+    """
+    report_type = payload.get("report_type", "active_by_dept")
+    title = payload.get("title", "Delegation of Authority Management Report")
+    records = payload.get("data")
+    
+    if not records:
+        if report_type == "regulatory_mandated":
+            recs = db.query(DOARecord).filter(DOARecord.regulatory == "Y").all()
+        elif report_type == "high_risk":
+            recs = db.query(DOARecord).filter(DOARecord.key_non_key == "Key").all()
+        elif report_type == "recently_modified":
+            recs = db.query(DOARecord).filter(DOARecord.current_version > 1).order_by(DOARecord.modified_at.desc()).limit(50).all()
+            if not recs:
+                recs = db.query(DOARecord).order_by(DOARecord.id.desc()).limit(20).all()
+        else:
+            recs = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED").all()
+        records = [format_record_dict_for_report(r) for r in recs]
+
+    excel_io = generate_doa_master_excel(records, title=title)
+    clean_title = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
+    filename = f"{clean_title}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+
+    return Response(
+        content=excel_io.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+@router.get("/reports/management/export-excel")
+def export_management_reports_excel_get(
+    report_type: str = Query("active_by_dept"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_normal_user)
+):
+    """
+    GET endpoint to export pre-set management reports directly as .xlsx file.
+    """
+    report_res = get_management_reports(report_type=report_type, db=db, current_user=current_user)
+    title = report_res.get("title", "Delegation of Authority Management Report")
+    records = report_res.get("data", [])
+    
+    excel_io = generate_doa_master_excel(records, title=title)
+    clean_title = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
+    filename = f"{clean_title}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+
+    return Response(
+        content=excel_io.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
 
 @router.get("/hr-integration")
 def get_hr_integration_data(

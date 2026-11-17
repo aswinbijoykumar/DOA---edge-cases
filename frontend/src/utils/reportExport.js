@@ -27,14 +27,145 @@ function humanizeHeader(key) {
 }
 
 /**
- * Export table report data to .xlsx (Excel)
+ * Export table report data to .xlsx (Excel) matching master DOA matrix schema
  */
-export function exportReportToExcel(reportData, filenamePrefix = 'management_report') {
+export async function exportReportToExcel(reportData, filenamePrefix = 'management_report') {
   if (!reportData || !reportData.data || !reportData.data.length) {
     alert('No report records to export.');
     return;
   }
 
+  const cleanTitle = (reportData.title || filenamePrefix).replace(/[^a-zA-Z0-9_-]/g, '_');
+  const filename = `${cleanTitle}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+  // 1. Attempt to generate pixel-perfect formatted Excel via Backend OpenPyXL service
+  try {
+    const token = localStorage.getItem('token');
+    const res = await fetch('/api/user/reports/management/export-excel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({
+        report_type: filenamePrefix,
+        title: reportData.title || 'Delegation of Authority Management Report',
+        data: reportData.data
+      })
+    });
+
+    if (res.ok) {
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      return;
+    }
+  } catch (backendErr) {
+    console.warn('Backend excel export failed, falling back to client-side generator:', backendErr);
+  }
+
+  // 2. Client-side fallback generator
+  const isDoaRecord = reportData.data.some(r => r && (r.decision_area || r.function || r.parent_function));
+
+  if (isDoaRecord) {
+    const headers = [
+      'Unique No.', 'Function/\nBusiness Line Name', 'Key/Non-Key', 'Decision Area',
+      'Shareholders', 'Board of Directors', 'Subsidiary Board', 'Chairman',
+      'Board Committees', 'Board Committees', 'Board Committees', 'Board Committees',
+      'GCEO', 'CEO',
+      'Management Committees and Working Groups', 'Management Committees and Working Groups',
+      'Management Committees and Working Groups', 'Management Committees and Working Groups',
+      'C-Level Management', 'C-Level Management', 'C-Level Management', 'C-Level Management',
+      'C-Level Management', 'C-Level Management', 'C-Level Management', 'C-Level Management',
+      'C-Level Management', 'C-Level Management',
+      'Comments', 'Regulatory Mandated'
+    ];
+
+    // Group records by category/business line
+    const groups = {};
+    reportData.data.forEach(r => {
+      const cat = r.business_line || r.category || 'General Processes';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(r);
+    });
+
+    const aoa = [headers];
+
+    Object.entries(groups).forEach(([banner, items]) => {
+      // Category banner row
+      const bannerRow = new Array(30).fill('');
+      bannerRow[3] = banner;
+      aoa.push(bannerRow);
+
+      items.forEach(r => {
+        aoa.push([
+          r.id || '',
+          r.function || r.parent_function || 'Finance',
+          r.key_non_key || 'Key',
+          r.decision_area || '',
+          r.shareholders || '',
+          r.board_of_directors || '',
+          r.subsidiary_board || '',
+          r.chairman || '',
+          r.board_committees || '',
+          r.board_committees_op || '',
+          r.board_committees2 || '',
+          r.board_committees2_op || '',
+          r.gceo || '',
+          r.ceo || '',
+          r.mgmt_committees || '',
+          r.mgmt_committees_op || '',
+          r.mgmt_committees2 || '',
+          r.mgmt_committees2_op || '',
+          r.c_level1 || '',
+          r.c_level1_op || '',
+          r.c_level2 || '',
+          r.c_level2_op || '',
+          r.c_level3 || '',
+          r.c_level3_op || '',
+          r.c_level4 || '',
+          r.c_level4_op || '',
+          r.c_level5 || '',
+          r.c_level5_op || '',
+          r.comments || '',
+          r.regulatory || 'N'
+        ]);
+      });
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+    worksheet['!cols'] = [
+      { wch: 12 }, { wch: 24 }, { wch: 16 }, { wch: 45 }, { wch: 18 }, { wch: 18 },
+      { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 10 },
+      { wch: 18 }, { wch: 18 }, { wch: 22 }, { wch: 10 }, { wch: 22 }, { wch: 10 },
+      { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 10 },
+      { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 10 }, { wch: 52 }, { wch: 18 }
+    ];
+    worksheet['!merges'] = [
+      { s: { r: 0, c: 8 }, e: { r: 0, c: 9 } },
+      { s: { r: 0, c: 10 }, e: { r: 0, c: 11 } },
+      { s: { r: 0, c: 14 }, e: { r: 0, c: 15 } },
+      { s: { r: 0, c: 16 }, e: { r: 0, c: 17 } },
+      { s: { r: 0, c: 18 }, e: { r: 0, c: 19 } },
+      { s: { r: 0, c: 20 }, e: { r: 0, c: 21 } },
+      { s: { r: 0, c: 22 }, e: { r: 0, c: 23 } },
+      { s: { r: 0, c: 24 }, e: { r: 0, c: 25 } },
+      { s: { r: 0, c: 26 }, e: { r: 0, c: 27 } }
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'DOA Master Matrix');
+    XLSX.writeFile(workbook, filename);
+    return;
+  }
+
+  // Generic flat table export for non-DOA records
   const columns = reportData.columns || Object.keys(reportData.data[0]);
   const formattedRows = reportData.data.map(row => {
     const formattedObj = {};
@@ -49,10 +180,6 @@ export function exportReportToExcel(reportData, filenamePrefix = 'management_rep
   const workbook = XLSX.utils.book_new();
   const sheetName = (reportData.report_id || 'Report').substring(0, 31);
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-  const cleanTitle = (reportData.title || filenamePrefix).replace(/[^a-zA-Z0-9_-]/g, '_');
-  const filename = `${cleanTitle}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-
   XLSX.writeFile(workbook, filename);
 }
 

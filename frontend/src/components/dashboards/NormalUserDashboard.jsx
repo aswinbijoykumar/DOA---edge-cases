@@ -226,7 +226,7 @@ export default function NormalUserDashboard({
       const mainHeader = document.querySelector('header');
       const navbarHeight = mainHeader ? mainHeader.offsetHeight : 88;
       
-      const shouldStick = rect.top <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      const shouldStick = (rect.top + 60) <= navbarHeight && rect.bottom > (navbarHeight + 60);
       setIsReportHeaderSticky(shouldStick);
       
       if (shouldStick) {
@@ -1079,30 +1079,30 @@ export default function NormalUserDashboard({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-md">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
-                      {reportData.report_id || 'RPT-PRESET'}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      {reportData.scope || `Persona: ${currentPersona.badge}`}
+              {/* Table rendering of report data */}
+              <div ref={reportTableWrapperRef} className="relative bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+                {/* Table Header Bar */}
+                <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-700">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                        {reportData.title || 'Delegation of Authority Management Report'}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {reportData.scope || `Persona: ${currentPersona.badge}`} &bull; Compiled: {new Date(reportData.generated_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-teal-500/20 border border-teal-400/30 rounded-full text-xs font-mono font-bold text-teal-300">
+                      {reportData.report_id || 'RPT-PRESET'} &bull; {reportData.count} records
                     </span>
                   </div>
-                  <h4 className="text-base font-extrabold">{reportData.title}</h4>
-                  <p className="text-xs text-slate-400">
-                    Compiled: {new Date(reportData.generated_at).toLocaleString()}
-                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-teal-500/20 border border-teal-500/30 rounded-full text-xs font-mono font-bold text-teal-300">
-                    Total Records: {reportData.count}
-                  </span>
-                </div>
-              </div>
 
-              {/* Table rendering of report data */}
-              <div ref={reportTableWrapperRef} className="relative border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
                 {/* Sticky Floating Table Header for Outer Page Scrolling */}
                 {isReportHeaderSticky && (
                   <div 
@@ -1124,20 +1124,24 @@ export default function NormalUserDashboard({
                         style={{ width: reportStickyHeaderMetrics.tableWidth ? `${reportStickyHeaderMetrics.tableWidth}px` : '100%' }}
                         className="w-full text-left text-xs table-fixed border-collapse"
                       >
-                        <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
+                        <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                           <tr>
-                            {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col, idx) => (
-                              <th 
-                                key={col} 
-                                style={{ 
-                                  width: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined,
-                                  minWidth: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined
-                                }}
-                                className="py-3 px-4 whitespace-nowrap"
-                              >
-                                {col.replace(/_/g, ' ')}
-                              </th>
-                            ))}
+                            {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col, idx) => {
+                              const isId = col.toLowerCase() === 'id';
+                              const label = isId ? 'NO.' : col.replace(/_/g, ' ');
+                              return (
+                                <th 
+                                  key={col} 
+                                  style={{ 
+                                    width: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined,
+                                    minWidth: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined
+                                  }}
+                                  className={`py-3 px-4 whitespace-nowrap ${isId ? 'text-center' : ''}`}
+                                >
+                                  {label}
+                                </th>
+                              );
+                            })}
                           </tr>
                         </thead>
                       </table>
@@ -1151,13 +1155,17 @@ export default function NormalUserDashboard({
                   className="max-h-[520px] overflow-x-auto overflow-y-auto overscroll-contain"
                 >
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200 z-10">
+                    <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider sticky top-0 z-10">
                       <tr>
-                        {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col) => (
-                          <th key={col} className="py-3 px-4 whitespace-nowrap">
-                            {col.replace(/_/g, ' ')}
-                          </th>
-                        ))}
+                        {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col) => {
+                          const isId = col.toLowerCase() === 'id';
+                          const label = isId ? 'NO.' : col.replace(/_/g, ' ');
+                          return (
+                            <th key={col} className={`py-3 px-4 whitespace-nowrap ${isId ? 'text-center' : ''}`}>
+                              {label}
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -1186,7 +1194,7 @@ export default function NormalUserDashboard({
                                 }
 
                                 return (
-                                  <td key={colKey + cIdx} className={`py-3 px-4 ${isId ? 'font-mono font-bold text-slate-900' : 'text-slate-700'}`}>
+                                  <td key={colKey + cIdx} className={`py-3 px-4 ${isId ? 'font-mono font-bold text-slate-400 text-center' : 'text-slate-700'}`}>
                                     {isStatus ? (
                                       <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
                                         renderedVal.includes('APPROVED') || renderedVal.includes('COMPLIANT') || renderedVal.includes('PASS')
