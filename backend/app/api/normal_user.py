@@ -230,6 +230,7 @@ def get_designation_wise_authorities(
                     action_type = "NOTIFICATION"
 
                 results.append({
+                    **record_to_dict(r),
                     "id": r.id,
                     "function": r.function,
                     "business_line": r.business_line,
@@ -271,6 +272,7 @@ def get_designation_wise_authorities(
                 action_type = "NOTIFICATION"
 
             results.append({
+                **record_to_dict(r),
                 "id": r.id,
                 "function": r.function,
                 "business_line": r.business_line,

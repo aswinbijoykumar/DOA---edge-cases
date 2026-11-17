@@ -27,6 +27,7 @@ import {
   ArrowUp,
   CheckCircle2
 } from 'lucide-react';
+import { exportReportToExcel } from '../../utils/reportExport';
 
 /**
  * Interface / Schema definition:
@@ -329,45 +330,16 @@ export default function GovernanceKpiCardsView({
     }
   };
 
-  // Export to Excel / CSV
+  // Export to Excel (.xlsx matching Data - DOA Tool.xlsx theme & 30-column schema)
   const handleExportExcel = () => {
     if (!filteredAuthorities.length) return;
-    const headers = [
-      'Ref #',
-      'Function',
-      'Business Line',
-      'Decision Area',
-      'Action Code',
-      'Key / Non-Key',
-      'Policy Reference',
-      'Regulatory Requirement',
-      'LUD (Last Update Date)',
-      'Composite Authority Flow'
-    ];
-
-    const rows = filteredAuthorities.map((item) => [
-      `"${item.id || ''}"`,
-      `"${(item.function || '').replace(/"/g, '""')}"`,
-      `"${(item.business_line || '').replace(/"/g, '""')}"`,
-      `"${(item.decision_area || '').replace(/"/g, '""')}"`,
-      `"${item.authority_code || item.action_type || ''}"`,
-      `"${item.key_non_key || 'Key'}"`,
-      `"${(item.policy_reference || '').replace(/"/g, '""')}"`,
-      `"${(item.regulatory_requirement || '').replace(/"/g, '""')}"`,
-      `"${item.last_update_date || item.effective_date || '2026-02-15'}"`,
-      `"${(formatAuthorityFlow(item.composite_authority) || '').replace(/"/g, '""')}"`
-    ]);
-
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `DOA_Designation_Matrix_${activeCategoryId}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    exportReportToExcel(
+      {
+        title: `DOA_Designation_Matrix_${activeCategoryId}_${activeSelectedOption?.label || ''}`,
+        data: filteredAuthorities
+      },
+      `DOA_Designation_Matrix_${activeCategoryId}`
+    );
   };
 
   // Export to PDF (Print-ready report)
@@ -687,7 +659,7 @@ export default function GovernanceKpiCardsView({
                 type="button"
                 onClick={handleExportExcel}
                 className="px-3 py-1.5 bg-white hover:bg-slate-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
-                title="Download visible data in Excel (CSV) format"
+                title="Download visible data in Excel (.xlsx) format"
               >
                 <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Export Excel</span>
