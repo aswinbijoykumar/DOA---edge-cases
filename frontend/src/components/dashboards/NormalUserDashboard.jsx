@@ -197,7 +197,7 @@ export default function NormalUserDashboard({
     currentUser?.persona_type === 'APPROVER' ? 'app_portfolio' :
     currentUser?.persona_type === 'REVIEWER' ? 'rev_regulatory' :
     currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'ao_charter' :
-    currentUser?.persona_type === 'DEPT_OWNER' ? 'do_limits' :
+    currentUser?.persona_type === 'DEPT_OWNER' ? 'do_history' :
     currentUser?.persona_type === 'PROCESS_OWNER' ? 'po_alignment' : 'usr_lifecycle';
 
   const [selectedReportType, setSelectedReportType] = useState(defaultReportKey);
@@ -435,50 +435,57 @@ export default function NormalUserDashboard({
     { key: 'shareholders', label: 'Shareholders (Annual General Meeting)' }
   ];
 
-  // Base global preset reports
+  // Base global preset reports (RPT-03 recently_modified removed per user specification)
   const GLOBAL_REPORT_TYPES = [
-    { key: 'active_by_dept', report_id: 'RPT-01', label: 'Active Delegations by Department', desc: 'Summary of active rules categorized by Finance vs Risk functions' },
-    { key: 'pending_approvals', report_id: 'RPT-02', label: 'Pending Approval Requests', desc: 'Change proposals currently awaiting workflow review or sign-off' },
-    { key: 'recently_modified', report_id: 'RPT-03', label: 'Recently Modified Rules (v2+)', desc: 'History of rules promoted through authority version bump cycles' },
-    { key: 'regulatory_mandated', report_id: 'RPT-04', label: 'Regulatory Mandated Rules', desc: 'Authorities citing external Central Bank or statutory guidelines' },
-    { key: 'high_risk', report_id: 'RPT-05', label: 'High-Risk Strategic Decisions', desc: 'Key strategic decisions requiring multi-tiered endorsements' }
+    { key: 'active_by_dept', label: 'Active Delegations by Department', desc: 'Summary of active rules categorized by Finance vs Risk functions' },
+    { key: 'pending_approvals', label: 'Pending Approval Requests', desc: 'Change proposals currently awaiting workflow review or sign-off' },
+    { key: 'regulatory_mandated', label: 'Regulatory Mandated Rules', desc: 'Authorities citing external Central Bank or statutory guidelines' },
+    { key: 'high_risk', label: 'High-Risk Strategic Decisions', desc: 'Key strategic decisions requiring multi-tiered endorsements' }
   ];
 
-  // Role-Specific Tailored Reports Map (All 7 Personas)
+  // Role-Specific Tailored Reports Map (RPT-DO-01 do_limits removed per user specification)
   const ROLE_SPECIFIC_REPORTS = {
     FRONTEND_USER: [
-      { key: 'usr_lifecycle', report_id: 'RPT-USR-01', endpoint: '/requestor/reports/lifecycle', label: 'My Proposal Lifecycle Report', desc: 'Status tracking of personal change submissions with stage & reviewer feedback' },
-      { key: 'usr_limits', report_id: 'RPT-USR-02', endpoint: '/requestor/reports/operational-limits', label: 'Commercial Operational Limits', desc: 'Operational signing caps and permitted operators for commercial operations' }
+      { key: 'usr_lifecycle', endpoint: '/requestor/reports/lifecycle', label: 'My Proposal Lifecycle Report', desc: 'Status tracking of personal change submissions with stage & reviewer feedback' },
+      { key: 'usr_limits', endpoint: '/requestor/reports/operational-limits', label: 'Commercial Operational Limits', desc: 'Operational signing caps and permitted operators for commercial operations' }
     ],
     PROCESS_OWNER: [
-      { key: 'po_alignment', report_id: 'RPT-PO-01', endpoint: '/process-owner/reports/operational-alignment', label: 'P2P & Capex Workflow Alignment', desc: 'Operational process boundaries, linked rules, and endorsing committee mappings' },
-      { key: 'po_impact_queue', report_id: 'RPT-PO-02', endpoint: '/process-owner/reports/impact-queue', label: 'Operational Impact Queue & SLA Telemetry', desc: 'Pending requests requiring process endorsement with >48h SLA telemetry' }
+      { key: 'po_alignment', endpoint: '/process-owner/reports/operational-alignment', label: 'P2P & Capex Workflow Alignment', desc: 'Operational process boundaries, linked rules, and endorsing committee mappings' },
+      { key: 'po_impact_queue', endpoint: '/process-owner/reports/impact-queue', label: 'Operational Impact Queue & SLA Telemetry', desc: 'Pending requests requiring process endorsement with >48h SLA telemetry' }
     ],
     DEPT_OWNER: [
-      { key: 'do_limits', report_id: 'RPT-DO-01', endpoint: '/dept-owner/reports/signing-limits', label: 'Department Delegated Signing Limits Matrix', desc: 'Finance threshold tiers (L1 Manager, L2 Head, L3 CFO) and statutory authorities' },
-      { key: 'do_history', report_id: 'RPT-DO-02', endpoint: '/dept-owner/reports/change-history', label: 'Department Rule Version History', desc: 'Audit log of version revisions, authors, and executive sign-off dates' }
+      { key: 'do_history', endpoint: '/dept-owner/reports/change-history', label: 'Department Rule Version History', desc: 'Audit log of version revisions, authors, and executive sign-off dates' }
     ],
     AUTHORITY_OWNER: [
-      { key: 'ao_charter', report_id: 'RPT-AO-01', endpoint: '/authority-owner/reports/charter-mandates', label: 'Corporate Charter & Terms of Reference Matrix', desc: 'Mandates for BoD, Audit, Risk Committees, and GCEO with charter sections' },
-      { key: 'ao_chain_flows', report_id: 'RPT-AO-02', endpoint: '/authority-owner/reports/chain-flows', label: 'Composite Authority Chain Flow Report', desc: 'Multi-tier endorsement flow analysis validating mandatory statutory ratification' }
+      { key: 'ao_charter', endpoint: '/authority-owner/reports/charter-mandates', label: 'Corporate Charter & Terms of Reference Matrix', desc: 'Mandates for BoD, Audit, Risk Committees, and GCEO with charter sections' },
+      { key: 'ao_chain_flows', endpoint: '/authority-owner/reports/chain-flows', label: 'Composite Authority Chain Flow Report', desc: 'Multi-tier endorsement flow analysis validating mandatory statutory ratification' }
     ],
     REVIEWER: [
-      { key: 'rev_regulatory', report_id: 'RPT-REV-01', endpoint: '/reviewer/reports/regulatory-register', label: 'Regulatory Mandated Rules & Basel Register', desc: 'Authorities mapped against Central Bank regulations and compliance policies' },
-      { key: 'rev_diffs', report_id: 'RPT-REV-02', endpoint: '/reviewer/reports/technical-diffs', label: '2LoD Review Queue & Concurrency Diff Analysis', desc: 'Detailed delta inspection (old vs proposed) and concurrency collision checks' }
+      { key: 'rev_regulatory', endpoint: '/reviewer/reports/regulatory-register', label: 'Regulatory Mandated Rules & Basel Register', desc: 'Authorities mapped against Central Bank regulations and compliance policies' },
+      { key: 'rev_diffs', endpoint: '/reviewer/reports/technical-diffs', label: '2LoD Review Queue & Concurrency Diff Analysis', desc: 'Detailed delta inspection (old vs proposed) and concurrency collision checks' }
     ],
     APPROVER: [
-      { key: 'app_portfolio', report_id: 'RPT-APP-01', endpoint: '/approver/reports/executive-portfolio', label: 'Executive Pending Approval Portfolio', desc: 'Submissions awaiting executive binding decision with financial exposure telemetry' },
-      { key: 'app_decisions', report_id: 'RPT-APP-02', endpoint: '/approver/reports/binding-decisions', label: 'Executive Binding Decisions Audit Report', desc: 'Decisions log with mandatory rationale remarks and publication readiness' }
+      { key: 'app_portfolio', endpoint: '/approver/reports/executive-portfolio', label: 'Executive Pending Approval Portfolio', desc: 'Submissions awaiting executive binding decision with financial exposure telemetry' },
+      { key: 'app_decisions', endpoint: '/approver/reports/binding-decisions', label: 'Executive Binding Decisions Audit Report', desc: 'Decisions log with mandatory rationale remarks and publication readiness' }
     ],
     AUDIT_READONLY: [
-      { key: 'aud_dossier', report_id: 'RPT-AUD-01', endpoint: '/audit-readonly/reports/version-dossier', label: 'Complete Version Snapshot Dossier', desc: 'Historical timeline of published version snapshots and baseline comparisons' },
-      { key: 'aud_ledger', report_id: 'RPT-AUD-02', endpoint: '/audit-readonly/reports/immutable-ledger', label: 'Tamper-Evident Immutable Audit Trail', desc: 'Full audit logs tracking submission, review, endorsement, and publication' },
-      { key: 'aud_sod', report_id: 'RPT-AUD-03', endpoint: '/audit-readonly/reports/sod-matrix', label: 'Segregation of Duties (SoD) Exception Matrix', desc: 'Automatic violation checks detecting self-approval or bypassed 4-eye steps' }
+      { key: 'aud_dossier', endpoint: '/audit-readonly/reports/version-dossier', label: 'Complete Version Snapshot Dossier', desc: 'Historical timeline of published version snapshots and baseline comparisons' },
+      { key: 'aud_ledger', endpoint: '/audit-readonly/reports/immutable-ledger', label: 'Tamper-Evident Immutable Audit Trail', desc: 'Full audit logs tracking submission, review, endorsement, and publication' },
+      { key: 'aud_sod', endpoint: '/audit-readonly/reports/sod-matrix', label: 'Segregation of Duties (SoD) Exception Matrix', desc: 'Automatic violation checks detecting self-approval or bypassed 4-eye steps' }
     ]
   };
 
-  const roleSpecificReportsList = ROLE_SPECIFIC_REPORTS[personaKey] || [];
-  const ALL_ACCESSIBLE_REPORTS = [...roleSpecificReportsList, ...GLOBAL_REPORT_TYPES];
+  const roleSpecificReportsList = (ROLE_SPECIFIC_REPORTS[personaKey] || [])
+    .filter(r => r.key !== 'do_limits' && r.report_id !== 'RPT-DO-01');
+
+  const accessibleGlobals = GLOBAL_REPORT_TYPES
+    .filter(r => r.key !== 'recently_modified' && r.report_id !== 'RPT-03');
+
+  // Enforce sequential naming convention: RPT-01, RPT-02, RPT-03, etc. for all visible cards
+  const ALL_ACCESSIBLE_REPORTS = [...roleSpecificReportsList, ...accessibleGlobals].map((r, idx) => ({
+    ...r,
+    report_id: `RPT-${String(idx + 1).padStart(2, '0')}`
+  }));
 
   const canPropose = currentUser?.permissions
     ? Boolean(currentUser.permissions.can_propose)
@@ -838,186 +845,43 @@ export default function NormalUserDashboard({
       )}
 
       {/* ========================================================================= */}
-      {/* SUB-VIEW 3: FUNCTIONALITY 7 & 9 - MANAGEMENT REPORTS & HR ORG HUB        */}
+      {/* SUB-VIEW 3: FUNCTIONALITY 7 - MANAGEMENT REPORTS                         */}
       {/* ========================================================================= */}
       {activeSubTab === 'reports' && (
         <div className="space-y-6 animate-fade-in">
-          {/* Sub-Switch under Management Reports: Pre-Set Reports vs HR Org & Acting Authorities */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setReportsSubView('preset')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  reportsSubView === 'preset'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-                }`}
-              >
-                <FileSpreadsheet className="h-4 w-4" />
-                <span>Pre-Set Management Reports</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setReportsSubView('hr_org');
-                  fetchHrData();
-                }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  reportsSubView === 'hr_org'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-                }`}
-              >
-                <Users className="h-4 w-4" />
-                <span>HR Org &amp; Acting Authorities</span>
-              </button>
-            </div>
-
-
-          </div>
-
-          {reportsSubView === 'hr_org' ? (
-            /* Integrated HR Org & Acting Authorities Section */
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
-              <div className="border-b border-slate-100 pb-5">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
+              <div>
                 <h3 className="text-xl font-bold text-slate-900">
-                  HR System Integration &amp; Acting Authority Hub
+                  Management Reports
                 </h3>
               </div>
 
-              {isLoadingHr ? (
-                <div className="py-16 text-center text-slate-400">
-                  <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal-600 mb-2" />
-                  <p className="text-xs font-semibold">Synchronizing with HR directory...</p>
-                </div>
-              ) : !hrData ? (
-                <div className="py-16 text-center text-slate-400">
-                  <Users className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs font-semibold">No HR connector data available.</p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* HR Telemetry Bar */}
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Synced Positions</span>
-                      <div className="text-2xl font-black text-slate-900 mt-1">{hrData.total_synced_positions}</div>
-                    </div>
-                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Vacancies Detected</span>
-                      <div className="text-2xl font-black text-amber-800 mt-1">{hrData.vacancies_detected}</div>
-                    </div>
-                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700">Active Acting Authorities</span>
-                      <div className="text-2xl font-black text-blue-800 mt-1">{hrData.acting_delegations_active}</div>
-                    </div>
-                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Sync Frequency</span>
-                      <div className="text-sm font-bold text-emerald-800 mt-2">Every 15 Minutes (WebHook)</div>
-                    </div>
-                  </div>
+              {/* Export Options (Excel & PDF) */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => exportReportToExcel(reportData, selectedReportType)}
+                  disabled={isLoadingReport || !reportData || !reportData.data?.length}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Download visible data in Excel (.xlsx) format"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Export Excel</span>
+                </button>
 
-                  {/* Active Acting Delegations (Sub-Delegations) */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
-                        Active Sub-Delegations &amp; Interim Sign-Off Authorities
-                      </span>
-                      <span className="text-xs text-slate-400">
-                        Total Active: <strong className="text-slate-800">{hrData.acting_delegations?.length || 0}</strong>
-                      </span>
-                    </div>
-
-                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                      <div className="max-h-[380px] overflow-y-auto">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200">
-                            <tr>
-                              <th className="py-3 px-4">Primary Position (Substantive)</th>
-                              <th className="py-3 px-4">Interim Acting Authority</th>
-                              <th className="py-3 px-4">Assigned Delegated Sign-Off</th>
-                              <th className="py-3 px-4">Valid Window</th>
-                              <th className="py-3 px-4 text-center">Formal Mandate</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {(hrData.acting_delegations || []).map((del, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                                <td className="py-3 px-4">
-                                  <div className="font-bold text-slate-800">{del.primary_position}</div>
-                                  <div className="text-[10px] text-slate-500 font-mono">{del.primary_holder}</div>
-                                </td>
-                                <td className="py-3 px-4">
-                                  <div className="font-bold text-indigo-700">{del.acting_holder}</div>
-                                  <div className="text-[10px] text-slate-500">{del.acting_position}</div>
-                                </td>
-                                <td className="py-3 px-4">
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
-                                    {del.authorized_scope}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                                  {del.start_date} &rarr; {del.end_date}
-                                </td>
-                                <td className="py-3 px-4 text-center">
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                    {del.mandate_status}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => exportReportToPdf(reportData, selectedReportType)}
+                  disabled={isLoadingReport || !reportData || !reportData.data?.length}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-800 border border-blue-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Generate printable PDF authority dossier"
+                >
+                  <FileText className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Export PDF</span>
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <h3 className="text-xl font-bold text-slate-900">
-                Management Governance Reports Hub
-              </h3>
-            </div>
-
-            {/* Export Buttons: Download in .pdf or in .xlsx */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => exportReportToPdf(reportData, selectedReportType)}
-                disabled={isLoadingReport || !reportData || !reportData.data?.length}
-                className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Download report in .pdf format"
-              >
-                <FileDown className="h-3.5 w-3.5 text-rose-600" />
-                <span>Download .PDF</span>
-              </button>
-
-              <button
-                onClick={() => exportReportToExcel(reportData, selectedReportType)}
-                disabled={isLoadingReport || !reportData || !reportData.data?.length}
-                className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Download report in .xlsx format"
-              >
-                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Download .XLSX</span>
-              </button>
-
-              <button
-                onClick={() => {
-                  window.print();
-                }}
-                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span>Print</span>
-              </button>
-            </div>
-          </div>
 
           {/* Pre-set Report Category Buttons: Role-Specific Primary followed by Global Catalog */}
           <div className="space-y-3">
@@ -1033,7 +897,6 @@ export default function NormalUserDashboard({
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {ALL_ACCESSIBLE_REPORTS.map(r => {
                 const isSelected = selectedReportType === r.key;
-                const isRoleSpecific = roleSpecificReportsList.some(item => item.key === r.key);
                 return (
                   <button
                     key={r.key}
@@ -1048,11 +911,6 @@ export default function NormalUserDashboard({
                       <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-700">
                         {r.report_id}
                       </span>
-                      {isRoleSpecific && (
-                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 border border-teal-200">
-                          Role Scoped
-                        </span>
-                      )}
                     </div>
                     <span className="text-xs font-bold text-slate-900 block truncate">
                       {r.label}
@@ -1082,24 +940,14 @@ export default function NormalUserDashboard({
               {/* Table rendering of report data */}
               <div ref={reportTableWrapperRef} className="relative bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
                 {/* Table Header Bar */}
-                <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-700">
+                <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
                       <FileSpreadsheet className="h-4 w-4 text-teal-300" />
                     </div>
-                    <div>
-                      <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
-                        {reportData.title || 'Delegation of Authority Management Report'}
-                      </h3>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        {reportData.scope || `Persona: ${currentPersona.badge}`} &bull; Compiled: {new Date(reportData.generated_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 bg-teal-500/20 border border-teal-400/30 rounded-full text-xs font-mono font-bold text-teal-300">
-                      {reportData.report_id || 'RPT-PRESET'} &bull; {reportData.count} records
-                    </span>
+                    <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                      {reportData.title || 'Delegation of Authority Management Report'}
+                    </h3>
                   </div>
                 </div>
 
@@ -1246,7 +1094,6 @@ export default function NormalUserDashboard({
             </div>
           )}
           </div>
-          )}
         </div>
       )}
 

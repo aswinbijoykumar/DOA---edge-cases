@@ -692,108 +692,227 @@ function humanizeHeader(key) {
 }
 
 /**
- * Export table report data to .pdf (Audit-grade PDF report)
+ * Export table report data to .pdf replicating the exact 30-column pattern,
+ * hierarchically merged headers, domain/category banners, and styling of Data - DOA Tool.xlsx.
  */
 export function exportReportToPdf(reportData, filenamePrefix = 'management_report') {
-  if (!reportData || !reportData.data || !reportData.data.length) {
+  if (!reportData) {
     alert('No report records to export.');
     return;
   }
 
+  const rows = Array.isArray(reportData)
+    ? reportData
+    : (reportData.data || []);
+
+  if (!rows || !rows.length) {
+    alert('No report records to export.');
+    return;
+  }
+
+  const title = reportData.title || 'Delegation of Authority Governance Matrix';
+  const reportId = reportData.report_id || filenamePrefix || 'RPT-DOA';
+  const scope = reportData.scope || 'Enterprise Governance Matrix';
+  const generatedAt = reportData.generated_at ? new Date(reportData.generated_at).toLocaleString() : new Date().toLocaleString();
+  const count = reportData.count || rows.length;
+
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'pt',
-    format: 'a4'
+    format: 'a3'
   });
 
-  const title = reportData.title || 'Management Governance Report';
-  const reportId = reportData.report_id || 'RPT-GEN';
-  const persona = reportData.persona || 'GOVERNANCE_ROLE';
-  const scope = reportData.scope || 'Enterprise-wide';
-  const generatedAt = reportData.generated_at ? new Date(reportData.generated_at).toLocaleString() : new Date().toLocaleString();
-  const count = reportData.count || reportData.data.length;
+  const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Header Banner
+  // Multi-tier / grouped headers matching Data - DOA Tool.xlsx
+  const headerRow = [
+    { content: 'Unique\nNo.', styles: { halign: 'center' } },
+    { content: 'Function/\nLine Name', styles: { halign: 'center' } },
+    { content: 'Key/\nNon-Key', styles: { halign: 'center' } },
+    { content: 'Decision Area', styles: { halign: 'left' } },
+    { content: 'Shareholders', styles: { halign: 'center' } },
+    { content: 'Board of\nDirectors', styles: { halign: 'center' } },
+    { content: 'Subsidiary\nBoard', styles: { halign: 'center' } },
+    { content: 'Chairman', styles: { halign: 'center' } },
+    { content: 'Board\nCommittees', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'Board\nCommittees', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'GCEO', styles: { halign: 'center' } },
+    { content: 'CEO', styles: { halign: 'center' } },
+    { content: 'Management Committees\nand Working Groups', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'Management Committees\nand Working Groups', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'C-Level\nManagement', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'C-Level\nManagement', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'C-Level\nManagement', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'C-Level\nManagement', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'C-Level\nManagement', colSpan: 2, styles: { halign: 'center' } },
+    { content: 'Comments', styles: { halign: 'left' } },
+    { content: 'Regulatory\nMandated', styles: { halign: 'center' } }
+  ];
+
+  // Column styles with exact proportional widths and alignments
+  const columnStyles = {
+    0: { cellWidth: 26, halign: 'center' },
+    1: { cellWidth: 40, halign: 'center' },
+    2: { cellWidth: 26, halign: 'center' },
+    3: { cellWidth: 195, halign: 'left' },
+    4: { cellWidth: 28, halign: 'center' },
+    5: { cellWidth: 28, halign: 'center' },
+    6: { cellWidth: 28, halign: 'center' },
+    7: { cellWidth: 28, halign: 'center' },
+    8: { cellWidth: 26, halign: 'center' },
+    9: { cellWidth: 18, halign: 'center' },
+    10: { cellWidth: 26, halign: 'center' },
+    11: { cellWidth: 18, halign: 'center' },
+    12: { cellWidth: 24, halign: 'center' },
+    13: { cellWidth: 24, halign: 'center' },
+    14: { cellWidth: 34, halign: 'center' },
+    15: { cellWidth: 18, halign: 'center' },
+    16: { cellWidth: 34, halign: 'center' },
+    17: { cellWidth: 18, halign: 'center' },
+    18: { cellWidth: 26, halign: 'center' },
+    19: { cellWidth: 18, halign: 'center' },
+    20: { cellWidth: 26, halign: 'center' },
+    21: { cellWidth: 18, halign: 'center' },
+    22: { cellWidth: 26, halign: 'center' },
+    23: { cellWidth: 18, halign: 'center' },
+    24: { cellWidth: 26, halign: 'center' },
+    25: { cellWidth: 18, halign: 'center' },
+    26: { cellWidth: 26, halign: 'center' },
+    27: { cellWidth: 18, halign: 'center' },
+    28: { cellWidth: 190, halign: 'left' },
+    29: { cellWidth: 26, halign: 'center' }
+  };
+
+  // Normalize rows using master lookup
+  const lookup = templateData.lookup || {};
+  const functionsOrder = templateData.functions_order || ['Finance Function', 'Risk Function'];
+  const bannersOrder = templateData.banners_order || [];
+
+  const normalizedRows = rows.map(r => normalizeRecordTo30Cols(r, lookup));
+
+  // Group by function banner and category banner
+  const grouped = {};
+  normalizedRows.forEach(item => {
+    const fb = item.func_banner || 'Finance Function';
+    const cb = item.banner || 'General Governance Processes';
+    if (!grouped[fb]) grouped[fb] = {};
+    if (!grouped[fb][cb]) grouped[fb][cb] = [];
+    grouped[fb][cb].push(item);
+  });
+
+  const orderedFuncKeys = [
+    ...functionsOrder.filter(f => grouped[f]),
+    ...Object.keys(grouped).filter(f => !functionsOrder.includes(f))
+  ];
+
+  const tableBody = [];
+
+  orderedFuncKeys.forEach(fb => {
+    const catMap = grouped[fb];
+    // Function Banner (Dark Navy #002060, white bold text)
+    tableBody.push([
+      {
+        content: fb,
+        colSpan: 30,
+        styles: {
+          fillColor: [0, 32, 96],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 7.5,
+          halign: 'left',
+          cellPadding: { top: 4, bottom: 4, left: 6, right: 6 }
+        }
+      }
+    ]);
+
+    const orderedCats = [
+      ...bannersOrder.filter(b => catMap[b]),
+      ...Object.keys(catMap).filter(b => !bannersOrder.includes(b))
+    ];
+
+    orderedCats.forEach(cb => {
+      const items = catMap[cb];
+      // Category Banner (Light Blue-Gray #D9E1F2, dark bolditalic text)
+      tableBody.push([
+        {
+          content: cb,
+          colSpan: 30,
+          styles: {
+            fillColor: [217, 225, 242],
+            textColor: [15, 23, 42],
+            fontStyle: 'bolditalic',
+            fontSize: 7,
+            halign: 'left',
+            cellPadding: { top: 3.5, bottom: 3.5, left: 6, right: 6 }
+          }
+        }
+      ]);
+
+      // Data Rows
+      items.forEach(item => {
+        const rowCells = item.cols.map((val, idx) => {
+          if (val === null || val === undefined) return '';
+          return String(val);
+        });
+        tableBody.push(rowCells);
+      });
+    });
+  });
+
+  // Top Title Bar on Page 1
   doc.setFillColor(15, 23, 42); // slate-900
-  doc.rect(0, 0, 842, 65, 'F');
+  doc.rect(0, 0, pageWidth, 38, 'F');
 
-  // Header Title
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
+  doc.setFontSize(10.5);
   doc.setFont('helvetica', 'bold');
-  doc.text('DELEGATION OF AUTHORITY (DOA) PLATFORM', 40, 28);
+  doc.text('DELEGATION OF AUTHORITY (DOA) PLATFORM', 20, 16);
 
-  doc.setFontSize(11);
+  doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(153, 246, 228); // teal-200
-  doc.text(`Pre-Set Management Report: [${reportId}] ${title}`, 40, 48);
+  doc.text(`Corporate Governance Matrix: [${reportId}] ${title}`, 20, 29);
 
-  // Subheader Metadata Box
-  doc.setFillColor(248, 250, 252); // slate-50
-  doc.rect(40, 75, 762, 38, 'F');
-  doc.setDrawColor(226, 232, 240); // slate-200
-  doc.rect(40, 75, 762, 38, 'S');
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.setFontSize(7.5);
+  doc.text(`Scope: ${scope}  |  Compiled: ${generatedAt}  |  Records: ${count}`, pageWidth - 20, 24, { align: 'right' });
 
-  doc.setTextColor(71, 85, 105); // slate-600
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Scope: `, 50, 92);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`${scope}`, 90, 92);
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Persona: `, 320, 92);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`${persona}`, 370, 92);
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Generated: `, 560, 92);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`${generatedAt}`, 620, 92);
-
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Total Records: `, 50, 106);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`${count}`, 125, 106);
-
-  // Prepare Table Columns & Rows
-  const columns = reportData.columns || Object.keys(reportData.data[0]);
-  const tableHead = [columns.map(col => humanizeHeader(col))];
-  const tableBody = reportData.data.map(row =>
-    columns.map(col => formatCellValue(row[col]))
-  );
-
+  // Generate Table matching exact 30-column Excel pattern
   autoTable(doc, {
-    startY: 125,
-    head: tableHead,
+    startY: 44,
+    head: [headerRow],
     body: tableBody,
     theme: 'grid',
-    styles: {
-      fontSize: 8,
-      cellPadding: 5,
-      overflow: 'linebreak',
-      textColor: [30, 41, 59],
-      lineColor: [226, 232, 240],
+    headStyles: {
+      fillColor: [184, 204, 228], // Exact Excel steel blue
+      textColor: [15, 23, 42],
+      fontStyle: 'bold',
+      fontSize: 6.5,
+      cellPadding: { top: 4, bottom: 4, left: 2, right: 2 },
+      lineColor: [180, 198, 220],
       lineWidth: 0.5
     },
-    headStyles: {
-      fillColor: [15, 23, 42], // slate-900
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      fontSize: 8
+    styles: {
+      fontSize: 6,
+      cellPadding: { top: 3, bottom: 3, left: 2, right: 2 },
+      lineColor: [203, 213, 225],
+      lineWidth: 0.5,
+      textColor: [30, 41, 59],
+      overflow: 'linebreak'
     },
     alternateRowStyles: {
       fillColor: [248, 250, 252]
     },
-    margin: { left: 40, right: 40, bottom: 40 },
+    columnStyles,
+    margin: { left: 20, right: 20, top: 44, bottom: 26 },
     didDrawPage: (data) => {
       const pageCount = doc.internal.getNumberOfPages();
-      doc.setFontSize(8);
+      doc.setFontSize(7);
       doc.setTextColor(148, 163, 184);
       doc.text(
-        `Confidential - Governance Audit Trail & Reporting Engine | Page ${data.pageNumber} of ${pageCount}`,
-        40,
-        doc.internal.pageSize.height - 20
+        `Confidential - Corporate Governance Audit Trail & Delegation Matrix | Page ${data.pageNumber} of ${pageCount}`,
+        20,
+        doc.internal.pageSize.getHeight() - 12
       );
     }
   });

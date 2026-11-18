@@ -27,7 +27,7 @@ import {
   ArrowUp,
   CheckCircle2
 } from 'lucide-react';
-import { exportReportToExcel } from '../../utils/reportExport';
+import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
 
 /**
  * Interface / Schema definition:
@@ -342,78 +342,17 @@ export default function GovernanceKpiCardsView({
     );
   };
 
-  // Export to PDF (Print-ready report)
+  // Export to PDF (matching Data - DOA Tool.xlsx theme & 30-column schema)
   const handleExportPdf = () => {
     if (!filteredAuthorities.length) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>DOA Nexus - Designation Matrix Report</title>
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 24px; color: #1e293b; }
-            h2 { margin: 0 0 4px 0; color: #0f172a; font-size: 20px; }
-            .subtitle { color: #64748b; font-size: 12px; margin-bottom: 16px; }
-            .meta { margin-bottom: 20px; font-size: 11px; color: #475569; display: flex; gap: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
-            table { width: 100%; border-collapse: collapse; font-size: 10px; }
-            th { background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 6px; text-align: left; font-weight: 700; text-transform: uppercase; font-size: 9px; }
-            td { border: 1px solid #e2e8f0; padding: 6px; vertical-align: top; }
-            tr:nth-child(even) { background: #f8fafc; }
-            .badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 9px; }
-            .badge-approve { background: #dcfce7; color: #166534; }
-            .badge-endorse { background: #dbeafe; color: #1e40af; }
-            .badge-recommend { background: #fef3c7; color: #92400e; }
-            .date { color: #64748b; font-family: monospace; }
-          </style>
-        </head>
-        <body>
-          <h2>DOA Nexus &bull; Designation Matrix Authority Report</h2>
-          <div class="subtitle">Category: ${activeSelectedOption?.label || activeCardConfig.title} &bull; Generated: ${new Date().toLocaleString()}</div>
-          <div class="meta">
-            <div><strong>Total Lines:</strong> ${filteredAuthorities.length}</div>
-            <div><strong>Action Filter:</strong> ${actionFilter}</div>
-            <div><strong>Function:</strong> ${departmentFilter}</div>
-            <div><strong>Regulatory Scope:</strong> ${regulatoryFilter}</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 45px;">Ref #</th>
-                <th style="width: 90px;">Function / Line</th>
-                <th>Decision Area Mandate</th>
-                <th style="width: 75px;">Action</th>
-                <th style="width: 120px;">Policy & Regulatory</th>
-                <th style="width: 100px;">Last Update Date</th>
-                <th style="width: 140px;">Composite Flow</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${filteredAuthorities.map(item => `
-                <tr>
-                  <td style="font-weight: bold;">#${item.id}</td>
-                  <td><strong>${item.function}</strong><br/><span style="color:#64748b;">${item.business_line || ''}</span></td>
-                  <td><strong>${item.decision_area}</strong></td>
-                  <td><span class="badge ${item.action_type === 'APPROVE' ? 'badge-approve' : item.action_type === 'ENDORSE' ? 'badge-endorse' : 'badge-recommend'}">${item.authority_code}</span></td>
-                  <td>${item.policy_reference || item.regulatory_requirement || '<span style="color:#94a3b8;">Internal Standard</span>'}</td>
-                  <td class="date">${item.last_update_date || item.effective_date || '2026-02-15'}</td>
-                  <td style="font-family: monospace; font-size: 9px;">${formatAuthorityFlow(item.composite_authority) || '—'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
+    exportReportToPdf(
+      {
+        title: `DOA_Designation_Matrix_${activeCategoryId}_${activeSelectedOption?.label || ''}`,
+        report_id: `RPT-DESIG-${activeCategoryId.toUpperCase()}`,
+        data: filteredAuthorities
+      },
+      `DOA_Designation_Matrix_${activeCategoryId}`
+    );
   };
 
   return (
@@ -713,16 +652,15 @@ export default function GovernanceKpiCardsView({
                   onScroll={handleStickyHorizontalScroll}
                   className="overflow-x-auto no-scrollbar"
                 >
-                  <div className="min-w-[1180px]">
+                  <div className="min-w-[1000px]">
                     <table className="w-full text-left text-xs table-fixed border-collapse">
                       <colgroup>
-                        <col className="w-[5%]" />
-                        <col className="w-[13%]" />
-                        <col className="w-[23%]" />
+                        <col className="w-[6%]" />
+                        <col className="w-[15%]" />
+                        <col className="w-[32%]" />
                         <col className="w-[18%]" />
-                        <col className="w-[19%]" />
-                        <col className="w-[9%]" />
-                        <col className="w-[13%]" />
+                        <col className="w-[18%]" />
+                        <col className="w-[11%]" />
                       </colgroup>
                       <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                         <tr>
@@ -732,7 +670,6 @@ export default function GovernanceKpiCardsView({
                           <th className="py-3 px-4 text-center whitespace-nowrap">Specific Action</th>
                           <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
                           <th className="py-3 px-3 text-center whitespace-nowrap">Last Update Date</th>
-                          <th className="py-3 px-4">Composite Flow</th>
                         </tr>
                       </thead>
                     </table>
@@ -756,17 +693,16 @@ export default function GovernanceKpiCardsView({
             </div>
 
             <div ref={tableScrollContainerRef} onScroll={handleTableHorizontalScroll} className="overflow-x-auto">
-              <div className="min-w-[1180px]">
+              <div className="min-w-[1000px]">
                 {/* Fixed Table Header (Scrollbar starts strictly below this header) */}
                 <table className="w-full text-left text-xs table-fixed border-collapse">
                   <colgroup>
-                    <col className="w-[5%]" />
-                    <col className="w-[13%]" />
-                    <col className="w-[23%]" />
+                    <col className="w-[6%]" />
+                    <col className="w-[15%]" />
+                    <col className="w-[32%]" />
                     <col className="w-[18%]" />
-                    <col className="w-[19%]" />
-                    <col className="w-[9%]" />
-                    <col className="w-[13%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[11%]" />
                   </colgroup>
                   <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                     <tr>
@@ -776,7 +712,6 @@ export default function GovernanceKpiCardsView({
                       <th className="py-3 px-4 text-center whitespace-nowrap">Specific Action</th>
                       <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
                       <th className="py-3 px-3 text-center whitespace-nowrap">Last Update Date</th>
-                      <th className="py-3 px-4">Composite Flow</th>
                     </tr>
                   </thead>
                 </table>
@@ -789,13 +724,12 @@ export default function GovernanceKpiCardsView({
                 >
                   <table className="w-full text-left text-xs table-fixed border-collapse">
                     <colgroup>
-                      <col className="w-[5%]" />
-                      <col className="w-[13%]" />
-                      <col className="w-[23%]" />
+                      <col className="w-[6%]" />
+                      <col className="w-[15%]" />
+                      <col className="w-[32%]" />
                       <col className="w-[18%]" />
-                      <col className="w-[19%]" />
-                      <col className="w-[9%]" />
-                      <col className="w-[13%]" />
+                      <col className="w-[18%]" />
+                      <col className="w-[11%]" />
                     </colgroup>
                     <tbody className="divide-y divide-slate-100">
                       {filteredAuthorities.map((item) => (
@@ -803,35 +737,13 @@ export default function GovernanceKpiCardsView({
                           <td className="py-3.5 px-4 font-mono font-bold text-slate-400 text-center">
                             #{item.id}
                           </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                                item.function === 'Risk'
-                                  ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                  : 'bg-teal-50 text-teal-700 border border-teal-200'
-                              }`}
-                            >
-                              {item.function}
-                            </span>
-                            <div className="text-[11px] text-slate-600 font-semibold mt-1 truncate max-w-[180px]">
-                              {item.business_line}
-                            </div>
+                          <td className="py-3.5 px-4 font-medium text-slate-700">
+                            {item.function}
                           </td>
                           <td className="py-3.5 px-6">
-                            <p className="font-bold text-slate-800 leading-snug">
+                            <p className="font-semibold text-slate-900 leading-snug">
                               {item.decision_area}
                             </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span
-                                className={`text-[10px] font-semibold px-2 py-0.2 rounded ${
-                                  item.key_non_key === 'Key'
-                                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                    : 'bg-slate-100 text-slate-600'
-                                }`}
-                              >
-                                {item.key_non_key} Decision
-                              </span>
-                            </div>
                           </td>
                           <td className="py-3.5 px-3 text-center whitespace-nowrap">
                             <span
@@ -858,7 +770,7 @@ export default function GovernanceKpiCardsView({
                                   title="Click to view full Policy &amp; Charter mandate details"
                                 >
                                   <BookOpen className="h-3 w-3 text-teal-600 shrink-0 group-hover:scale-110 transition-transform" />
-                                  <span className="truncate max-w-[150px]">{item.policy_reference}</span>
+                                  <span className="truncate max-w-[190px]">{item.policy_reference}</span>
                                   <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
                                 </button>
                               )}
@@ -870,7 +782,7 @@ export default function GovernanceKpiCardsView({
                                   title="Click to view statutory requirement &amp; regulatory code"
                                 >
                                   <ShieldCheck className="h-3 w-3 text-rose-500 shrink-0 group-hover:scale-110 transition-transform" />
-                                  <span className="truncate max-w-[150px]">{item.regulatory_requirement}</span>
+                                  <span className="truncate max-w-[190px]">{item.regulatory_requirement}</span>
                                   <ArrowUpRight className="h-2.5 w-2.5 opacity-60 shrink-0" />
                                 </button>
                               )}
@@ -893,12 +805,6 @@ export default function GovernanceKpiCardsView({
                             <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                               <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
                               <span>{item.last_update_date || item.effective_date || '2026-02-15'}</span>
-                            </span>
-                          </td>
-
-                          <td className="py-3.5 px-3">
-                            <span className="text-xs font-mono font-medium text-slate-700 block max-w-[140px] truncate" title={formatAuthorityFlow(item.composite_authority)}>
-                              {formatAuthorityFlow(item.composite_authority)}
                             </span>
                           </td>
                         </tr>

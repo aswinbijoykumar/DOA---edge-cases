@@ -33,6 +33,7 @@ import {
   BookOpen
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { exportReportToPdf } from '../../utils/reportExport';
 import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
 import BahrainKsaAlignmentReportView from '../supplementary/BahrainKsaAlignmentReportView';
 import PointInTimeReconstructionView from '../supplementary/PointInTimeReconstructionView';
@@ -1123,7 +1124,17 @@ export default function GovernanceTeamDashboard({
                   </div>
                 </div>
                 <button
-                  onClick={() => alert('Compliance report downloaded successfully.')}
+                  onClick={() => {
+                    if (doaRecords && doaRecords.length > 0) {
+                      exportReportToPdf({
+                        title: 'Governance Delegation Matrix Formal Audit Dossier',
+                        report_id: 'RPT-AUD-01',
+                        data: doaRecords
+                      }, 'Governance_Formal_Audit_Report');
+                    } else {
+                      alert('No active delegation records available for export.');
+                    }
+                  }}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold"
                 >
                   Download Formal Audit PDF
