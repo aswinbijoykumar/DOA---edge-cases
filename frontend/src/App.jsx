@@ -1614,7 +1614,8 @@ export default function App() {
                       id: 'exceptions', 
                       label: 'Exception Workflow', 
                       icon: AlertOctagon, 
-                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'],
+                      disabled: true
                     },
                     { 
                       id: 'audit', 
@@ -1630,14 +1631,19 @@ export default function App() {
                     return (
                       <button
                         key={tab.id}
+                        disabled={Boolean(tab.disabled)}
+                        title={tab.disabled ? 'Exception Workflow is currently restricted' : undefined}
                         onClick={() => {
+                          if (tab.disabled) return;
                           setActiveTab(tab.id);
                           setSelectedRecord(null);
                         }}
                         className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-200 relative ${
-                          isActive 
-                            ? 'bg-white text-teal-600 shadow-sm' 
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                          tab.disabled
+                            ? 'text-slate-400 opacity-50 cursor-not-allowed'
+                            : isActive 
+                              ? 'bg-white text-teal-600 shadow-sm' 
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
                         }`}
                       >
                         <Icon className={`h-4 w-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
@@ -2302,49 +2308,51 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Authority Hierarchy Studio & Proposed Authority Chain Builder */}
-                  <div className="space-y-4 w-full">
-                    <AuthorityChainBuilder
-                      initialChain={authorityChain.map((item, idx) => ({
-                        id: `init-${idx}`,
-                        authorityBody: item.parentName || 'Board Committees',
-                        entity: item.childName || item.parentName || 'AC – Audit Committee',
-                        code: item.display ? item.display.split(' ')[0] : 'AC',
-                        operator: item.operator || (idx === 0 ? 'P' : idx === 1 ? 'R' : 'A'),
-                        operatorLabel: item.operator === 'P' ? 'Proposer (P)' : item.operator === 'R' ? 'General Reviewer (R)' : item.operator === 'A' ? 'Approver (A)' : `Endorse (${item.operator || 'E1'})`,
-                        roleType: item.operator === 'P' ? 'proposer' : (item.operator === 'R' || item.operator === 'R1' || item.operator === 'R2') ? 'reviewer' : (item.operator === 'A' || item.operator === 'BA') ? 'approver' : 'endorser',
-                        display: item.display
-                      }))}
-                      onChange={(newChain, compositeStr) => {
-                        setAuthorityChain(newChain);
-                        setFormData(prev => ({ ...prev, authority: compositeStr }));
-                      }}
-                      onSave={(newChain, compositeStr) => {
-                        setAuthorityChain(newChain);
-                        setFormData(prev => ({ ...prev, authority: compositeStr }));
-                        addToast('Authority Matrix Validated & Saved', 'success');
-                      }}
-                    />
-
-                    {/* Authority preview input (Non-Editable) */}
-                    <div className="space-y-1.5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Composite Authority String (Generated Sequence)
-                        </label>
-                        <span className="text-[10px] font-bold text-slate-500 uppercase bg-white px-2 py-0.5 rounded border border-slate-200">
-                          Read-Only
-                        </span>
-                      </div>
-                      <input 
-                        type="text"
-                        readOnly
-                        value={formData.authority}
-                        placeholder="e.g. CEO (A) ← BRC (E1) ← CRO (R) ← AC (P)"
-                        className="w-full text-xs font-mono font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
+                  {/* Authority Hierarchy Studio & Proposed Authority Chain Builder (Hidden in Delete Mode) */}
+                  {actionMode !== 'Delete' && (
+                    <div className="space-y-4 w-full">
+                      <AuthorityChainBuilder
+                        initialChain={authorityChain.map((item, idx) => ({
+                          id: `init-${idx}`,
+                          authorityBody: item.parentName || 'Board Committees',
+                          entity: item.childName || item.parentName || 'AC – Audit Committee',
+                          code: item.display ? item.display.split(' ')[0] : 'AC',
+                          operator: item.operator || (idx === 0 ? 'P' : idx === 1 ? 'R' : 'A'),
+                          operatorLabel: item.operator === 'P' ? 'Proposer (P)' : item.operator === 'R' ? 'General Reviewer (R)' : item.operator === 'A' ? 'Approver (A)' : `Endorse (${item.operator || 'E1'})`,
+                          roleType: item.operator === 'P' ? 'proposer' : (item.operator === 'R' || item.operator === 'R1' || item.operator === 'R2') ? 'reviewer' : (item.operator === 'A' || item.operator === 'BA') ? 'approver' : 'endorser',
+                          display: item.display
+                        }))}
+                        onChange={(newChain, compositeStr) => {
+                          setAuthorityChain(newChain);
+                          setFormData(prev => ({ ...prev, authority: compositeStr }));
+                        }}
+                        onSave={(newChain, compositeStr) => {
+                          setAuthorityChain(newChain);
+                          setFormData(prev => ({ ...prev, authority: compositeStr }));
+                          addToast('Authority Matrix Validated & Saved', 'success');
+                        }}
                       />
+
+                      {/* Authority preview input (Non-Editable) */}
+                      <div className="space-y-1.5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Composite Authority String (Generated Sequence)
+                          </label>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase bg-white px-2 py-0.5 rounded border border-slate-200">
+                            Read-Only
+                          </span>
+                        </div>
+                        <input 
+                          type="text"
+                          readOnly
+                          value={formData.authority}
+                          placeholder="e.g. CEO (A) ← BRC (E1) ← CRO (R) ← AC (P)"
+                          className="w-full text-xs font-mono font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                 </div>
 

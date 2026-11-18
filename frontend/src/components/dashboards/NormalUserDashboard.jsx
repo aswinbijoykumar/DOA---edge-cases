@@ -625,16 +625,14 @@ export default function NormalUserDashboard({
               )}
             </button>
 
-            {/* 5. Exception Workflow */}
+            {/* 5. Exception Workflow (Temporarily Restricted / Disabled) */}
             <button
-              onClick={() => onNavigateTab('exceptions')}
-              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
-                activeTab === 'exceptions'
-                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-600/30 ring-2 ring-emerald-400/30 font-black'
-                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30'
-              }`}
+              type="button"
+              disabled
+              title="Exception Workflow is currently restricted"
+              className="h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
             >
-              <AlertOctagon className="h-4 w-4 text-emerald-300 shrink-0" />
+              <AlertOctagon className="h-4 w-4 text-slate-500 shrink-0" />
               <span className="truncate">Exception Workflow</span>
             </button>
 
