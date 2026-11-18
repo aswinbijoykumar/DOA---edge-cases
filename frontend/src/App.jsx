@@ -2824,11 +2824,7 @@ export default function App() {
             <div className="absolute inset-y-0 right-0 max-w-lg w-full bg-white shadow-2xl flex flex-col transform transition-transform duration-300 translate-x-0 border-l border-slate-200">
               
               {/* Header */}
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <div>
-                  <span className="text-[10px] uppercase font-extrabold tracking-widest text-teal-600">Rule Inspector</span>
-                  <h3 className="font-extrabold text-slate-800 text-lg">Record Detail #{selectedRecord.id}</h3>
-                </div>
+              <div className="p-4 border-b border-slate-100 flex items-center justify-end bg-slate-50">
                 <button 
                   onClick={() => setSelectedRecord(null)}
                   className="p-1.5 rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors"
@@ -2921,39 +2917,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Attached Context Documents (Functionality 3) */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Paperclip className="h-3.5 w-3.5 text-slate-500" /> Attached Policy &amp; Resolution Documents
-                    </h4>
-                    <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                      PDF Evidence
-                    </span>
-                  </div>
 
-                  <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between p-2 bg-white rounded-lg border border-slate-200 text-xs">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-teal-600" />
-                        <div>
-                          <span className="font-bold text-slate-800 block">DOA_Charter_Extract_Ref_{selectedRecord.id}.pdf</span>
-                          <span className="text-[10px] text-slate-400">Board Mandate &bull; 420 KB &bull; Verified</span>
-                        </div>
-                      </div>
-                      <a
-                        href="#preview"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          addToast(`Opening attached document for Authority #${selectedRecord.id}`, 'info');
-                        }}
-                        className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold transition-all"
-                      >
-                        Inspect
-                      </a>
-                    </div>
-                  </div>
-                </div>
 
                 {/* Full Authority Approval Flow */}
                 <div className="space-y-2">
@@ -3086,7 +3050,7 @@ export default function App() {
                     onClick={() => setSelectedRecord(null)}
                     className="w-full py-2.5 bg-slate-800 text-white hover:bg-slate-700 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                   >
-                    Close Rule Inspector
+                    Close
                   </button>
                 )}
               </div>
