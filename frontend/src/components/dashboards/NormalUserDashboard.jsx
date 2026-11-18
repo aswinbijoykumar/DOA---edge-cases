@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   FileText, 
   Plus, 
@@ -27,16 +27,124 @@ import {
   AlertTriangle,
   RefreshCw,
   Sparkles,
-  Paperclip
+  Paperclip,
+  FileDown,
+  GitPullRequest,
+  AlertOctagon,
+  History,
+  Edit3,
+  Bookmark,
+  ArrowUp
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
+
+import ExceptionRequestModal from '../supplementary/ExceptionRequestModal';
+import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
+import GovernanceKpiCardsView from './GovernanceKpiCardsView';
+import doaHeroBg from '../../assets/doa-hero-harbour.svg';
+
+
+// Demo / View-only Latest Amendments to the Delegation of Authority Matrix
+const DEMO_LATEST_AMENDMENTS = [
+  {
+    id: '#342',
+    decisionArea: 'Approval of Bank mandates',
+    updateType: 'New/Amended',
+    department: 'Finance',
+    lastUpdateDate: '10-Nov-26'
+  },
+  {
+    id: '#341',
+    decisionArea: 'Capital Expenditure & Asset Disposal Authority',
+    updateType: 'Modified',
+    department: 'Finance & Treasury',
+    lastUpdateDate: '08-Nov-26'
+  },
+  {
+    id: '#340',
+    decisionArea: 'Credit Facility & Wholesale Lending Approvals (> $5M)',
+    updateType: 'New/Amended',
+    department: 'Credit Risk',
+    lastUpdateDate: '05-Nov-26'
+  },
+  {
+    id: '#339',
+    decisionArea: 'Procurement of Enterprise Cloud & IT Infrastructure',
+    updateType: 'Threshold Revision',
+    department: 'Procurement & IT',
+    lastUpdateDate: '02-Nov-26'
+  },
+  {
+    id: '#338',
+    decisionArea: 'Executive Remuneration & Incentive Structure Sign-off',
+    updateType: 'Modified',
+    department: 'Human Resources',
+    lastUpdateDate: '29-Oct-26'
+  },
+  {
+    id: '#337',
+    decisionArea: 'Legal Settlement Endorsement & Regulatory Representation',
+    updateType: 'New/Amended',
+    department: 'Legal & Compliance',
+    lastUpdateDate: '25-Oct-26'
+  }
+];
+
+// Demo / View-only Frequently Visited Decision Areas (UI view purpose only, not stored in DB)
+const DEMO_FREQUENTLY_VISITED_AREAS = [
+  {
+    no: '#225',
+    decisionArea: 'Approve increase or reduction of share capital',
+    function: 'Finance',
+    authorityChain: 'Shareholders (A) ← BoD (E2) ← AC (E1) ← ExCom (E) ← GCEO (R2) ← CEO (R1)',
+    lastUpdateDate: '10-Nov-26'
+  },
+  {
+    no: '#243',
+    decisionArea: 'Approve annual budget and five-year financial plan',
+    function: 'Finance',
+    authorityChain: 'BoD (A) ← ExCom (E2) ← GCEO (E1) ← CEO (E) ← GCFO (R) ← CFO (P)',
+    lastUpdateDate: '08-Nov-26'
+  },
+  {
+    no: '#301',
+    decisionArea: 'Approve wholesale single obligor credit limit above USD 50 million up to regulatory cap',
+    function: 'Risk',
+    authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (R1)',
+    lastUpdateDate: '05-Nov-26'
+  },
+  {
+    no: '#305',
+    decisionArea: 'Approve Value-at-Risk (VaR) limits, Stressed VaR limits, and Stop-Loss thresholds for Trading Book',
+    function: 'Risk',
+    authorityChain: 'BoD (A) ← BRPC (E1) ← GRC (E) ← ALCO(G) (R1) ← GCRO (R)',
+    lastUpdateDate: '01-Nov-26'
+  },
+  {
+    no: '#251',
+    decisionArea: 'Approve tier one (1) or tier two (2) capital issue',
+    function: 'Finance',
+    authorityChain: 'Shareholders (Y, A1) ← BoD (A) ← AC (E1) ← BRPC (E) ← GCCO (R) ← GCFO (P)',
+    lastUpdateDate: '28-Oct-26'
+  },
+  {
+    no: '#308',
+    decisionArea: 'Approve Group Risk Appetite Statement (RAS) and Group Risk Tolerance Matrix',
+    function: 'Risk',
+    authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (P)',
+    lastUpdateDate: '22-Oct-26'
+  }
+];
 
 export default function NormalUserDashboard({ 
   userStats, 
   currentUser, 
   onNavigateTab, 
   onNewRequest,
-  kpis
+  kpis,
+  pendingQueueCount = 0,
+  activeTab = 'overview'
 }) {
   // Map persona to their exact designation key
   const PERSONA_TO_DESIGNATION = {
@@ -51,31 +159,121 @@ export default function NormalUserDashboard({
 
   const initialDesignation = PERSONA_TO_DESIGNATION[currentUser?.persona_type] || 'ceo';
 
-  // Sub-tab view inside Normal User Workspace
-  // 'overview' | 'designations' | 'reports' | 'hr_integration'
-  const [activeSubTab, setActiveSubTab] = useState(
-    currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'designations' :
-    currentUser?.persona_type === 'PROCESS_OWNER' ? 'hr_integration' :
-    currentUser?.persona_type === 'AUDIT_READONLY' ? 'reports' : 'overview'
-  );
+  const isFrontendUser = currentUser?.persona_type === 'FRONTEND_USER';
 
-  // Designation Matrix State (Functionality 5)
+  const [activeSubTab, setActiveSubTab] = useState('overview');
+
+  useEffect(() => {
+    if (currentUser?.persona_type) {
+      setActiveSubTab('overview');
+    }
+  }, [currentUser?.id, currentUser?.persona_type]);
+
+  // Supplementary BRD Modals & Workflow State
+  const [showValidatorModal, setShowValidatorModal] = useState(false);
+  const [showExceptionModal, setShowExceptionModal] = useState(false);
+  const [blockedValidationData, setBlockedValidationData] = useState(null);
+
+
+  // Designation Matrix & Interactive Governance KPI Cards State
   const [selectedDesignationKey, setSelectedDesignationKey] = useState(initialDesignation);
+  const [activeGovernanceCategory, setActiveGovernanceCategory] = useState(
+    currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'board_committee' :
+    currentUser?.persona_type === 'DEPT_OWNER' ? 'function' : 'c_level'
+  );
+  const [selectedGovernanceOptions, setSelectedGovernanceOptions] = useState({
+    function: { id: 'ops_logistics', label: 'Operations & Logistics', badge: '96% Compliant' },
+    board_committee: { id: 'all_committees', label: 'All Standing Committees', badge: '6 Standing' },
+    shareholder: { id: 'all_shareholders', label: 'All Shareholder Mandates', badge: '100% Voting' },
+    c_level: { id: 'exec_committee_all', label: 'Exec Committee (All Portfolios)', badge: '7 Officers' },
+    group_wide: { id: 'matrix_4_2', label: 'Matrix 4.2 Core Delegations', badge: 'Master Live' }
+  });
   const [designationMatrixData, setDesignationMatrixData] = useState(null);
   const [isLoadingDesignation, setIsLoadingDesignation] = useState(false);
 
   // Management Reports State (Functionality 7)
-  const [selectedReportType, setSelectedReportType] = useState(
-    currentUser?.persona_type === 'AUDIT_READONLY' ? 'regulatory_mandated' :
-    currentUser?.persona_type === 'APPROVER' ? 'pending_approvals' :
-    currentUser?.persona_type === 'DEPT_OWNER' ? 'active_by_dept' : 'active_by_dept'
-  );
+  const defaultReportKey = 
+    currentUser?.persona_type === 'AUDIT_READONLY' ? 'aud_dossier' :
+    currentUser?.persona_type === 'APPROVER' ? 'app_portfolio' :
+    currentUser?.persona_type === 'REVIEWER' ? 'rev_regulatory' :
+    currentUser?.persona_type === 'AUTHORITY_OWNER' ? 'ao_charter' :
+    currentUser?.persona_type === 'DEPT_OWNER' ? 'do_limits' :
+    currentUser?.persona_type === 'PROCESS_OWNER' ? 'po_alignment' : 'usr_lifecycle';
+
+  const [selectedReportType, setSelectedReportType] = useState(defaultReportKey);
   const [reportData, setReportData] = useState(null);
   const [isLoadingReport, setIsLoadingReport] = useState(false);
 
   // HR Integration State (Functionality 9)
   const [hrData, setHrData] = useState(null);
   const [isLoadingHr, setIsLoadingHr] = useState(false);
+  const [reportsSubView, setReportsSubView] = useState('preset');
+
+  // Management Report Sticky Header State and Refs
+  const reportTableWrapperRef = useRef(null);
+  const reportTableScrollContainerRef = useRef(null);
+  const reportStickyHeaderScrollRef = useRef(null);
+  const [isReportHeaderSticky, setIsReportHeaderSticky] = useState(false);
+  const [reportStickyHeaderMetrics, setReportStickyHeaderMetrics] = useState({ width: 0, left: 0, top: 0, tableWidth: 0, colWidths: [] });
+
+  useEffect(() => {
+    const updateStickyMetrics = () => {
+      if (!reportTableWrapperRef.current || !reportTableScrollContainerRef.current) {
+        setIsReportHeaderSticky(false);
+        return;
+      }
+      const rect = reportTableWrapperRef.current.getBoundingClientRect();
+      const mainHeader = document.querySelector('header');
+      const navbarHeight = mainHeader ? mainHeader.offsetHeight : 88;
+      
+      const shouldStick = (rect.top + 60) <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      setIsReportHeaderSticky(shouldStick);
+      
+      if (shouldStick) {
+        const table = reportTableScrollContainerRef.current.querySelector('table');
+        const ths = table ? table.querySelectorAll('thead th') : [];
+        const colWidths = Array.from(ths).map(th => th.getBoundingClientRect().width);
+        const tableWidth = table ? table.offsetWidth : rect.width;
+
+        setReportStickyHeaderMetrics({
+          width: rect.width,
+          left: rect.left,
+          top: navbarHeight,
+          tableWidth,
+          colWidths
+        });
+
+        if (reportStickyHeaderScrollRef.current) {
+          if (reportStickyHeaderScrollRef.current.scrollLeft !== reportTableScrollContainerRef.current.scrollLeft) {
+            reportStickyHeaderScrollRef.current.scrollLeft = reportTableScrollContainerRef.current.scrollLeft;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', updateStickyMetrics, { passive: true });
+    window.addEventListener('resize', updateStickyMetrics, { passive: true });
+    updateStickyMetrics();
+
+    return () => {
+      window.removeEventListener('scroll', updateStickyMetrics);
+      window.removeEventListener('resize', updateStickyMetrics);
+    };
+  }, [reportData, activeSubTab]);
+
+  const handleReportTableHorizontalScroll = (e) => {
+    if (reportStickyHeaderScrollRef.current && reportStickyHeaderScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      reportStickyHeaderScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleReportStickyHorizontalScroll = (e) => {
+    if (reportTableScrollContainerRef.current && reportTableScrollContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      reportTableScrollContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+
 
   // Persona configurations
   const PERSONA_CONFIGS = {
@@ -140,9 +338,9 @@ export default function NormalUserDashboard({
       ]
     },
     FRONTEND_USER: {
-      badge: 'Front-End User',
+      badge: 'Requester',
       color: 'border-amber-500/30 bg-amber-500/20 text-amber-300',
-      greeting: 'Business Line Analyst',
+      greeting: 'Business Line Requester',
       description: 'Search, filter, and inspect approved DOA rules relevant to your department or business line, and raise change proposals where necessary.',
       responsibilities: [
         'Search and filter approved DOA master rules by department, function, and keyword',
@@ -168,11 +366,11 @@ export default function NormalUserDashboard({
   const personaKey = currentUser?.persona_type || 'FRONTEND_USER';
   const currentPersona = PERSONA_CONFIGS[personaKey] || PERSONA_CONFIGS.FRONTEND_USER;
 
-  // Load Designation Matrix
-  const fetchDesignationMatrix = async (key) => {
+  // Load Designation Matrix & Governance KPI Cards
+  const fetchDesignationMatrix = async (params) => {
     setIsLoadingDesignation(true);
     try {
-      const res = await api.getDesignationMatrix(key);
+      const res = await api.getDesignationMatrix(params);
       setDesignationMatrixData(res);
     } catch (err) {
       console.error('Failed to load designation matrix:', err);
@@ -181,11 +379,30 @@ export default function NormalUserDashboard({
     }
   };
 
-  // Load Management Report
-  const fetchReport = async (type) => {
+  const handleSelectGovernanceCategory = (categoryId, option) => {
+    setActiveGovernanceCategory(categoryId);
+    setSelectedGovernanceOptions(prev => ({
+      ...prev,
+      [categoryId]: option
+    }));
+    fetchDesignationMatrix({
+      category_id: categoryId,
+      option_id: option.id
+    });
+  };
+
+  // Load Management Report (Functionality 7)
+  const fetchReport = async (reportItem) => {
     setIsLoadingReport(true);
     try {
-      const res = await api.getManagementReports(type);
+      let res;
+      if (reportItem?.endpoint) {
+        res = await api.getRoleReport(reportItem.endpoint);
+      } else if (typeof reportItem === 'string') {
+        res = await api.getManagementReports(reportItem);
+      } else if (reportItem?.key) {
+        res = await api.getManagementReports(reportItem.key);
+      }
       setReportData(res);
     } catch (err) {
       console.error('Failed to load report:', err);
@@ -207,16 +424,6 @@ export default function NormalUserDashboard({
     }
   };
 
-  useEffect(() => {
-    if (activeSubTab === 'designations') {
-      fetchDesignationMatrix(selectedDesignationKey);
-    } else if (activeSubTab === 'reports') {
-      fetchReport(selectedReportType);
-    } else if (activeSubTab === 'hr_integration') {
-      fetchHrData();
-    }
-  }, [activeSubTab, selectedDesignationKey, selectedReportType]);
-
   const DESIGNATIONS_LIST = [
     { key: 'board_of_directors', label: 'Board of Directors (BoD)' },
     { key: 'chairman', label: 'Board Chairman' },
@@ -228,92 +435,266 @@ export default function NormalUserDashboard({
     { key: 'shareholders', label: 'Shareholders (Annual General Meeting)' }
   ];
 
-  const REPORT_TYPES = [
-    { key: 'active_by_dept', label: 'Active Delegations by Department', desc: 'Summary of all currently active rules categorized by Finance vs Risk' },
-    { key: 'pending_approvals', label: 'Pending Approval Queue', desc: 'All submissions currently awaiting committee or executive sign-off' },
-    { key: 'recently_modified', label: 'Recently Modified Rules (v2+)', desc: 'History of authorities promoted through version bump cycle' },
-    { key: 'regulatory_mandated', label: 'Regulatory Mandated Rules', desc: 'Rules with external Central Bank or statutory governance compliance' },
-    { key: 'high_risk', label: 'High-Risk & Key Strategic Decisions', desc: 'Critical corporate decisions requiring multi-tiered endorsements' }
+  // Base global preset reports
+  const GLOBAL_REPORT_TYPES = [
+    { key: 'active_by_dept', report_id: 'RPT-01', label: 'Active Delegations by Department', desc: 'Summary of active rules categorized by Finance vs Risk functions' },
+    { key: 'pending_approvals', report_id: 'RPT-02', label: 'Pending Approval Requests', desc: 'Change proposals currently awaiting workflow review or sign-off' },
+    { key: 'recently_modified', report_id: 'RPT-03', label: 'Recently Modified Rules (v2+)', desc: 'History of rules promoted through authority version bump cycles' },
+    { key: 'regulatory_mandated', report_id: 'RPT-04', label: 'Regulatory Mandated Rules', desc: 'Authorities citing external Central Bank or statutory guidelines' },
+    { key: 'high_risk', report_id: 'RPT-05', label: 'High-Risk Strategic Decisions', desc: 'Key strategic decisions requiring multi-tiered endorsements' }
   ];
+
+  // Role-Specific Tailored Reports Map (All 7 Personas)
+  const ROLE_SPECIFIC_REPORTS = {
+    FRONTEND_USER: [
+      { key: 'usr_lifecycle', report_id: 'RPT-USR-01', endpoint: '/requestor/reports/lifecycle', label: 'My Proposal Lifecycle Report', desc: 'Status tracking of personal change submissions with stage & reviewer feedback' },
+      { key: 'usr_limits', report_id: 'RPT-USR-02', endpoint: '/requestor/reports/operational-limits', label: 'Commercial Operational Limits', desc: 'Operational signing caps and permitted operators for commercial operations' }
+    ],
+    PROCESS_OWNER: [
+      { key: 'po_alignment', report_id: 'RPT-PO-01', endpoint: '/process-owner/reports/operational-alignment', label: 'P2P & Capex Workflow Alignment', desc: 'Operational process boundaries, linked rules, and endorsing committee mappings' },
+      { key: 'po_impact_queue', report_id: 'RPT-PO-02', endpoint: '/process-owner/reports/impact-queue', label: 'Operational Impact Queue & SLA Telemetry', desc: 'Pending requests requiring process endorsement with >48h SLA telemetry' }
+    ],
+    DEPT_OWNER: [
+      { key: 'do_limits', report_id: 'RPT-DO-01', endpoint: '/dept-owner/reports/signing-limits', label: 'Department Delegated Signing Limits Matrix', desc: 'Finance threshold tiers (L1 Manager, L2 Head, L3 CFO) and statutory authorities' },
+      { key: 'do_history', report_id: 'RPT-DO-02', endpoint: '/dept-owner/reports/change-history', label: 'Department Rule Version History', desc: 'Audit log of version revisions, authors, and executive sign-off dates' }
+    ],
+    AUTHORITY_OWNER: [
+      { key: 'ao_charter', report_id: 'RPT-AO-01', endpoint: '/authority-owner/reports/charter-mandates', label: 'Corporate Charter & Terms of Reference Matrix', desc: 'Mandates for BoD, Audit, Risk Committees, and GCEO with charter sections' },
+      { key: 'ao_chain_flows', report_id: 'RPT-AO-02', endpoint: '/authority-owner/reports/chain-flows', label: 'Composite Authority Chain Flow Report', desc: 'Multi-tier endorsement flow analysis validating mandatory statutory ratification' }
+    ],
+    REVIEWER: [
+      { key: 'rev_regulatory', report_id: 'RPT-REV-01', endpoint: '/reviewer/reports/regulatory-register', label: 'Regulatory Mandated Rules & Basel Register', desc: 'Authorities mapped against Central Bank regulations and compliance policies' },
+      { key: 'rev_diffs', report_id: 'RPT-REV-02', endpoint: '/reviewer/reports/technical-diffs', label: '2LoD Review Queue & Concurrency Diff Analysis', desc: 'Detailed delta inspection (old vs proposed) and concurrency collision checks' }
+    ],
+    APPROVER: [
+      { key: 'app_portfolio', report_id: 'RPT-APP-01', endpoint: '/approver/reports/executive-portfolio', label: 'Executive Pending Approval Portfolio', desc: 'Submissions awaiting executive binding decision with financial exposure telemetry' },
+      { key: 'app_decisions', report_id: 'RPT-APP-02', endpoint: '/approver/reports/binding-decisions', label: 'Executive Binding Decisions Audit Report', desc: 'Decisions log with mandatory rationale remarks and publication readiness' }
+    ],
+    AUDIT_READONLY: [
+      { key: 'aud_dossier', report_id: 'RPT-AUD-01', endpoint: '/audit-readonly/reports/version-dossier', label: 'Complete Version Snapshot Dossier', desc: 'Historical timeline of published version snapshots and baseline comparisons' },
+      { key: 'aud_ledger', report_id: 'RPT-AUD-02', endpoint: '/audit-readonly/reports/immutable-ledger', label: 'Tamper-Evident Immutable Audit Trail', desc: 'Full audit logs tracking submission, review, endorsement, and publication' },
+      { key: 'aud_sod', report_id: 'RPT-AUD-03', endpoint: '/audit-readonly/reports/sod-matrix', label: 'Segregation of Duties (SoD) Exception Matrix', desc: 'Automatic violation checks detecting self-approval or bypassed 4-eye steps' }
+    ]
+  };
+
+  const roleSpecificReportsList = ROLE_SPECIFIC_REPORTS[personaKey] || [];
+  const ALL_ACCESSIBLE_REPORTS = [...roleSpecificReportsList, ...GLOBAL_REPORT_TYPES];
+
+  const canPropose = currentUser?.permissions
+    ? Boolean(currentUser.permissions.can_propose)
+    : ['FRONTEND_USER', 'PROCESS_OWNER', 'DEPT_OWNER', 'AUTHORITY_OWNER'].includes(personaKey);
+
+  const canViewAudit = personaKey === 'AUDIT_READONLY';
+
+  const scopeDomainsLabel = currentUser?.permissions?.allowed_domains?.length
+    ? currentUser.permissions.allowed_domains.join(' & ')
+    : (currentUser?.allowed_domains || 'Scoped');
+  const scopeEntityLabel = currentUser?.permissions?.entity_id || currentUser?.entity_id || 'ENT-BH-01';
+
+  useEffect(() => {
+    if (activeSubTab === 'designations') {
+      const currentOpt = selectedGovernanceOptions[activeGovernanceCategory];
+      fetchDesignationMatrix({
+        category_id: activeGovernanceCategory,
+        option_id: currentOpt?.id || 'all'
+      });
+    } else if (activeSubTab === 'reports') {
+      const activeReportObj = ALL_ACCESSIBLE_REPORTS.find(r => r.key === selectedReportType) || ALL_ACCESSIBLE_REPORTS[0];
+      if (activeReportObj) {
+        fetchReport(activeReportObj);
+      }
+    } else if (activeSubTab === 'hr_integration') {
+      fetchHrData();
+    }
+  }, [activeSubTab, selectedDesignationKey, selectedReportType]);
+
 
   return (
     <div className="space-y-7 animate-fade-in font-sans">
       
-      {/* Dynamic Role & Persona Banner */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-teal-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-slate-800">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Dynamic Role & Persona Banner / KPI Card */}
+      <div className="relative rounded-3xl p-6 sm:p-8 text-white shadow-2xl overflow-hidden border border-teal-500/30 bg-[#071C2B]">
+        {/* Dynamic Animated Harbour SVG Background */}
+        <img 
+          src={doaHeroBg}
+          alt="DOA Hero Matrix"
+          className="absolute inset-0 w-full h-full object-cover object-right pointer-events-none select-none"
+        />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={`px-3 py-1 border rounded-full text-[10px] font-extrabold tracking-widest uppercase ${currentPersona.color}`}>
-                {currentPersona.badge}
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {currentUser?.designation || 'Business Stakeholder'} &bull; {currentUser?.department || 'Operations'}
-              </span>
-            </div>
-            
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
+        {/* Soft Dark Gradient Overlay for optimal text and button contrast on left */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071C2B]/95 via-[#071C2B]/60 to-transparent pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+
+          <div className="space-y-1 max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 drop-shadow-md">
               <span>Welcome back, {currentUser?.full_name || 'Stakeholder'}</span>
-              <Sparkles className="h-5 w-5 text-teal-400" />
             </h2>
-            
-            <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
-              {currentPersona.description}
-            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons Aligned in the Same Line */}
+        <div className="mt-6 pt-5 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 relative z-10">
+          <div className="shrink-0 flex items-center">
+            <span className="h-10 w-20 rounded-xl inline-flex items-center justify-center text-center text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 shadow-xs">
+              Action
+            </span>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 flex-shrink-0">
+          <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-2.5 flex-1 w-full`}>
+            {/* 1. Overview */}
+            <button
+              onClick={() => {
+                onNavigateTab('overview');
+                setActiveSubTab('overview');
+              }}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'overview' && activeSubTab === 'overview'
+                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-indigo-600/30 ring-2 ring-indigo-400/30 font-black'
+                  : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border-indigo-400/30'
+              }`}
+            >
+              <Layers className="h-4 w-4 text-indigo-300 shrink-0" />
+              <span className="truncate">Overview</span>
+            </button>
+
+            {/* 2. Search DoA */}
             <button
               onClick={() => onNavigateTab('search')}
-              className="px-4 py-3 bg-white/10 hover:bg-white/15 text-white border border-white/20 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'search'
+                  ? 'bg-blue-600 text-white border-blue-400 shadow-blue-600/30 ring-2 ring-blue-400/30 font-black'
+                  : 'bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 border-blue-400/30'
+              }`}
             >
-              <Search className="h-4 w-4 text-teal-300" />
-              <span>Search DOA Matrix</span>
+              <Search className="h-4 w-4 text-blue-300 shrink-0" />
+              <span className="truncate">Search DoA</span>
             </button>
-            
-            {currentUser?.persona_type !== 'AUDIT_READONLY' && (
+
+            {/* 3. Initiate Proposal (enabled strictly for authorized proposer personas) */}
+            {!canPropose ? (
+              <button
+                disabled
+                className="h-10 w-full px-2.5 py-1 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border shadow-sm bg-white/5 text-slate-500 border-white/10 cursor-not-allowed opacity-60"
+              >
+                <Edit3 className="h-4 w-4 text-slate-500 shrink-0" />
+                <div className="flex flex-col items-center justify-center min-w-0">
+                  <span className="truncate text-xs font-bold leading-tight">Initiate Proposal</span>
+                  <span className="text-[10px] font-medium text-slate-500 leading-tight">(new/amendment)</span>
+                </div>
+              </button>
+            ) : (
               <button
                 onClick={onNewRequest}
-                className="px-5 py-3 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5"
+                className={`h-10 w-full px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                  activeTab === 'request'
+                    ? 'bg-cyan-600 text-white border-cyan-400 shadow-cyan-600/30 ring-2 ring-cyan-400/30 font-black'
+                    : 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-200 border-cyan-400/30'
+                }`}
               >
-                <Plus className="h-4 w-4" />
-                <span>Propose Change Request</span>
+                <Edit3 className="h-4 w-4 text-cyan-300 shrink-0" />
+                <div className="flex flex-col items-center justify-center min-w-0">
+                  <span className="truncate text-xs font-bold leading-tight">Initiate Proposal</span>
+                  <span className="text-[10px] font-medium text-cyan-200/90 leading-tight">(new/amendment)</span>
+                </div>
+              </button>
+            )}
+
+            {/* 4. Change Queue */}
+            <button
+              onClick={() => onNavigateTab('queue')}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'queue'
+                  ? 'bg-teal-600 text-white border-teal-400 shadow-teal-600/30 ring-2 ring-teal-400/30 font-black'
+                  : 'bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border-teal-400/30'
+              }`}
+            >
+              <GitPullRequest className="h-4 w-4 text-teal-300 shrink-0" />
+              <span className="truncate">Change Queue</span>
+              {pendingQueueCount > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.2 bg-teal-500 text-slate-950 font-extrabold rounded-full text-[10px] shrink-0">
+                  {pendingQueueCount}
+                </span>
+              )}
+            </button>
+
+            {/* 5. Exception Workflow */}
+            <button
+              onClick={() => onNavigateTab('exceptions')}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeTab === 'exceptions'
+                  ? 'bg-emerald-600 text-white border-emerald-400 shadow-emerald-600/30 ring-2 ring-emerald-400/30 font-black'
+                  : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border-emerald-400/30'
+              }`}
+            >
+              <AlertOctagon className="h-4 w-4 text-emerald-300 shrink-0" />
+              <span className="truncate">Exception Workflow</span>
+            </button>
+
+            {/* 6. Audit Trail (Internal Audit Read-Only Only) */}
+            {canViewAudit && (
+              <button
+                onClick={() => onNavigateTab('audit')}
+                className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                  activeTab === 'audit'
+                    ? 'bg-teal-400 text-slate-950 border-teal-300 ring-2 ring-teal-400/40 font-black shadow-lg shadow-teal-500/25'
+                    : 'bg-teal-500 hover:bg-teal-400 text-slate-950 font-black border-teal-400 shadow-lg shadow-teal-500/25 transform hover:-translate-y-0.5'
+                }`}
+              >
+                <History className="h-4 w-4 text-slate-950 shrink-0" />
+                <span className="truncate">Audit Trail</span>
               </button>
             )}
           </div>
         </div>
 
-        {/* Feature Sub-Navigation Tabs */}
-        <div className="mt-8 pt-4 border-t border-white/10 flex flex-wrap gap-2">
-          {[
-            { id: 'overview', label: 'Persona Workspace', icon: Briefcase },
-            { id: 'designations', label: 'Designation-Wise Authorities', icon: Award, highlight: true },
-            { id: 'reports', label: 'Management Reports', icon: FileSpreadsheet, highlight: true },
-            { id: 'hr_integration', label: 'HR Org & Acting Authorities', icon: Users, highlight: true }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeSubTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveSubTab(tab.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  isActive
-                    ? 'bg-teal-500 text-slate-950 shadow-md font-black'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10'
-                }`}
-              >
-                <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-slate-950' : 'text-teal-400'}`} />
-                <span>{tab.label}</span>
-                {tab.highlight && !isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                )}
-              </button>
-            );
-          })}
+        {/* View Buttons Aligned in the Same Line - Same Size as Action Card & Buttons */}
+        <div className="mt-3 pt-3 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 relative z-10">
+          <div className="shrink-0 flex items-center">
+            <span className="h-10 w-20 rounded-xl inline-flex items-center justify-center text-center text-[10px] font-extrabold uppercase tracking-widest text-teal-400 bg-teal-950/60 border border-teal-500/30 shadow-xs">
+              View
+            </span>
+          </div>
+
+          <div className={`grid grid-cols-2 sm:grid-cols-3 ${canViewAudit ? 'lg:grid-cols-6' : 'lg:grid-cols-5'} gap-2.5 flex-1 w-full`}>
+            {/* 1. Designation View */}
+            <button
+              onClick={() => {
+                onNavigateTab('overview');
+                setActiveSubTab('designations');
+              }}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeSubTab === 'designations'
+                  ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-teal-500/30 ring-2 ring-teal-400/30 font-black'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
+              }`}
+            >
+              <Award className={`h-4 w-4 shrink-0 ${activeSubTab === 'designations' ? 'text-slate-950' : 'text-teal-400'}`} />
+              <span className="truncate">Designation View</span>
+              {activeSubTab !== 'designations' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse shrink-0" />
+              )}
+            </button>
+
+            {/* 2. Management Reports */}
+            <button
+              onClick={() => {
+                onNavigateTab('overview');
+                setActiveSubTab('reports');
+              }}
+              className={`h-10 w-full px-2.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shadow-sm ${
+                activeSubTab === 'reports'
+                  ? 'bg-teal-500 text-slate-950 border-teal-400 shadow-teal-500/30 ring-2 ring-teal-400/30 font-black'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border-white/10'
+              }`}
+            >
+              <FileSpreadsheet className={`h-4 w-4 shrink-0 ${activeSubTab === 'reports' ? 'text-slate-950' : 'text-teal-400'}`} />
+              <span className="truncate">Management Reports</span>
+              {activeSubTab !== 'reports' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse shrink-0" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -322,449 +703,374 @@ export default function NormalUserDashboard({
       {/* ========================================================================= */}
       {activeSubTab === 'overview' && (
         <div className="space-y-7">
-          {/* Key KPI Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">My Authored Submissions</span>
-                <div className="p-2.5 bg-slate-50 rounded-xl text-slate-700">
-                  <FileText className="h-4 w-4" />
+          {/* Latest amendments to the Delegation of Authority Matrix (Excel Demo Model) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+            {/* Table Header Bar */}
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="h-4 w-4 text-teal-300" />
                 </div>
-              </div>
-              <div className="text-3xl font-black text-slate-900 mt-3">
-                {userStats?.total_my_requests ?? 0}
-              </div>
-              <div className="text-[11px] text-slate-500 mt-1 font-medium truncate">
-                Authored by {currentUser?.email}
+                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                  Latest amendments to the Delegation of Authority Matrix
+                </h3>
               </div>
             </div>
 
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">In Review Queue</span>
-                <div className="p-2.5 bg-amber-50 rounded-xl text-amber-600">
-                  <Clock className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-amber-600 mt-3">
-                {userStats?.my_pending ?? 0}
-              </div>
-              <div className="text-[11px] text-amber-700 mt-1 font-medium">
-                Awaiting 2LoD validation
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Approved Proposals</span>
-                <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
-                  <CheckCircle className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-blue-600 mt-3">
-                {userStats?.my_approved ?? 0}
-              </div>
-              <div className="text-[11px] text-blue-700 mt-1 font-medium">
-                Ready for v2 master publication
-              </div>
-            </div>
-
-            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-md transition-all">
-              <div className="flex items-center justify-between text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Active Published Rules</span>
-                <div className="p-2.5 bg-emerald-50 rounded-xl text-emerald-600">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-emerald-600 mt-3">
-                {userStats?.total_published_doa ?? kpis?.sourceRecords ?? 53}
-              </div>
-              <div className="text-[11px] text-emerald-700 mt-1 font-medium">
-                Live corporate governance matrix
-              </div>
+            {/* Table Content */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                    <th className="py-3 px-4 sm:px-6 w-24 text-center">NO.</th>
+                    <th className="py-3 px-4 sm:px-6">Decision area</th>
+                    <th className="py-3 px-4 sm:px-6">Update Type</th>
+                    <th className="py-3 px-4 sm:px-6">Function</th>
+                    <th className="py-3 px-4 sm:px-6 text-right">Last update date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {DEMO_LATEST_AMENDMENTS.map((item, idx) => (
+                    <tr 
+                      key={idx}
+                      className="hover:bg-teal-50/30 transition-colors"
+                    >
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-400 text-center">
+                        {item.id}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
+                        {item.decisionArea}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                          item.updateType === 'New/Amended' 
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                            : item.updateType === 'Modified'
+                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                        }`}>
+                          {item.updateType}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
+                        {item.department}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium whitespace-nowrap">
+                        {item.lastUpdateDate}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Submissions & Role Guidance Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-8 bg-white border border-slate-200/90 rounded-2xl shadow-2xs p-6 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <div>
-                  <h3 className="font-bold text-slate-800 text-base">
-                    {currentUser?.persona_type === 'APPROVER' ? 'Pending Approval Queue & Recent Proposals' : 'My Recent Change Proposals'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    {currentUser?.persona_type === 'APPROVER' ? 'Inspect change submissions requiring executive endorsement' : 'Track status of your drafted or submitted delegation rules'}
-                  </p>
+          {/* Frequently visited decision areas (View-only Demo Card) */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+            {/* Table Header Bar */}
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0">
+                  <Bookmark className="h-4 w-4 text-indigo-300" />
                 </div>
-                <button
-                  onClick={() => onNavigateTab('queue')}
-                  className="text-xs font-bold text-teal-600 hover:text-teal-700 flex items-center gap-1"
-                >
-                  View All in Queue <ArrowRight className="h-3.5 w-3.5" />
-                </button>
+                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                  Frequently visited decision areas
+                </h3>
+              </div>
+            </div>
+
+            {/* Table Content */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                    <th className="py-3 px-4 sm:px-6 w-24 text-center">NO.</th>
+                    <th className="py-3 px-4 sm:px-6">Decision area</th>
+                    <th className="py-3 px-4 sm:px-6 w-32">Function</th>
+                    <th className="py-3 px-4 sm:px-6">Authority Chain</th>
+                    <th className="py-3 px-4 sm:px-6 text-right whitespace-nowrap">Last Update Date</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-xs">
+                  {DEMO_FREQUENTLY_VISITED_AREAS.map((item, idx) => (
+                    <tr 
+                      key={idx}
+                      className="hover:bg-indigo-50/30 transition-colors"
+                    >
+                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-400 text-center">
+                        {item.no}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
+                        {item.decisionArea}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
+                        {item.function}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 font-mono text-[11px] text-slate-700 font-medium">
+                        {item.authorityChain}
+                      </td>
+                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium whitespace-nowrap">
+                        {item.lastUpdateDate}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 2: DESIGNATION VIEW - INTERACTIVE GOVERNANCE KPI CARDS & DROPDOWNS */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'designations' && (
+        <div className="space-y-6 animate-fade-in">
+          <GovernanceKpiCardsView
+            currentUser={currentUser}
+            activeCategoryId={activeGovernanceCategory}
+            selectedOptionsMap={selectedGovernanceOptions}
+            onSelectCategory={handleSelectGovernanceCategory}
+            matrixData={designationMatrixData}
+            isLoading={isLoadingDesignation}
+          />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 3: FUNCTIONALITY 7 & 9 - MANAGEMENT REPORTS & HR ORG HUB        */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'reports' && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Sub-Switch under Management Reports: Pre-Set Reports vs HR Org & Acting Authorities */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setReportsSubView('preset')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  reportsSubView === 'preset'
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                }`}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                <span>Pre-Set Management Reports</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setReportsSubView('hr_org');
+                  fetchHrData();
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  reportsSubView === 'hr_org'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                <span>HR Org &amp; Acting Authorities</span>
+              </button>
+            </div>
+
+
+          </div>
+
+          {reportsSubView === 'hr_org' ? (
+            /* Integrated HR Org & Acting Authorities Section */
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
+              <div className="border-b border-slate-100 pb-5">
+                <h3 className="text-xl font-bold text-slate-900">
+                  HR System Integration &amp; Acting Authority Hub
+                </h3>
               </div>
 
-              {(!userStats?.recent_submissions || userStats.recent_submissions.length === 0) ? (
-                <div className="py-12 text-center text-slate-400">
-                  <FileCheck className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-slate-600">No change proposals authored yet.</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Click below to draft your first authority modification proposal.</p>
-                  <button
-                    onClick={onNewRequest}
-                    className="mt-4 px-4 py-2 bg-teal-50 text-teal-700 border border-teal-200 rounded-xl text-xs font-bold hover:bg-teal-100 transition-all"
-                  >
-                    Draft First Proposal
-                  </button>
+              {isLoadingHr ? (
+                <div className="py-16 text-center text-slate-400">
+                  <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal-600 mb-2" />
+                  <p className="text-xs font-semibold">Synchronizing with HR directory...</p>
+                </div>
+              ) : !hrData ? (
+                <div className="py-16 text-center text-slate-400">
+                  <Users className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                  <p className="text-xs font-semibold">No HR connector data available.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100">
-                  {userStats.recent_submissions.map(sub => (
-                    <div key={sub.id} className="py-3.5 flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-slate-900">#{sub.id}</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                            sub.request_type === 'ADD' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                            sub.request_type === 'MODIFY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                            'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}>
-                            {sub.request_type}
-                          </span>
-                          <span className="text-xs font-bold text-slate-700 truncate">
-                            {sub.department} &bull; {sub.process || 'DOA Authority'}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-500 mt-1 italic truncate">
-                          "{sub.rationale || 'Rule proposal'}"
-                        </p>
-                      </div>
+                <div className="space-y-6">
+                  {/* HR Telemetry Bar */}
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Synced Positions</span>
+                      <div className="text-2xl font-black text-slate-900 mt-1">{hrData.total_synced_positions}</div>
+                    </div>
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700">Vacancies Detected</span>
+                      <div className="text-2xl font-black text-amber-800 mt-1">{hrData.vacancies_detected}</div>
+                    </div>
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700">Active Acting Authorities</span>
+                      <div className="text-2xl font-black text-blue-800 mt-1">{hrData.acting_delegations_active}</div>
+                    </div>
+                    <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">Sync Frequency</span>
+                      <div className="text-sm font-bold text-emerald-800 mt-2">Every 15 Minutes (WebHook)</div>
+                    </div>
+                  </div>
 
-                      <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                          sub.status === 'SUBMITTED' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                          sub.status === 'APPROVED' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                          sub.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                          'bg-rose-50 text-rose-700 border border-rose-200'
-                        }`}>
-                          {sub.status}
-                        </span>
-                        <button
-                          onClick={() => onNavigateTab('queue')}
-                          className="text-xs text-slate-400 hover:text-slate-700 p-1"
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
+                  {/* Active Acting Delegations (Sub-Delegations) */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                        Active Sub-Delegations &amp; Interim Sign-Off Authorities
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        Total Active: <strong className="text-slate-800">{hrData.acting_delegations?.length || 0}</strong>
+                      </span>
+                    </div>
+
+                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
+                      <div className="max-h-[380px] overflow-y-auto">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200">
+                            <tr>
+                              <th className="py-3 px-4">Primary Position (Substantive)</th>
+                              <th className="py-3 px-4">Interim Acting Authority</th>
+                              <th className="py-3 px-4">Assigned Delegated Sign-Off</th>
+                              <th className="py-3 px-4">Valid Window</th>
+                              <th className="py-3 px-4 text-center">Formal Mandate</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {(hrData.acting_delegations || []).map((del, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                                <td className="py-3 px-4">
+                                  <div className="font-bold text-slate-800">{del.primary_position}</div>
+                                  <div className="text-[10px] text-slate-500 font-mono">{del.primary_holder}</div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="font-bold text-indigo-700">{del.acting_holder}</div>
+                                  <div className="text-[10px] text-slate-500">{del.acting_position}</div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                                    {del.authorized_scope}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                                  {del.start_date} &rarr; {del.end_date}
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                    {del.mandate_status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Persona Action Center */}
-            <div className="lg:col-span-4 space-y-4">
-              <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-5 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <ShieldCheck className="h-4 w-4 text-teal-600" />
-                    Role Responsibilities
-                  </h4>
-                  <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
-                    {currentPersona.badge}
-                  </span>
-                </div>
-                
-                <div className="space-y-2 text-xs">
-                  {(currentPersona.responsibilities || [
-                    'Search, filter, and view designation-wise authorities',
-                    'Inspect policy, charter, and regulatory citations',
-                    'Generate live pre-set management reports',
-                    'View HR hierarchy & acting delegation routing'
-                  ]).map((resp, i) => (
-                    <div key={i} className="flex items-start gap-2 text-slate-700">
-                      <span className="font-bold text-teal-600 flex-shrink-0">✓</span>
-                      <span className="leading-snug">{resp}</span>
-                    </div>
-                  ))}
-                  
-                  {currentUser?.persona_type === 'AUDIT_READONLY' && (
-                    <div className="flex items-start gap-2 text-amber-700 pt-1 border-t border-slate-200">
-                      <span className="font-bold flex-shrink-0">ℹ</span>
-                      <span>Assurance Read-Only mode: proposal modification locked</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Feature Callouts */}
-              <div className="bg-gradient-to-br from-teal-50 to-indigo-50 border border-teal-200/70 rounded-2xl p-5 space-y-2">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 flex items-center gap-1">
-                  <Award className="h-3.5 w-3.5" /> High-Impact Features
-                </span>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Need to check all authorities of the CEO or Board? Switch to the <strong>Designation-Wise Authorities</strong> tab above to view them grouped with exact action codes.
-                </p>
-                <button
-                  onClick={() => setActiveSubTab('designations')}
-                  className="mt-2 text-xs font-bold text-teal-700 hover:text-teal-900 underline flex items-center gap-1"
-                >
-                  View Designation Matrix <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 2: FUNCTIONALITY 5 - DESIGNATION-WISE AUTHORITIES UNDER ONE TAB */}
-      {/* ========================================================================= */}
-      {activeSubTab === 'designations' && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-teal-50 border border-teal-200 text-teal-800 rounded text-[10px] font-extrabold uppercase">
-                  Functionality 5
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  Designation-Wise Authorities Matrix
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                View all authorities for a specific executive designation or governance body under one consolidated table, highlighting whether they Approve (A), Endorse (E), Recommend (R), or Receive Notification (N).
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-50 border border-teal-200 rounded-xl text-xs">
-                <Award className="h-4 w-4 text-teal-700" />
-                <span className="text-slate-600">Your Incumbent Role:</span>
-                <strong className="text-teal-900 font-extrabold">{currentUser?.designation || 'Stakeholder'}</strong>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-bold text-slate-700 whitespace-nowrap">
-                  View Designation:
-                </label>
-                <select
-                  value={selectedDesignationKey}
-                  onChange={(e) => setSelectedDesignationKey(e.target.value)}
-                  className="px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer shadow-2xs"
-                >
-                  {DESIGNATIONS_LIST.map(d => (
-                    <option key={d.key} value={d.key}>
-                      {d.label} {d.key === initialDesignation ? '(Your Role)' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Persona-Specific Authority Banner */}
-          {selectedDesignationKey === initialDesignation && (
-            <div className="p-4 bg-teal-900 text-white rounded-2xl flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-teal-500/30 rounded-xl">
-                  <Award className="h-5 w-5 text-teal-300" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-xs tracking-wider uppercase text-teal-300">
-                    Showing authorities specifically delegated to YOUR designation
-                  </h4>
-                  <p className="text-xs text-slate-200 mt-0.5">
-                    These are the rules where you possess explicit signing, endorsement, or approval powers.
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-teal-800 border border-teal-700 rounded-xl text-xs font-mono font-bold text-teal-200">
-                Incumbent: {currentUser?.full_name}
-              </span>
-            </div>
-          )}
-
-          {/* Action Code Legend */}
-          <div className="flex flex-wrap items-center gap-4 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
-            <span className="font-extrabold text-slate-500 uppercase text-[10px]">Action Legend:</span>
-            <span className="flex items-center gap-1.5 font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-600" />
-              Approve (A / A1 / A2)
-            </span>
-            <span className="flex items-center gap-1.5 font-bold text-blue-800 bg-blue-100/70 border border-blue-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-blue-600" />
-              Endorse (E / E1 / E2)
-            </span>
-            <span className="flex items-center gap-1.5 font-bold text-amber-800 bg-amber-100/70 border border-amber-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-amber-600" />
-              Recommend (R / R1)
-            </span>
-            <span className="flex items-center gap-1.5 font-bold text-purple-800 bg-purple-100/70 border border-purple-300 px-2.5 py-1 rounded-md text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-purple-600" />
-              Notification (N)
-            </span>
-          </div>
-
-          {/* Designation Authorities Table */}
-          {isLoadingDesignation ? (
-            <div className="py-16 text-center text-slate-400">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal-600 mb-2" />
-              <p className="text-xs font-semibold">Filtering designation authorities...</p>
-            </div>
-          ) : !designationMatrixData || designationMatrixData.authorities.length === 0 ? (
-            <div className="py-16 text-center text-slate-400">
-              <Award className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-              <p className="text-xs font-semibold">No direct authorities mapped to this designation.</p>
-            </div>
           ) : (
-            <div className="border border-slate-200/90 rounded-2xl overflow-hidden shadow-2xs">
-              <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between text-xs">
-                <span className="font-extrabold text-slate-700">
-                  Total Active Authorities for {DESIGNATIONS_LIST.find(d => d.key === selectedDesignationKey)?.label}: <span className="text-teal-700">{designationMatrixData.total_authorities}</span>
-                </span>
-                <span className="text-slate-400 text-[11px]">Live Database &bull; Active Version 1</span>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
-                    <tr>
-                      <th className="py-3 px-4">Ref #</th>
-                      <th className="py-3 px-4">Function &bull; Business Line</th>
-                      <th className="py-3 px-6">Decision Area / Authority Mandate</th>
-                      <th className="py-3 px-4 text-center">Specific Action</th>
-                      <th className="py-3 px-4">Policy &amp; Regulatory Linkage</th>
-                      <th className="py-3 px-4">Composite Flow</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {designationMatrixData.authorities.map((item) => (
-                      <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                          #{item.id}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                            item.function === 'Risk' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-teal-50 text-teal-700 border border-teal-200'
-                          }`}>
-                            {item.function}
-                          </span>
-                          <div className="text-[11px] text-slate-600 font-semibold mt-1 truncate max-w-[180px]">
-                            {item.business_line}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-6">
-                          <p className="font-bold text-slate-800 leading-snug">
-                            {item.decision_area}
-                          </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className={`text-[10px] font-semibold px-2 py-0.2 rounded ${
-                              item.key_non_key === 'Key' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-600'
-                            }`}>
-                              {item.key_non_key} Decision
-                            </span>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-block px-3 py-1 rounded-lg font-black text-xs border ${
-                            item.action_type === 'APPROVE' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
-                            item.action_type === 'ENDORSE' ? 'bg-blue-100 text-blue-900 border-blue-300' :
-                            item.action_type === 'RECOMMEND' ? 'bg-amber-100 text-amber-900 border-amber-300' :
-                            'bg-purple-100 text-purple-900 border-purple-300'
-                          }`}>
-                            {item.authority_code} ({item.action_type})
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <div className="space-y-1">
-                            {item.policy_reference && (
-                              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">
-                                <BookOpen className="h-3 w-3 text-teal-600" />
-                                <span className="truncate max-w-[200px]">{item.policy_reference}</span>
-                              </div>
-                            )}
-                            {item.regulatory_requirement && (
-                              <div className="flex items-center gap-1.5 text-[10px] text-rose-700 font-medium">
-                                <ShieldCheck className="h-3 w-3 text-rose-500" />
-                                <span className="truncate max-w-[200px]">{item.regulatory_requirement}</span>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-teal-900 font-bold bg-teal-50/40 rounded">
-                          {item.composite_authority}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 3: FUNCTIONALITY 7 - PRE-SET MANAGEMENT REPORTS */}
-      {/* ========================================================================= */}
-      {activeSubTab === 'reports' && (
-        <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 rounded text-[10px] font-extrabold uppercase">
-                  Functionality 7
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  Management Governance Reports Hub
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                Generate pre-set reports on active delegations, pending approval requests, recently modified rules, and regulatory mandated authorities.
-              </p>
+              <h3 className="text-xl font-bold text-slate-900">
+                Management Governance Reports Hub
+              </h3>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Export Buttons: Download in .pdf or in .xlsx */}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => exportReportToPdf(reportData, selectedReportType)}
+                disabled={isLoadingReport || !reportData || !reportData.data?.length}
+                className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Download report in .pdf format"
+              >
+                <FileDown className="h-3.5 w-3.5 text-rose-600" />
+                <span>Download .PDF</span>
+              </button>
+
+              <button
+                onClick={() => exportReportToExcel(reportData, selectedReportType)}
+                disabled={isLoadingReport || !reportData || !reportData.data?.length}
+                className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Download report in .xlsx format"
+              >
+                <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Download .XLSX</span>
+              </button>
+
               <button
                 onClick={() => {
                   window.print();
                 }}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs"
               >
                 <Download className="h-3.5 w-3.5" />
-                <span>Export / Print</span>
+                <span>Print</span>
               </button>
             </div>
           </div>
 
-          {/* Pre-set Report Category Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {REPORT_TYPES.map(r => (
-              <button
-                key={r.key}
-                onClick={() => setSelectedReportType(r.key)}
-                className={`p-3.5 rounded-2xl border text-left transition-all ${
-                  selectedReportType === r.key
-                    ? 'border-teal-600 bg-teal-50/70 shadow-sm ring-2 ring-teal-500/20'
-                    : 'border-slate-200 hover:border-teal-300 bg-slate-50/50 hover:bg-white'
-                }`}
-              >
-                <span className="text-xs font-bold text-slate-900 block truncate">
-                  {r.label}
-                </span>
-                <span className="text-[10px] text-slate-500 mt-1 block line-clamp-2">
-                  {r.desc}
-                </span>
-              </button>
-            ))}
+          {/* Pre-set Report Category Buttons: Role-Specific Primary followed by Global Catalog */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                Select Pre-Set Report Module:
+              </span>
+              <span className="text-[11px] text-slate-400 font-medium">
+                Scope: <strong className="text-slate-700">{currentPersona.badge}</strong>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {ALL_ACCESSIBLE_REPORTS.map(r => {
+                const isSelected = selectedReportType === r.key;
+                const isRoleSpecific = roleSpecificReportsList.some(item => item.key === r.key);
+                return (
+                  <button
+                    key={r.key}
+                    onClick={() => setSelectedReportType(r.key)}
+                    className={`p-3.5 rounded-2xl border text-left transition-all relative ${
+                      isSelected
+                        ? 'border-teal-600 bg-teal-50/80 shadow-sm ring-2 ring-teal-500/20'
+                        : 'border-slate-200 hover:border-teal-300 bg-slate-50/50 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-200/80 text-slate-700">
+                        {r.report_id}
+                      </span>
+                      {isRoleSpecific && (
+                        <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-teal-100 text-teal-800 border border-teal-200">
+                          Role Scoped
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 block truncate">
+                      {r.label}
+                    </span>
+                    <span className="text-[10px] text-slate-500 mt-1 block line-clamp-2 leading-relaxed">
+                      {r.desc}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* Active Report Results View */}
           {isLoadingReport ? (
             <div className="py-16 text-center text-slate-400">
               <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal-600 mb-2" />
-              <p className="text-xs font-semibold">Compiling management report...</p>
+              <p className="text-xs font-semibold">Compiling management report from database...</p>
             </div>
           ) : !reportData ? (
             <div className="py-16 text-center text-slate-400">
@@ -773,95 +1079,184 @@ export default function NormalUserDashboard({
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-md">
-                <div>
-                  <h4 className="text-base font-extrabold">{reportData.title}</h4>
-                  <p className="text-xs text-slate-400">Generated: {new Date(reportData.generated_at).toLocaleString()}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 bg-teal-500/20 border border-teal-500/30 rounded-full text-xs font-mono font-bold text-teal-300">
-                    Total Records: {reportData.count}
-                  </span>
-                </div>
-              </div>
-
               {/* Table rendering of report data */}
-              <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-2xs">
-                <div className="max-h-[480px] overflow-y-auto">
+              <div ref={reportTableWrapperRef} className="relative bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+                {/* Table Header Bar */}
+                <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-700">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                        {reportData.title || 'Delegation of Authority Management Report'}
+                      </h3>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {reportData.scope || `Persona: ${currentPersona.badge}`} &bull; Compiled: {new Date(reportData.generated_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 bg-teal-500/20 border border-teal-400/30 rounded-full text-xs font-mono font-bold text-teal-300">
+                      {reportData.report_id || 'RPT-PRESET'} &bull; {reportData.count} records
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sticky Floating Table Header for Outer Page Scrolling */}
+                {isReportHeaderSticky && (
+                  <div 
+                    style={{
+                      position: 'fixed',
+                      top: `${reportStickyHeaderMetrics.top}px`,
+                      left: `${reportStickyHeaderMetrics.left}px`,
+                      width: `${reportStickyHeaderMetrics.width}px`,
+                      zIndex: 25
+                    }}
+                    className="bg-slate-100 border-x border-b border-slate-300 shadow-lg overflow-hidden animate-fade-in"
+                  >
+                    <div 
+                      ref={reportStickyHeaderScrollRef}
+                      onScroll={handleReportStickyHorizontalScroll}
+                      className="overflow-x-auto no-scrollbar"
+                    >
+                      <table 
+                        style={{ width: reportStickyHeaderMetrics.tableWidth ? `${reportStickyHeaderMetrics.tableWidth}px` : '100%' }}
+                        className="w-full text-left text-xs table-fixed border-collapse"
+                      >
+                        <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                          <tr>
+                            {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col, idx) => {
+                              const isId = col.toLowerCase() === 'id';
+                              const label = isId ? 'NO.' : col.replace(/_/g, ' ');
+                              return (
+                                <th 
+                                  key={col} 
+                                  style={{ 
+                                    width: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined,
+                                    minWidth: reportStickyHeaderMetrics.colWidths?.[idx] ? `${reportStickyHeaderMetrics.colWidths[idx]}px` : undefined
+                                  }}
+                                  className={`py-3 px-4 whitespace-nowrap ${isId ? 'text-center' : ''}`}
+                                >
+                                  {label}
+                                </th>
+                              );
+                            })}
+                          </tr>
+                        </thead>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                <div 
+                  ref={reportTableScrollContainerRef}
+                  onScroll={handleReportTableHorizontalScroll}
+                  className="max-h-[520px] overflow-x-auto overflow-y-auto overscroll-contain"
+                >
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider sticky top-0 border-b border-slate-200">
+                    <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider sticky top-0 z-10">
                       <tr>
-                        <th className="py-3 px-4">Record / ID</th>
-                        <th className="py-3 px-4">Category &bull; Business Line</th>
-                        <th className="py-3 px-6">Decision Area / Rationale</th>
-                        <th className="py-3 px-4">Status / Version</th>
-                        <th className="py-3 px-4">Policy Linkage</th>
+                        {(reportData.columns || (Array.isArray(reportData.data) && reportData.data.length > 0 ? Object.keys(reportData.data[0]) : [])).map((col) => {
+                          const isId = col.toLowerCase() === 'id';
+                          const label = isId ? 'NO.' : col.replace(/_/g, ' ');
+                          return (
+                            <th key={col} className={`py-3 px-4 whitespace-nowrap ${isId ? 'text-center' : ''}`}>
+                              {label}
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {reportData.data.map((item, idx) => (
-                        <tr key={item.id || idx} className="hover:bg-slate-50/70">
-                          <td className="py-3 px-4 font-mono font-bold text-slate-900">
-                            #{item.id}
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="font-semibold text-slate-800">
-                              {item.parent_function || item.function || item.department}
-                            </span>
-                            <div className="text-[11px] text-slate-500 truncate max-w-[180px]">
-                              {item.business_line || item.process}
-                            </div>
-                          </td>
-                          <td className="py-3 px-6">
-                            <p className="font-bold text-slate-800 line-clamp-2">
-                              {item.decision_area || item.rationale || 'Authority Rule Record'}
-                            </p>
-                          </td>
-                          <td className="py-3 px-4">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-teal-50 text-teal-800 border border-teal-200">
-                              {item.status || `v${item.current_version || 1}`}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-slate-600 text-[11px]">
-                            {item.policy_reference || 'Internal Policy §4'}
+                      {!Array.isArray(reportData.data) || reportData.data.length === 0 ? (
+                        <tr>
+                          <td colSpan={reportData.columns?.length || 5} className="py-8 text-center text-slate-400">
+                            No records found for this report.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        reportData.data.map((item, idx) => {
+                          const cols = reportData.columns || Object.keys(item);
+                          return (
+                            <tr key={item.id || item.log_id || item.version_id || idx} className="hover:bg-slate-50/70 transition-colors">
+                              {cols.map((colKey, cIdx) => {
+                                const val = item[colKey];
+                                const renderedVal = val !== null && val !== undefined ? (typeof val === 'object' ? JSON.stringify(val) : String(val)) : '-';
+                                const isId = colKey.toLowerCase().includes('id');
+                                const isStatus = colKey.toLowerCase().includes('status') || colKey === 'decision';
+                                const isAlert = colKey.toLowerCase().includes('alert');
+
+                                const isAuthorityFlow = colKey.toLowerCase().includes('composite') || colKey.toLowerCase().includes('authority') || colKey.toLowerCase().includes('chain') || colKey.toLowerCase().includes('flow');
+                                let displayVal = renderedVal;
+                                if (typeof val === 'string' && (isAuthorityFlow || /[➔→]|->/.test(val))) {
+                                  displayVal = val.replace(/[➔→]|->/g, '←');
+                                }
+
+                                return (
+                                  <td key={colKey + cIdx} className={`py-3 px-4 ${isId ? 'font-mono font-bold text-slate-400 text-center' : 'text-slate-700'}`}>
+                                    {isStatus ? (
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
+                                        renderedVal.includes('APPROVED') || renderedVal.includes('COMPLIANT') || renderedVal.includes('PASS')
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                          : renderedVal.includes('REJECTED') || renderedVal.includes('VIOLATION')
+                                          ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                                          : 'bg-teal-50 text-teal-800 border border-teal-200'
+                                      }`}>
+                                        {renderedVal}
+                                      </span>
+                                    ) : isAlert ? (
+                                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                        renderedVal.includes('EXCEEDED')
+                                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                          : 'bg-slate-100 text-slate-700'
+                                      }`}>
+                                        {renderedVal}
+                                      </span>
+                                    ) : (
+                                      <span className="line-clamp-2 max-w-xs font-mono text-[11px]" title={displayVal}>{displayVal}</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
+
+                {/* Floating "Top" Quick Action Pill Pop-up */}
+                {isReportHeaderSticky && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      reportTableScrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="absolute bottom-6 right-6 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-teal-700 text-white text-xs font-bold shadow-xl border border-white/10 transition-all transform hover:scale-105 backdrop-blur-xs cursor-pointer animate-fade-in"
+                    title="Scroll back to top"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5 text-teal-300" />
+                    <span>Top</span>
+                  </button>
+                )}
               </div>
             </div>
+          )}
+          </div>
           )}
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 4: FUNCTIONALITY 9 - HR SYSTEM INTEGRATION & ACTING AUTHORITIES */}
-      {/* ========================================================================= */}
+      {/* Legacy fallback if activeSubTab === 'hr_integration' */}
       {activeSubTab === 'hr_integration' && (
         <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-sm space-y-6 animate-fade-in">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-100 pb-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded text-[10px] font-extrabold uppercase">
-                  Functionality 9
-                </span>
-                <h3 className="text-xl font-bold text-slate-900">
-                  HR System Integration &amp; Acting Authority Hub
-                </h3>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-                Real-time synchronization with enterprise HR systems (SAP SuccessFactors / Workday) to auto-update designations, reporting lines, detect vacancies, and route approvals to acting authorities.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-xs font-bold flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live HR Connector: ACTIVE
-              </span>
-            </div>
+          <div className="border-b border-slate-100 pb-5">
+            <h3 className="text-xl font-bold text-slate-900">
+              HR System Integration &amp; Acting Authority Hub
+            </h3>
           </div>
 
           {isLoadingHr ? (
@@ -902,7 +1297,7 @@ export default function NormalUserDashboard({
                   <thead className="bg-slate-100 text-slate-700 uppercase font-black text-[10px] tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="py-3 px-4">Emp Code</th>
-                      <th className="py-3 px-4">Designation &bull; Department</th>
+                      <th className="py-3 px-4">Designation &bull; Function</th>
                       <th className="py-3 px-4">Active Incumbent</th>
                       <th className="py-3 px-4">Reporting Hierarchy</th>
                       <th className="py-3 px-4">Acting Authority Routing</th>
@@ -966,6 +1361,43 @@ export default function NormalUserDashboard({
           )}
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* SUB-VIEW 5: EXCEPTIONS WORKFLOW INBOX (SECTION 4.3) */}
+      {/* ========================================================================= */}
+      {activeSubTab === 'exceptions' && (
+        <div className="animate-fade-in space-y-4">
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200">
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Submit New Exception Request</h3>
+              <p className="text-xs text-slate-500">Need to propose a decision area that deviates from standard DOA rules?</p>
+            </div>
+            <button
+              onClick={() => setShowExceptionModal(true)}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Draft Exception Request</span>
+            </button>
+          </div>
+          <ExceptionWorkflowInbox currentUser={currentUser} />
+        </div>
+      )}
+
+
+
+      {/* Supplementary BRD Exception Modal */}
+      <ExceptionRequestModal
+        isOpen={showExceptionModal}
+        onClose={() => {
+          setShowExceptionModal(false);
+          setBlockedValidationData(null);
+        }}
+        initialData={blockedValidationData || {}}
+        onSuccess={() => {
+          setActiveSubTab('exceptions');
+        }}
+      />
 
     </div>
   );

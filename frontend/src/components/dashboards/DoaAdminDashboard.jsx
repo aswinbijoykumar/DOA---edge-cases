@@ -39,6 +39,10 @@ import {
   Info
 } from 'lucide-react';
 import { api } from '../../services/api';
+import ExceptionWorkflowInbox from '../supplementary/ExceptionWorkflowInbox';
+import BahrainKsaAlignmentReportView from '../supplementary/BahrainKsaAlignmentReportView';
+import PointInTimeReconstructionView from '../supplementary/PointInTimeReconstructionView';
+
 
 export default function DoaAdminDashboard({
   adminStats,
@@ -306,7 +310,7 @@ export default function DoaAdminDashboard({
       };
 
       if (recordModalMode === 'create') {
-        const res = await api.createChangeRequest({
+        await api.createChangeRequest({
           request_type: 'ADD',
           department: recordForm.parent_function,
           process: recordForm.business_line,
@@ -314,10 +318,8 @@ export default function DoaAdminDashboard({
           base_version: 1,
           proposed_value: proposedPayload
         });
-        // Auto approve if DOA Admin
-        await api.approveChangeRequest(res.id, 'Executive pre-approved by DOA Administrator');
       } else {
-        const res = await api.createChangeRequest({
+        await api.createChangeRequest({
           request_type: 'MODIFY',
           doa_id: recordForm.id,
           department: recordForm.parent_function,
@@ -326,7 +328,6 @@ export default function DoaAdminDashboard({
           base_version: 1,
           proposed_value: proposedPayload
         });
-        await api.approveChangeRequest(res.id, 'Executive pre-approved by DOA Administrator');
       }
 
       setShowRecordModal(false);
@@ -344,16 +345,17 @@ export default function DoaAdminDashboard({
       return;
     }
     try {
-      const res = await api.createChangeRequest({
+      const targetRec = doaRecords.find(r => r.id === recordId);
+      await api.createChangeRequest({
         request_type: 'DELETE',
         doa_id: recordId,
-        department: 'Governance',
-        process: 'Record Retirement',
+        department: targetRec?.parentFunction || targetRec?.parent_function || 'Finance',
+        process: targetRec?.businessLine || targetRec?.business_line || 'Record Retirement',
+        entity_id: targetRec?.entity_id || 'ENT-BH-01',
         rationale: 'Retired and archived by DOA Administrator',
-        base_version: 1,
+        base_version: targetRec?.currentVersion || targetRec?.current_version || 1,
         proposed_value: { id: recordId, status: 'ARCHIVED', comments: 'Administrative retirement' }
       });
-      await api.approveChangeRequest(res.id, 'Administrative retirement approval');
       if (onRefreshData) onRefreshData();
     } catch (err) {
       alert(`Retire action failed: ${err.message}`);
@@ -420,17 +422,22 @@ export default function DoaAdminDashboard({
         {/* Left: Brand & Dashboard Indicator */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center text-slate-950 font-black text-lg shadow-lg shadow-teal-500/20">
-              P
+            <div className="bg-white px-3 py-1.5 rounded-xl shadow-sm flex items-center">
+              <img 
+                src="/protiviti-logo.png" 
+                alt="Protiviti" 
+                className="h-8 sm:h-9 w-auto object-contain max-w-[160px] sm:max-w-[185px]"
+                onError={(e) => { e.target.src = 'https://www.orgvue.com/content/uploads/sites/2/2024/04/protiviti-logo-1024x379.png'; }}
+              />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-base tracking-tight text-white">protiviti</span>
+                <span className="font-extrabold text-base tracking-tight text-white">DoA Nexus</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-500/10 border border-teal-500/30 text-teal-400">
                   DOA ADMIN CONSOLE
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium">Enterprise Delegation Master & Governance Matrix</p>
+              <p className="text-[11px] text-slate-400 font-medium">Enterprise Delegation Master &amp; Governance Matrix</p>
             </div>
           </div>
         </div>
@@ -527,7 +534,7 @@ export default function DoaAdminDashboard({
               </div>
               <div className="text-left hidden sm:block">
                 <p className="text-xs font-bold leading-none text-slate-200">{currentUser?.full_name || 'DOA Administrator'}</p>
-                <p className="text-[10px] text-teal-400 font-mono mt-0.5">DOA_ADMINISTRATOR</p>
+                <p className="text-[10px] text-teal-400 font-medium mt-0.5">{currentUser?.designation || 'DOA Administrator'}</p>
               </div>
             </button>
 
@@ -571,6 +578,9 @@ export default function DoaAdminDashboard({
                 { id: 'dashboard', label: 'Dashboard', icon: Layers, badge: null },
                 { id: 'repository', label: 'DOA Repository', icon: Database, badge: kpis.totalDoas },
                 { id: 'decision_areas', label: 'Decision Areas', icon: FolderTree, badge: null },
+                { id: 'exceptions', label: 'Exceptions (Sec 4.3)', icon: AlertCircle, badge: 'New' },
+                { id: 'bahrain_ksa', label: 'Bahrain–KSA Parity', icon: Scale, badge: null },
+                { id: 'point_in_time', label: 'Point-in-Time Audit', icon: History, badge: null },
                 { id: 'queue', label: 'Change Queue', icon: GitPullRequest, badge: kpis.pendingReview || null },
                 { id: 'taxonomy', label: 'Taxonomy', icon: Sliders, badge: null },
                 { id: 'workflows', label: 'Workflows', icon: Sliders, badge: null },
@@ -779,33 +789,33 @@ export default function DoaAdminDashboard({
                         .filter(cr => cr.status === 'SUBMITTED' || cr.status === 'APPROVED')
                         .slice(0, 5)
                         .map(cr => (
-                          <div key={cr.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs font-extrabold text-teal-400">#{cr.id}</span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                          <div key={cr.id} className="py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3 min-w-0">
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono text-xs font-extrabold text-teal-400 shrink-0">#{cr.id}</span>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase shrink-0 ${
                                   cr.request_type === 'ADD' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
                                   cr.request_type === 'MODIFY' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
                                   'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                                 }`}>
                                   {cr.request_type}
                                 </span>
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${
                                   cr.status === 'APPROVED' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' :
                                   'bg-amber-950 text-amber-400 border border-amber-800'
                                 }`}>
                                   {cr.status}
                                 </span>
-                                <span className="text-xs font-bold text-slate-300 truncate">
+                                <span className="text-xs font-bold text-slate-300 truncate max-w-[280px] sm:max-w-[360px]" title={`${cr.department} • ${cr.process}`}>
                                   {cr.department} &bull; {cr.process}
                                 </span>
                               </div>
-                              <p className="text-xs text-slate-400 line-clamp-1 italic">
+                              <p className="text-xs text-slate-400 truncate italic max-w-full">
                                 "{cr.rationale || 'Administrative rule proposal'}"
                               </p>
                             </div>
 
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-1.5 shrink-0 self-start md:self-center">
                               <button
                                 onClick={() => onInspectCR(cr)}
                                 title="Inspect Diff"
@@ -826,7 +836,7 @@ export default function DoaAdminDashboard({
                                   <button
                                     onClick={() => onApproveCR(cr.id)}
                                     title="Approve Proposal"
-                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1"
+                                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1 shrink-0"
                                   >
                                     <Check className="h-3.5 w-3.5" />
                                     <span>Approve</span>
@@ -845,7 +855,7 @@ export default function DoaAdminDashboard({
                                 <button
                                   onClick={() => onPublishCR(cr.id)}
                                   title="Publish into New Master Version"
-                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl text-xs transition-all shadow-sm flex items-center gap-1.5"
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black rounded-xl text-xs transition-all shadow-sm flex items-center gap-1.5 shrink-0"
                                 >
                                   <Send className="h-3.5 w-3.5" />
                                   <span>Publish (v1➔v2)</span>
@@ -1266,40 +1276,48 @@ export default function DoaAdminDashboard({
                             <span>Side-by-Side Diff</span>
                           </button>
 
-                          {cr.status === 'SUBMITTED' && (
+                          {(cr.requester_email || '').toLowerCase() === (currentUser?.email || '').toLowerCase() ? (
+                            <span className="px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[11px] font-bold">
+                              VAL-06 SoD: Own Proposal (Requires 2nd Approver)
+                            </span>
+                          ) : (
                             <>
-                              <button
-                                onClick={() => setClarificationModal({ open: true, crId: cr.id, comment: '' })}
-                                className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-                              >
-                                <HelpCircle className="h-3.5 w-3.5" />
-                                <span>Clarification</span>
-                              </button>
-                              <button
-                                onClick={() => onApproveCR(cr.id)}
-                                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/20"
-                              >
-                                <Check className="h-3.5 w-3.5" />
-                                <span>Approve</span>
-                              </button>
-                              <button
-                                onClick={() => onRejectCR(cr.id)}
-                                className="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                                <span>Reject</span>
-                              </button>
-                            </>
-                          )}
+                              {cr.status === 'SUBMITTED' && (
+                                <>
+                                  <button
+                                    onClick={() => setClarificationModal({ open: true, crId: cr.id, comment: '' })}
+                                    className="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                                  >
+                                    <HelpCircle className="h-3.5 w-3.5" />
+                                    <span>Clarification</span>
+                                  </button>
+                                  <button
+                                    onClick={() => onApproveCR(cr.id)}
+                                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md shadow-blue-600/20"
+                                  >
+                                    <Check className="h-3.5 w-3.5" />
+                                    <span>Approve</span>
+                                  </button>
+                                  <button
+                                    onClick={() => onRejectCR(cr.id)}
+                                    className="px-3 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              )}
 
-                          {cr.status === 'APPROVED' && (
-                            <button
-                              onClick={() => onPublishCR(cr.id)}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              <span>Publish Master (v1 ➔ v2)</span>
-                            </button>
+                              {cr.status === 'APPROVED' && (
+                                <button
+                                  onClick={() => onPublishCR(cr.id)}
+                                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                                >
+                                  <Send className="h-3.5 w-3.5" />
+                                  <span>Publish Master (v1 ➔ v2)</span>
+                                </button>
+                              )}
+                            </>
                           )}
                         </div>
                       </div>
@@ -1505,13 +1523,19 @@ export default function DoaAdminDashboard({
                             >
                               Review Diff
                             </button>
-                            <button
-                              onClick={() => onPublishCR(cr.id)}
-                              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              <span>Publish New Version</span>
-                            </button>
+                            {(cr.requester_email || '').toLowerCase() === (currentUser?.email || '').toLowerCase() ? (
+                              <span className="px-3 py-2 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[11px] font-bold">
+                                VAL-06 SoD: Requires Independent Publisher
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => onPublishCR(cr.id)}
+                                className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                <span>Publish New Version</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -1653,8 +1677,36 @@ export default function DoaAdminDashboard({
             </div>
           )}
 
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 1: EXCEPTIONS WORKFLOW COCKPIT                   */}
+          {/* ========================================================================= */}
+          {activeNav === 'exceptions' && (
+            <div className="animate-fade-in">
+              <ExceptionWorkflowInbox currentUser={currentUser} onRefreshStats={onRefreshData} />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 2: BAHRAIN–KSA ALIGNMENT RECONCILIATION DOSSIER  */}
+          {/* ========================================================================= */}
+          {activeNav === 'bahrain_ksa' && (
+            <div className="animate-fade-in">
+              <BahrainKsaAlignmentReportView />
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* SUPPLEMENTARY BRD PANEL 3: POINT-IN-TIME TEMPORAL DOA RECONSTRUCTION      */}
+          {/* ========================================================================= */}
+          {activeNav === 'point_in_time' && (
+            <div className="animate-fade-in">
+              <PointInTimeReconstructionView />
+            </div>
+          )}
+
         </main>
       </div>
+
 
       {/* ========================================================================= */}
       {/* MODAL 1: CREATE / EDIT DOA RECORD (WITH PRE-SUBMISSION VALIDATION)        */}

@@ -84,9 +84,7 @@ export const api = {
       role: data.role,
       persona_type: data.persona_type || 'FRONTEND_USER',
       designation: data.designation || '',
-      department: data.department || '',
-      can_request: data.can_request !== undefined ? data.can_request : true,
-      can_review: data.can_review !== undefined ? data.can_review : false
+      department: data.department || ''
     });
     return data;
   },
@@ -99,9 +97,42 @@ export const api = {
     removeStoredToken();
   },
 
-  // Functionality 5: Designation-wise authorities
-  async getDesignationMatrix(designationKey = 'ceo') {
-    return await request(`/user/designation-matrix?designation_key=${encodeURIComponent(designationKey)}`);
+  async forgotPassword(email) {
+    return await request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email })
+    });
+  },
+
+  async verifyOtp(email, otp) {
+    return await request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email, otp })
+    });
+  },
+
+  async resetPassword(email, resetToken, newPassword) {
+    return await request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        reset_token: resetToken,
+        new_password: newPassword
+      })
+    });
+  },
+
+  // Functionality 5: Designation-wise authorities & Governance KPI Categories
+  async getDesignationMatrix(params = 'ceo') {
+    if (typeof params === 'string') {
+      return await request(`/user/designation-matrix?designation_key=${encodeURIComponent(params)}`);
+    }
+    const query = new URLSearchParams();
+    if (params.designation_key) query.append('designation_key', params.designation_key);
+    if (params.category_id) query.append('category_id', params.category_id);
+    if (params.option_id) query.append('option_id', params.option_id);
+    const queryString = query.toString();
+    return await request(`/user/designation-matrix${queryString ? `?${queryString}` : ''}`);
   },
 
   // Functionality 7: Pre-set Management Reports
@@ -153,19 +184,9 @@ export const api = {
     return await request(`/doa/${id}/archive`, { method: 'POST' });
   },
 
-  // Change Requests & Unified Workflow
+  // Change Requests
   async getChangeRequests(status) {
     const endpoint = status ? `/change-requests?status=${status}` : '/change-requests';
-    return await request(endpoint);
-  },
-
-  async getMyRequests(status) {
-    const endpoint = status ? `/change-requests/my-requests?status=${status}` : '/change-requests/my-requests';
-    return await request(endpoint);
-  },
-
-  async getReviewerQueue(status) {
-    const endpoint = status ? `/change-requests/review-queue?status=${status}` : '/change-requests/review-queue';
     return await request(endpoint);
   },
 
@@ -181,66 +202,6 @@ export const api = {
     return await request('/change-requests', {
       method: 'POST',
       body: JSON.stringify(data)
-    });
-  },
-
-  async saveDraft(data) {
-    return await request('/change-requests/draft', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-  },
-
-  async updateChangeRequest(id, data) {
-    return await request(`/change-requests/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
-  },
-
-  async submitDraft(id) {
-    return await request(`/change-requests/${id}/submit`, {
-      method: 'POST'
-    });
-  },
-
-  async deleteDraft(id) {
-    return await request(`/change-requests/${id}/draft`, {
-      method: 'DELETE'
-    });
-  },
-
-  async startReview(id) {
-    return await request(`/change-requests/${id}/start-review`, {
-      method: 'POST'
-    });
-  },
-
-  async requestClarification(id, message, attachments = []) {
-    return await request(`/change-requests/${id}/clarification`, {
-      method: 'POST',
-      body: JSON.stringify({ message, attachments })
-    });
-  },
-
-  async respondClarification(id, message, attachments = []) {
-    return await request(`/change-requests/${id}/respond-clarification`, {
-      method: 'POST',
-      body: JSON.stringify({ message, attachments })
-    });
-  },
-
-  async addReviewerComment(id, comment, operational_comments = '') {
-    return await request(`/change-requests/${id}/comment`, {
-      method: 'POST',
-      body: JSON.stringify({ comment, operational_comments })
-    });
-  },
-
-  async submitReviewerRecommendation(id, recommendation, notes, operational_comments = '') {
-    return await request(`/change-requests/${id}/recommend`, {
-      method: 'POST',
-      body: JSON.stringify({ recommendation, notes, operational_comments })
     });
   },
 
@@ -260,17 +221,6 @@ export const api = {
 
   async publishChangeRequest(id) {
     return await request(`/change-requests/${id}/publish`, {
-      method: 'POST'
-    });
-  },
-
-  // Notifications
-  async getNotifications() {
-    return await request('/change-requests/notifications');
-  },
-
-  async markNotificationRead(id) {
-    return await request(`/change-requests/notifications/${id}/read`, {
       method: 'POST'
     });
   },
@@ -401,5 +351,187 @@ export const api = {
 
   async getSystemTelemetry() {
     return await request('/system-admin/telemetry');
+  },
+
+  // =========================================================================
+  // 7 SPECIFIC USER ROLE BACKEND APIS
+  // =========================================================================
+
+  // 1. Requestor / Business Line Analyst
+  async getRequestorDashboard() {
+    return await request('/requestor/dashboard');
+  },
+  async getRequestorProposals() {
+    return await request('/requestor/proposals');
+  },
+  async submitRequestorProposal(data) {
+    return await request('/requestor/proposals', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async withdrawRequestorProposal(crId) {
+    return await request(`/requestor/proposals/${crId}/withdraw`, {
+      method: 'POST'
+    });
+  },
+
+  // 2. Process Owner (Operational Lead)
+  async getProcessOwnerDashboard() {
+    return await request('/process-owner/dashboard');
+  },
+  async getProcessOwnerQueue() {
+    return await request('/process-owner/queue');
+  },
+  async endorseProcessImpact(crId, operationalImpact) {
+    return await request(`/process-owner/requests/${crId}/endorse`, {
+      method: 'POST',
+      body: JSON.stringify({ operational_impact: operationalImpact })
+    });
+  },
+
+  // 3. Department / Function Owner
+  async getDeptOwnerDashboard() {
+    return await request('/dept-owner/dashboard');
+  },
+  async getDeptOwnerQueue() {
+    return await request('/dept-owner/queue');
+  },
+  async getDepartmentDoas() {
+    return await request('/dept-owner/department-doas');
+  },
+  async deptOwnerSignoff(crId, comment) {
+    return await request(`/dept-owner/requests/${crId}/signoff`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 4. Authority Owner (Charter & Mandates)
+  async getAuthorityOwnerDashboard() {
+    return await request('/authority-owner/dashboard');
+  },
+  async getAuthorityMandatesMatrix() {
+    return await request('/authority-owner/matrix');
+  },
+  async verifyAuthorityMandate(crId, comment) {
+    return await request(`/authority-owner/requests/${crId}/verify-mandate`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 5. Reviewer (2LoD Risk & Policy Review)
+  async getReviewerDashboard() {
+    return await request('/reviewer/dashboard');
+  },
+  async getReviewerQueue() {
+    return await request('/reviewer/queue');
+  },
+  async getReviewerDiff(crId) {
+    return await request(`/reviewer/diff/${crId}`);
+  },
+  async recommendReviewerCR(crId, comment) {
+    return await request(`/reviewer/requests/${crId}/recommend`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 6. Approver (Executive Approver)
+  async getApproverDashboard() {
+    return await request('/approver/dashboard');
+  },
+  async getApproverInbox() {
+    return await request('/approver/inbox');
+  },
+  async makeApproverDecision(crId, action, comment) {
+    return await request(`/approver/requests/${crId}/decision?action=${action}`, {
+      method: 'POST',
+      body: JSON.stringify({ comment })
+    });
+  },
+
+  // 7. Audit Read-Only (Assurance & Compliance)
+  async getAuditReadonlyDashboard() {
+    return await request('/audit-readonly/dashboard');
+  },
+  async getAuditDoaVersions(doaId) {
+    return await request(`/audit-readonly/versions/${doaId}`);
+  },
+  async getAuditLedger(skip = 0, limit = 100) {
+    return await request(`/audit-readonly/ledger?skip=${skip}&limit=${limit}`);
+  },
+
+  // 8. Persona-specific Management Reports (Functionality 7)
+  async getRoleReport(endpointUrl) {
+    return await request(endpointUrl);
+  },
+
+  // 9. Governance Assistant Chatbot
+  async queryChatbot(message, context = {}) {
+    return await request('/chatbot/query', {
+      method: 'POST',
+      body: JSON.stringify({ message, context })
+    });
+  },
+
+  // 10. Supplementary BRD Governance Endpoints
+  async validateDecisionAreaProposal(data) {
+    return await request('/supplementary/validate-proposal', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async getAuthoritativeSources() {
+    return await request('/supplementary/authoritative-sources');
+  },
+  async triggerSourceImpact(sourceId) {
+    return await request(`/supplementary/authoritative-sources/${sourceId}/trigger-impact`, {
+      method: 'POST'
+    });
+  },
+  async getExpenditureLimits() {
+    return await request('/supplementary/expenditure-limits');
+  },
+  async getExceptionRequests() {
+    return await request('/supplementary/exceptions');
+  },
+  async createExceptionRequest(data) {
+    return await request('/supplementary/exceptions', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async actionExceptionRequest(exceptionId, action, rationale, amendments = null) {
+    return await request(`/supplementary/exceptions/${exceptionId}/action`, {
+      method: 'POST',
+      body: JSON.stringify({ action, rationale, amendments })
+    });
+  },
+  async getBahrainKsaAlignmentReport() {
+    return await request('/supplementary/reports/bahrain-ksa-alignment');
+  },
+  async compareCrossGeography(data) {
+    return await request('/supplementary/cross-geography/compare', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+  async reconstructPointInTime(targetDate, entity = null) {
+    return await request('/supplementary/point-in-time/reconstruct', {
+      method: 'POST',
+      body: JSON.stringify({ target_date: targetDate, entity })
+    });
+  },
+  async getCertifications() {
+    return await request('/supplementary/certifications');
+  },
+  async getTemporaryDelegations() {
+    return await request('/supplementary/temporary-delegations');
+  },
+  async getGovernanceFindings() {
+    return await request('/supplementary/findings');
   }
 };
+

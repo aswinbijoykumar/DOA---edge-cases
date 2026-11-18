@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authority Hierarchy Studio — Proposed Authority Chain Builder</title>
+  <!-- Google Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 antialiased">
+
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Header Bar -->
+    <header class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2">
+      <div>
+        <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+          Authority Hierarchy Studio
+        </h1>
+        <p class="text-xs text-slate-500">
+          Corporate Delegation of Authority (DoA) & Approval Matrix
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 self-start sm:self-auto">
+        <button
+          id="btn-load-preset"
+          type="button"
+          class="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg shadow-xs transition-colors"
+        >
+          <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5 text-teal-600"></i>
+          <span>Load Standard Preset</span>
+        </button>
+        <button
+          id="btn-reset-chain"
+          type="button"
+          class="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 text-rose-600 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold rounded-lg shadow-xs transition-colors"
+        >
+          <i data-lucide="trash-2" class="h-3.5 w-3.5 text-rose-500"></i>
+          <span>Reset Chain</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Notification Toast Box -->
+    <div id="toast-container" class="hidden p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 border shadow-xs transition-all"></div>
+
+    <!-- 1. HIERARCHICAL RULESET (Sequential Approval Protocol) -->
+    <section class="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 pb-3">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+            HIERARCHICAL RULESET
+          </span>
+          <h2 class="text-base font-bold text-slate-800">
+            Sequential Approval Protocol
+          </h2>
+        </div>
+
+      </div>
+
+      <!-- 4 Protocol Step Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Step 1 Card -->
+        <div id="card-step-1" class="p-4 rounded-xl border transition-all bg-blue-50/70 border-blue-400 shadow-xs ring-1 ring-blue-400/20">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold text-blue-700 uppercase tracking-wider">
+              STEP 1 • MANDATORY
+            </span>
+            <span id="badge-step-1" class="h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-600">
+              1
+            </span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">Proposer (P)</h3>
+          <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+            Originating committee or authority proposing the action.
+          </p>
+        </div>
+
+        <!-- Step 2 Card -->
+        <div id="card-step-2" class="p-4 rounded-xl border transition-all bg-white border-slate-200/80 opacity-70">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold text-purple-700 uppercase tracking-wider">
+              STEP 2 • MANDATORY
+            </span>
+            <span id="badge-step-2" class="h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-600">
+              2
+            </span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">Initial Reviewer (R)</h3>
+          <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+            First line technical scrutiny or governance gatekeeper.
+          </p>
+        </div>
+
+        <!-- Step 3 Card -->
+        <div id="card-step-3" class="p-4 rounded-xl border transition-all bg-white border-slate-200/80 opacity-70">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider">
+              STEP 3 • FLEXIBLE
+            </span>
+            <span id="badge-step-3" class="h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-600">
+              3
+            </span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">Endorsements (E1-E3)</h3>
+          <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+            Optional multi-tier stakeholder concurrence & sub-reviews.
+          </p>
+        </div>
+
+        <!-- Step 4 Card -->
+        <div id="card-step-4" class="p-4 rounded-xl border transition-all bg-white border-slate-200/80 opacity-70">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wider">
+              STEP 4 • FINAL SIGNOFF
+            </span>
+            <span id="badge-step-4" class="h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-600">
+              4
+            </span>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">Approver (A / BA)</h3>
+          <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+            Final binding statutory or board authority decision maker.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Proposed Authority Builder (Card with dark navy header) -->
+    <section class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-white">
+      <!-- Navy Header -->
+      <div class="bg-slate-900 px-5 py-4 flex items-center text-white">
+        <h2 class="text-sm font-bold text-white tracking-tight">
+          Proposed Authority Builder
+        </h2>
+      </div>
+
+      <!-- Builder Form Controls -->
+      <div class="p-5 sm:p-6 space-y-4">
+        <form id="builder-form" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+          <!-- 1. Authority Body -->
+          <div class="md:col-span-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="select-body" class="text-xs font-bold text-slate-700">
+                1. AUTHORITY BODY
+              </label>
+              <span class="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/60">
+                CATEGORY
+              </span>
+            </div>
+            <select
+              id="select-body"
+              class="w-full text-xs sm:text-sm font-semibold border border-slate-300 rounded-xl p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
+            >
+              <option value="Board Committees">Board Committees</option>
+              <option value="Executive Committee (ExCo)">Executive Committee (ExCo)</option>
+              <option value="Management Committees">Management Committees</option>
+              <option value="Risk & Compliance Functions">Risk & Compliance Functions</option>
+              <option value="Business Unit Heads">Business Unit Heads</option>
+            </select>
+          </div>
+
+          <!-- 2. Select Committee / Entity -->
+          <div class="md:col-span-4 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="select-entity" class="text-xs font-bold text-slate-700 truncate">
+                2. SELECT COMMITTEE / ENTITY
+              </label>
+              <span id="entity-count-badge" class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                6 OPTIONS
+              </span>
+            </div>
+            <select
+              id="select-entity"
+              class="w-full text-xs sm:text-sm font-semibold border border-slate-300 rounded-xl p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
+            >
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <!-- 3. Action Operator -->
+          <div class="md:col-span-3 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="select-operator" class="text-xs font-bold text-slate-700">
+                3. ACTION OPERATOR
+              </label>
+              <span id="operator-mode-badge" class="text-[10px] font-bold px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200">
+                AUTO: PROPOSER
+              </span>
+            </div>
+            <div id="operator-container" class="relative">
+              <!-- Dynamically switched between locked input and unlocked select -->
+            </div>
+          </div>
+
+          <!-- Append (+) Button -->
+          <div class="md:col-span-1 flex items-end">
+            <button
+              id="btn-append-node"
+              type="submit"
+              title="Append to active authority chain"
+              class="w-full h-[42px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl flex items-center justify-center shadow-sm font-bold text-xl transition-all transform hover:scale-105 active:scale-95 cursor-pointer"
+            >
+              <i data-lucide="plus" class="h-6 w-6"></i>
+            </button>
+          </div>
+        </form>
+
+        <!-- Sub-row Info Banner -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 bg-blue-50/70 border border-blue-200/70 rounded-xl text-xs text-blue-800">
+          <div class="flex items-center gap-2">
+            <i data-lucide="info" class="h-4 w-4 text-blue-600 flex-shrink-0"></i>
+            <span id="sub-banner-text">Step 1 of Approval Chain: Select an entity and click [ + ] to establish the originating Proposer (P).</span>
+          </div>
+          <span class="text-[11px] text-blue-600 font-medium self-end sm:self-auto">
+            Press <kbd class="px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[10px] font-mono shadow-2xs">Enter ↵</kbd> to append
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. ACTIVE PROPOSED AUTHORITY CHAIN Canvas -->
+    <section class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <i data-lucide="git-merge" class="h-4 w-4 text-teal-600"></i>
+          <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+            ACTIVE PROPOSED AUTHORITY CHAIN
+          </h2>
+          <span id="chain-count-badge" class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+            0 Nodes
+          </span>
+        </div>
+        <span class="text-xs text-slate-400">
+          Click ← → to reorder, or × to remove a node.
+        </span>
+      </div>
+
+      <!-- Pipeline Container -->
+      <div id="pipeline-canvas" class="min-h-[140px] flex items-center">
+        <!-- Injected via RENDER() -->
+      </div>
+
+      <!-- Canvas Footer Bar -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-4 border-t border-slate-100">
+        <!-- Legend -->
+        <div class="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
+          <div class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-blue-600"></span>
+            <span>Proposer (P)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-purple-600"></span>
+            <span>Reviewer (R)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+            <span>Endorser (E)</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
+            <span>Approver (A)</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2 self-end md:self-auto">
+          <button
+            id="btn-export-json"
+            type="button"
+            class="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-colors"
+          >
+            <i data-lucide="download" class="h-3.5 w-3.5 text-slate-500"></i>
+            <span>Export Scheme JSON</span>
+          </button>
+
+          <button
+            id="btn-validate-save"
+            type="button"
+            class="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+          >
+            <i data-lucide="check" class="h-3.5 w-3.5 text-teal-400"></i>
+            <span>Validate & Save Matrix</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- JSON Export Modal -->
+  <div id="json-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden animate-fade-in">
+      <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <div class="flex items-center gap-2">
+          <i data-lucide="download" class="h-4 w-4 text-teal-600"></i>
+          <h3 class="text-sm font-bold text-slate-800">
+            Export Proposed Authority Scheme JSON
+          </h3>
+        </div>
+        <button id="btn-close-modal" class="h-7 w-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 flex items-center justify-center">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-3">
+        <p class="text-xs text-slate-500">
+          Clean serializable data model ready for governance API submission:
+        </p>
+        <pre id="json-code-block" class="p-3 bg-slate-900 text-emerald-300 font-mono text-[11px] rounded-xl overflow-x-auto max-h-64 leading-relaxed"></pre>
+      </div>
+
+      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <button
+          id="btn-copy-json"
+          class="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg shadow-xs transition-colors"
+        >
+          <i data-lucide="copy" class="h-3.5 w-3.5 text-slate-500"></i>
+          <span id="copy-btn-text">Copy JSON</span>
+        </button>
+        <button
+          id="btn-modal-done"
+          class="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vanilla JavaScript Logic -->
+  <script>
+    /* =========================================================================
+       1. DATA TAXONOMY & OPERATOR DICTIONARY
+       ========================================================================= */
+    const TAXONOMY = {
+      'Board Committees': [
+        { code: 'AC', name: 'AC – Audit Committee' },
+        { code: 'BRC', name: 'BRC – Board Risk Committee' },
+        { code: 'NRC', name: 'NRC – Nomination & Remuneration Committee' },
+        { code: 'BoD', name: 'BoD – Board of Directors' },
+        { code: 'BCC', name: 'BCC – Board Credit Committee' },
+        { code: 'BAC', name: 'BAC – Board Assurance Committee' }
+      ],
+      'Executive Committee (ExCo)': [
+        { code: 'CEO', name: 'CEO – Chief Executive Officer' },
+        { code: 'CFO', name: 'CFO – Chief Financial Officer' },
+        { code: 'CRO', name: 'CRO – Chief Risk Officer' },
+        { code: 'COO', name: 'COO – Chief Operating Officer' },
+        { code: 'GCFO', name: 'GCFO – Group Chief Financial Officer' }
+      ],
+      'Management Committees': [
+        { code: 'ALCO', name: 'ALCO – Asset Liability Committee' },
+        { code: 'ORC', name: 'ORC – Operational Risk Committee' },
+        { code: 'MRC', name: 'MRC – Market Risk Committee' },
+        { code: 'BRPC', name: 'BRPC – Business Review & Planning Committee' }
+      ],
+      'Risk & Compliance Functions': [
+        { code: 'H-MRG', name: 'Head of Model Risk Governance' },
+        { code: 'CCO', name: 'Chief Compliance Officer' },
+        { code: 'H-OR', name: 'Head of Operational Risk' },
+        { code: 'H-ECR', name: 'Head of Enterprise Credit & Risk' }
+      ],
+      'Business Unit Heads': [
+        { code: 'H-RB', name: 'Head of Retail Banking' },
+        { code: 'H-WM', name: 'Head of Wealth Management' },
+        { code: 'H-WB', name: 'Head of Wholesale Banking' },
+        { code: 'H-TCM', name: 'Head of Treasury & Capital Markets' }
+      ]
+    };
+
+    const OPERATORS = [
+      { code: 'P', label: 'Proposer (P)', roleType: 'proposer' },
+      { code: 'R', label: 'General Reviewer (R)', roleType: 'reviewer' },
+      { code: 'R1', label: 'Reviewer 1 (R1)', roleType: 'reviewer' },
+      { code: 'R2', label: 'Reviewer 2 (R2)', roleType: 'reviewer' },
+      { code: 'E1', label: 'Endorse 1 (E1)', roleType: 'endorser' },
+      { code: 'E2', label: 'Endorse 2 (E2)', roleType: 'endorser' },
+      { code: 'E3', label: 'Endorse 3 (E3)', roleType: 'endorser' },
+      { code: 'A', label: 'Approver (A)', roleType: 'approver' },
+      { code: 'BA', label: 'Board Approver (BA)', roleType: 'approver' }
+    ];
+
+    const ROLE_STYLES = {
+      proposer: {
+        bg: 'bg-blue-50/90',
+        border: 'border-blue-300',
+        badgeBg: 'bg-blue-100 text-blue-800 border-blue-200',
+        stepColor: 'text-blue-600',
+        dot: 'bg-blue-600'
+      },
+      reviewer: {
+        bg: 'bg-purple-50/90',
+        border: 'border-purple-300',
+        badgeBg: 'bg-purple-100 text-purple-800 border-purple-200',
+        stepColor: 'text-purple-600',
+        dot: 'bg-purple-600'
+      },
+      endorser: {
+        bg: 'bg-amber-50/90',
+        border: 'border-amber-300',
+        badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
+        stepColor: 'text-amber-600',
+        dot: 'bg-amber-600'
+      },
+      approver: {
+        bg: 'bg-emerald-50/90',
+        border: 'border-emerald-300',
+        badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        stepColor: 'text-emerald-600',
+        dot: 'bg-emerald-600'
+      }
+    };
+
+    /* =========================================================================
+       2. APPLICATION STATE
+       ========================================================================= */
+    let STATE = {
+      chain: [], // [{ id, authorityBody, entity, code, operator, operatorLabel, roleType, display }]
+      selectedBody: 'Board Committees',
+      selectedEntityCode: 'AC',
+      selectedOperatorCode: 'P',
+      currentPhase: 1, // 1 to 4
+      isOperatorLocked: true
+    };
+
+    /* =========================================================================
+       3. UPDATE_OPERATOR_STATE() & STATE MACHINE
+       ========================================================================= */
+    function UPDATE_OPERATOR_STATE() {
+      const hasProposer = STATE.chain.some(n => n.roleType === 'proposer');
+      const hasReviewer = STATE.chain.some(n => n.roleType === 'reviewer');
+      const hasApprover = STATE.chain.some(n => n.roleType === 'approver');
+
+      if (!hasProposer) {
+        STATE.currentPhase = 1;
+        STATE.isOperatorLocked = true;
+        STATE.selectedOperatorCode = 'P';
+      } else if (!hasReviewer) {
+        STATE.currentPhase = 2;
+        STATE.isOperatorLocked = true;
+        STATE.selectedOperatorCode = 'R';
+      } else if (!hasApprover) {
+        STATE.currentPhase = 3;
+        STATE.isOperatorLocked = false;
+        if (STATE.selectedOperatorCode === 'P') {
+          STATE.selectedOperatorCode = 'E1';
+        }
+      } else {
+        STATE.currentPhase = 4;
+        STATE.isOperatorLocked = false;
+      }
+    }
+
+    /* =========================================================================
+       4. RENDER()
+       ========================================================================= */
+    function RENDER() {
+      UPDATE_OPERATOR_STATE();
+
+      const { currentPhase, chain, isOperatorLocked } = STATE;
+      const hasProposer = chain.some(n => n.roleType === 'proposer');
+      const hasReviewer = chain.some(n => n.roleType === 'reviewer');
+      const hasApprover = chain.some(n => n.roleType === 'approver');
+
+      // 1. Update Stepper Header Pills & Badges
+      const pill = document.getElementById('phase-status-pill');
+      const pillText = document.getElementById('phase-status-text');
+      const desc = document.getElementById('header-phase-description');
+      const subBanner = document.getElementById('sub-banner-text');
+      const opBadge = document.getElementById('operator-mode-badge');
+
+      if (currentPhase === 1) {
+        pill.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border bg-blue-50 text-blue-700 border-blue-200';
+        pillText.textContent = 'Phase 1: Set Initiating Proposer (P)';
+        desc.textContent = 'Phase 1: Proposer persona is mandatory and auto-assigned.';
+        subBanner.textContent = 'Step 1 of Approval Chain: Select an entity and click [ + ] to establish the originating Proposer (P).';
+        opBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200';
+        opBadge.textContent = 'AUTO: PROPOSER';
+      } else if (currentPhase === 2) {
+        pill.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border bg-purple-50 text-purple-700 border-purple-200';
+        pillText.textContent = 'Phase 2: Add Mandatory Initial Reviewer (R)';
+        desc.textContent = 'Phase 2: Initial Reviewer (R) is mandatory after Proposer.';
+        subBanner.textContent = 'Step 2 of Approval Chain: Select an entity and click [ + ] to assign the initial Reviewer (R).';
+        opBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-purple-50 text-purple-700 border-purple-200';
+        opBadge.textContent = 'AUTO: REVIEWER';
+      } else if (currentPhase === 3) {
+        pill.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border bg-amber-50 text-amber-700 border-amber-200';
+        pillText.textContent = 'Phase 3: Endorsements & Sub-reviews';
+        desc.textContent = 'Phase 3: Add optional Endorsers (E1-E3), Sub-reviewers, or conclude with an Approver.';
+        subBanner.textContent = 'Step 3: Flexible endorsement phase unlocked. Choose role and click [ + ] to append.';
+        opBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-amber-50 text-amber-700 border-amber-200';
+        opBadge.textContent = 'CUSTOM OPERATORS';
+      } else {
+        pill.className = 'self-start sm:self-auto px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 border bg-emerald-50 text-emerald-700 border-emerald-200';
+        pillText.textContent = 'Phase 4: Compliant Approver Assigned';
+        desc.textContent = 'Phase 4: Final Sign-off Approver established. Matrix hierarchy compliant.';
+        subBanner.textContent = 'Authority Chain Complete: Approver established. Reorder if needed or click [ Validate & Save Matrix ].';
+        opBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded border bg-emerald-50 text-emerald-700 border-emerald-200';
+        opBadge.textContent = 'COMPLIANT: APPROVER';
+      }
+
+      // 2. Update Protocol 4 Step Cards
+      const setCardState = (cardId, badgeId, isActive, isComplete, num, activeBg) => {
+        const card = document.getElementById(cardId);
+        const badge = document.getElementById(badgeId);
+        if (isActive) {
+          card.className = `p-4 rounded-xl border transition-all ${activeBg} shadow-xs`;
+          badge.className = 'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-700';
+          badge.textContent = num;
+        } else if (isComplete) {
+          card.className = 'p-4 rounded-xl border transition-all bg-slate-50 border-slate-200 text-slate-700';
+          badge.className = 'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-teal-600 text-white';
+          badge.textContent = '✓';
+        } else {
+          card.className = 'p-4 rounded-xl border transition-all bg-white border-slate-200/80 opacity-70';
+          badge.className = 'h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold bg-slate-200 text-slate-600';
+          badge.textContent = num;
+        }
+      };
+
+      setCardState('card-step-1', 'badge-step-1', currentPhase === 1, hasProposer, '1', 'bg-blue-50/70 border-blue-400 ring-1 ring-blue-400/20');
+      setCardState('card-step-2', 'badge-step-2', currentPhase === 2, hasReviewer, '2', 'bg-purple-50/70 border-purple-400 ring-1 ring-purple-400/20');
+      setCardState('card-step-3', 'badge-step-3', currentPhase === 3, (hasProposer && hasReviewer && !hasApprover), '3', 'bg-amber-50/70 border-amber-400 ring-1 ring-amber-400/20');
+      setCardState('card-step-4', 'badge-step-4', currentPhase === 4, hasApprover, '4', 'bg-emerald-50/70 border-emerald-400 ring-1 ring-emerald-400/20');
+
+      // 3. Render Action Operator Container (Locked vs Unlocked)
+      const opContainer = document.getElementById('operator-container');
+      if (isOperatorLocked) {
+        const label = STATE.selectedOperatorCode === 'P' ? 'Proposer (P)' : 'General Reviewer (R)';
+        opContainer.innerHTML = `
+          <div class="w-full text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl p-2.5 bg-slate-100 text-slate-600 flex items-center justify-between cursor-not-allowed">
+            <span>${label}</span>
+            <i data-lucide="lock" class="h-4 w-4 text-blue-600 flex-shrink-0"></i>
+          </div>
+        `;
+      } else {
+        const optionsHtml = OPERATORS.filter(op => op.code !== 'P').map(op => {
+          const selected = op.code === STATE.selectedOperatorCode ? 'selected' : '';
+          return `<option value="${op.code}" ${selected}>${op.label}</option>`;
+        }).join('');
+
+        opContainer.innerHTML = `
+          <select
+            id="select-operator"
+            class="w-full text-xs sm:text-sm font-semibold border border-slate-300 rounded-xl p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
+          >
+            ${optionsHtml}
+          </select>
+        `;
+        document.getElementById('select-operator').addEventListener('change', (e) => {
+          STATE.selectedOperatorCode = e.target.value;
+        });
+      }
+
+      // 4. Render Active Pipeline Canvas
+      const canvas = document.getElementById('pipeline-canvas');
+      document.getElementById('chain-count-badge').textContent = `${chain.length} Nodes`;
+      document.getElementById('btn-reset-chain').disabled = chain.length === 0;
+
+      if (chain.length === 0) {
+        canvas.innerHTML = `
+          <div class="w-full border-2 border-dashed border-slate-200 rounded-2xl py-12 px-4 text-center bg-slate-50/50 flex flex-col items-center justify-center">
+            <div class="h-12 w-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-3">
+              <i data-lucide="layers" class="h-6 w-6"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-700">
+              Authority Chain is Empty
+            </h3>
+            <p class="text-xs text-slate-500 mt-1 max-w-md">
+              Begin by selecting a Committee and clicking <span class="font-bold text-emerald-700">[ + ]</span> above. The system will automatically inject the initiating <span class="font-bold text-blue-700">Proposer (P)</span>.
+            </p>
+          </div>
+        `;
+      } else {
+        let nodesHtml = '';
+        chain.forEach((node, index) => {
+          const style = ROLE_STYLES[node.roleType] || ROLE_STYLES.proposer;
+          const isFirst = index === 0;
+          const isLast = index === chain.length - 1;
+
+          nodesHtml += `
+            <div class="w-[220px] rounded-xl border ${style.border} ${style.bg} p-3.5 shadow-xs flex flex-col justify-between space-y-2.5 transition-all hover:shadow-sm">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider ${style.stepColor}">
+                  STEP #${index + 1}
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${style.badgeBg}">
+                    ${node.operatorLabel}
+                  </span>
+                  <button
+                    type="button"
+                    onclick="handleRemove(${index})"
+                    title="Remove step"
+                    class="h-5 w-5 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <i data-lucide="x" class="h-3.5 w-3.5"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 leading-snug line-clamp-2">
+                  ${node.entity}
+                </h4>
+                <p class="text-[10px] text-slate-500 mt-0.5 truncate">
+                  ${node.authorityBody}
+                </p>
+              </div>
+
+              <div class="flex items-center justify-between pt-1 border-t border-slate-200/50">
+                <span class="text-[10px] font-mono text-slate-500">
+                  ${node.display}
+                </span>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onclick="handleReorder(${index}, ${index - 1})"
+                    ${isFirst ? 'disabled' : ''}
+                    title="Move step left"
+                    class="h-6 w-6 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <i data-lucide="arrow-left" class="h-3 w-3"></i>
+                  </button>
+                  <button
+                    type="button"
+                    onclick="handleReorder(${index}, ${index + 1})"
+                    ${isLast ? 'disabled' : ''}
+                    title="Move step right"
+                    class="h-6 w-6 rounded bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    <i data-lucide="arrow-right" class="h-3 w-3"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          if (!isLast) {
+            nodesHtml += `
+              <div class="flex items-center justify-center px-1 text-slate-400">
+                <i data-lucide="arrow-right" class="h-5 w-5 stroke-[2.5]"></i>
+              </div>
+            `;
+          }
+        });
+
+        canvas.innerHTML = `
+          <div class="w-full overflow-x-auto py-2 custom-scroll">
+            <div class="flex items-center gap-3 min-w-max pb-2">
+              ${nodesHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      // Re-initialize Lucide Icons after DOM mutation
+      lucide.createIcons();
+    }
+
+    /* =========================================================================
+       5. USER ACTIONS & EVENT LISTENERS
+       ========================================================================= */
+    function populateEntities() {
+      const entities = TAXONOMY[STATE.selectedBody] || [];
+      const select = document.getElementById('select-entity');
+      document.getElementById('entity-count-badge').textContent = `${entities.length} OPTIONS`;
+
+      select.innerHTML = entities.map(e => `
+        <option value="${e.code}" ${e.code === STATE.selectedEntityCode ? 'selected' : ''}>${e.name}</option>
+      `).join('');
+
+      if (!entities.some(e => e.code === STATE.selectedEntityCode) && entities.length > 0) {
+        STATE.selectedEntityCode = entities[0].code;
+      }
+    }
+
+    function showToast(text, type = 'info') {
+      const container = document.getElementById('toast-container');
+      container.className = `p-3.5 rounded-xl text-xs font-semibold flex items-center gap-2 border shadow-xs transition-all ${
+        type === 'error' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+        type === 'warning' ? 'bg-amber-50 text-amber-800 border-amber-200' :
+        type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+        'bg-blue-50 text-blue-800 border-blue-200'
+      }`;
+      const iconName = (type === 'error' || type === 'warning') ? 'alert-circle' : 'check-circle-2';
+      container.innerHTML = `<i data-lucide="${iconName}" class="h-4 w-4 flex-shrink-0"></i><span>${text}</span>`;
+      container.classList.remove('hidden');
+      lucide.createIcons();
+      setTimeout(() => {
+        container.classList.add('hidden');
+      }, 3500);
+    }
+
+    function handleRemove(index) {
+      STATE.chain.splice(index, 1);
+      showToast('Step removed from authority hierarchy.', 'info');
+      RENDER();
+    }
+
+    function handleReorder(fromIndex, toIndex) {
+      if (toIndex < 0 || toIndex >= STATE.chain.length) return;
+
+      const updated = [...STATE.chain];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+
+      // Guard rail: Proposer cannot move after Approver
+      const pIdx = updated.findIndex(n => n.roleType === 'proposer');
+      const aIdx = updated.findIndex(n => n.roleType === 'approver');
+      if (pIdx !== -1 && aIdx !== -1 && pIdx > aIdx) {
+        showToast('Invalid order: Proposer (P) cannot appear after an Approver (A).', 'error');
+        return;
+      }
+
+      STATE.chain = updated;
+      RENDER();
+    }
+
+    // Initialize Event Handlers
+    document.addEventListener('DOMContentLoaded', () => {
+      populateEntities();
+
+      // Body selection change
+      document.getElementById('select-body').addEventListener('change', (e) => {
+        STATE.selectedBody = e.target.value;
+        populateEntities();
+      });
+
+      // Entity selection change
+      document.getElementById('select-entity').addEventListener('change', (e) => {
+        STATE.selectedEntityCode = e.target.value;
+      });
+
+      // Form submission (Append Node)
+      document.getElementById('builder-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const hasApprover = STATE.chain.some(n => n.roleType === 'approver');
+        if (hasApprover && STATE.selectedOperatorCode !== 'BA' && STATE.selectedOperatorCode !== 'A') {
+          showToast('Approver is already set. Move or remove the Approver before adding more pre-approval steps.', 'warning');
+          return;
+        }
+
+        const entities = TAXONOMY[STATE.selectedBody] || [];
+        const entityObj = entities.find(e => e.code === STATE.selectedEntityCode) || entities[0];
+        const opObj = OPERATORS.find(o => o.code === STATE.selectedOperatorCode) || OPERATORS[0];
+
+        const newNode = {
+          id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          authorityBody: STATE.selectedBody,
+          entity: entityObj.name,
+          code: entityObj.code,
+          operator: opObj.code,
+          operatorLabel: opObj.label,
+          roleType: opObj.roleType,
+          display: `${entityObj.code} (${opObj.code})`
+        };
+
+        STATE.chain.push(newNode);
+        showToast(`Added ${newNode.display} to hierarchy.`, 'success');
+        RENDER();
+      });
+
+      // Reset Chain
+      document.getElementById('btn-reset-chain').addEventListener('click', () => {
+        if (STATE.chain.length === 0) return;
+        if (confirm('Are you sure you want to reset the proposed authority chain?')) {
+          STATE.chain = [];
+          showToast('Authority chain cleared.', 'info');
+          RENDER();
+        }
+      });
+
+      // Load Standard Preset
+      document.getElementById('btn-load-preset').addEventListener('click', () => {
+        STATE.chain = [
+          {
+            id: 'preset-1',
+            authorityBody: 'Board Committees',
+            entity: 'AC – Audit Committee',
+            code: 'AC',
+            operator: 'P',
+            operatorLabel: 'Proposer (P)',
+            roleType: 'proposer',
+            display: 'AC (P)'
+          },
+          {
+            id: 'preset-2',
+            authorityBody: 'Executive Committee (ExCo)',
+            entity: 'CRO – Chief Risk Officer',
+            code: 'CRO',
+            operator: 'R',
+            operatorLabel: 'General Reviewer (R)',
+            roleType: 'reviewer',
+            display: 'CRO (R)'
+          },
+          {
+            id: 'preset-3',
+            authorityBody: 'Board Committees',
+            entity: 'BRC – Board Risk Committee',
+            code: 'BRC',
+            operator: 'E1',
+            operatorLabel: 'Endorse 1 (E1)',
+            roleType: 'endorser',
+            display: 'BRC (E1)'
+          },
+          {
+            id: 'preset-4',
+            authorityBody: 'Executive Committee (ExCo)',
+            entity: 'CEO – Chief Executive Officer',
+            code: 'CEO',
+            operator: 'A',
+            operatorLabel: 'Approver (A)',
+            roleType: 'approver',
+            display: 'CEO (A)'
+          }
+        ];
+        showToast('Standard 4-tier approval preset loaded.', 'success');
+        RENDER();
+      });
+
+      // Export JSON Modal
+      const modal = document.getElementById('json-modal');
+      document.getElementById('btn-export-json').addEventListener('click', () => {
+        const hasProposer = STATE.chain.some(n => n.roleType === 'proposer');
+        const hasReviewer = STATE.chain.some(n => n.roleType === 'reviewer');
+        const hasApprover = STATE.chain.some(n => n.roleType === 'approver');
+
+        const payload = {
+          governanceVersion: 'v2.4',
+          generatedAt: new Date().toISOString(),
+          status: (hasProposer && hasReviewer && hasApprover) ? 'COMPLIANT' : 'INCOMPLETE',
+          totalSteps: STATE.chain.length,
+          compositeString: STATE.chain.map(n => n.display).join(' ➔ '),
+          nodes: STATE.chain.map((n, idx) => ({
+            step: idx + 1,
+            authorityBody: n.authorityBody,
+            entity: n.entity,
+            code: n.code,
+            operator: n.operator,
+            operatorLabel: n.operatorLabel,
+            roleType: n.roleType,
+            display: n.display
+          }))
+        };
+
+        document.getElementById('json-code-block').textContent = JSON.stringify(payload, null, 2);
+        modal.classList.remove('hidden');
+      });
+
+      const closeModal = () => modal.classList.add('hidden');
+      document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+      document.getElementById('btn-modal-done').addEventListener('click', closeModal);
+
+      // Copy JSON
+      document.getElementById('btn-copy-json').addEventListener('click', () => {
+        const text = document.getElementById('json-code-block').textContent;
+        navigator.clipboard.writeText(text);
+        const btnText = document.getElementById('copy-btn-text');
+        btnText.textContent = 'Copied to Clipboard!';
+        setTimeout(() => {
+          btnText.textContent = 'Copy JSON';
+        }, 2000);
+      });
+
+      // Validate & Save Matrix
+      document.getElementById('btn-validate-save').addEventListener('click', () => {
+        const hasProposer = STATE.chain.some(n => n.roleType === 'proposer');
+        const hasReviewer = STATE.chain.some(n => n.roleType === 'reviewer');
+        const hasApprover = STATE.chain.some(n => n.roleType === 'approver');
+
+        if (!hasProposer) {
+          alert('Validation Error: The delegation hierarchy must have an initiating Proposer (P).');
+          return;
+        }
+        if (!hasReviewer) {
+          alert('Validation Error: The delegation hierarchy must have at least one Reviewer (R).');
+          return;
+        }
+        if (!hasApprover) {
+          alert('Validation Error: The delegation hierarchy must conclude with an Approver (A / BA).');
+          return;
+        }
+
+        const composite = STATE.chain.map(n => n.display).join(' ➔ ');
+        showToast(`Authority Matrix Validated & Saved: ${composite}`, 'success');
+      });
+
+      // Initial Render
+      RENDER();
+    });
+  </script>
+</body>
+</html>
+

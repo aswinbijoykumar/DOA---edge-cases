@@ -1,11 +1,37 @@
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 # Auth Schemas
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    email: str
+    dev_otp: Optional[str] = None
+
+class VerifyOtpRequest(BaseModel):
+    email: str
+    otp: str
+
+class VerifyOtpResponse(BaseModel):
+    message: str
+    reset_token: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    reset_token: str
+    new_password: str
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+    success: bool
+
 
 
 class Token(BaseModel):
@@ -18,8 +44,9 @@ class Token(BaseModel):
     persona_type: Optional[str] = "FRONTEND_USER"
     designation: Optional[str] = None
     department: Optional[str] = None
-    can_request: bool = True
-    can_review: bool = False
+    entity_id: Optional[str] = "ENT-BH-01"
+    allowed_domains: Optional[str] = None
+    permissions: Optional[Dict[str, Any]] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -30,9 +57,10 @@ class UserResponse(BaseModel):
     designation: Optional[str] = None
     department: Optional[str] = None
     reports_to: Optional[str] = None
+    entity_id: Optional[str] = "ENT-BH-01"
+    allowed_domains: Optional[str] = None
+    permissions: Optional[Dict[str, Any]] = None
     is_active: bool
-    can_request: bool = True
-    can_review: bool = False
 
     class Config:
         from_attributes = True
@@ -46,6 +74,8 @@ class DOABase(BaseModel):
     category: str
     key_non_key: str = "Key"
     decision_area: str
+    entity_id: Optional[str] = "ENT-BH-01"
+    classification: Optional[str] = "Board-level DOA"
     shareholders: Optional[str] = ""
     board_of_directors: Optional[str] = ""
     subsidiary_board: Optional[str] = ""
@@ -114,76 +144,20 @@ class ChangeRequestCreate(BaseModel):
     department: Optional[str] = None
     process: Optional[str] = None
     rationale: Optional[str] = None
-    currency: Optional[str] = "USD"
-    current_limit: Optional[str] = None
-    proposed_limit: Optional[str] = None
-    effective_date: Optional[str] = None
-    priority: Optional[str] = "MEDIUM" # LOW, MEDIUM, HIGH, CRITICAL
-    due_date: Optional[str] = None
-    risk_impact: Optional[str] = None
     base_version: int = 1
-    proposed_value: Dict[str, Any] # Contains fields proposed
+    proposed_value: Dict[str, Any] = Field(default_factory=dict) # Contains fields proposed
     operational_impact: Optional[str] = None
     attachments: Optional[List[Dict[str, Any]]] = None
-
-class ChangeRequestUpdate(BaseModel):
-    department: Optional[str] = None
-    process: Optional[str] = None
-    rationale: Optional[str] = None
-    currency: Optional[str] = None
-    current_limit: Optional[str] = None
-    proposed_limit: Optional[str] = None
-    effective_date: Optional[str] = None
-    priority: Optional[str] = None
-    due_date: Optional[str] = None
-    risk_impact: Optional[str] = None
-    proposed_value: Optional[Dict[str, Any]] = None
-    operational_impact: Optional[str] = None
-    attachments: Optional[List[Dict[str, Any]]] = None
+    # Supplementary BRD fields
+    entity_id: Optional[str] = "ENT-BH-01"
+    classification: Optional[str] = "Board-level DOA"
+    exception_id: Optional[str] = None
+    authoritative_source_ids: Optional[List[str]] = None
+    linked_expenditure_limit_id: Optional[str] = None
 
 class ActionDecision(BaseModel):
     comment: Optional[str] = None
     operational_impact: Optional[str] = None
-
-class ReviewerRecommendationPayload(BaseModel):
-    recommendation: str # RECOMMEND_APPROVAL, RECOMMEND_REJECTION
-    notes: str
-    operational_comments: Optional[str] = None
-
-class ReviewerCommentPayload(BaseModel):
-    comment: str
-    operational_comments: Optional[str] = None
-
-class ClarificationCreate(BaseModel):
-    message: str
-    attachments: Optional[List[Dict[str, Any]]] = None
-
-class ClarificationRead(BaseModel):
-    id: int
-    change_request_id: str
-    user_id: int
-    user_email: str
-    user_name: str
-    message_type: str
-    message: str
-    attachments: Optional[List[Dict[str, Any]]] = []
-    created_at: Optional[datetime]
-
-    class Config:
-        from_attributes = True
-
-class NotificationRead(BaseModel):
-    id: int
-    user_id: int
-    title: str
-    message: str
-    link: Optional[str] = None
-    notification_type: str
-    is_read: bool
-    created_at: Optional[datetime]
-
-    class Config:
-        from_attributes = True
 
 class ChangeRequestRead(BaseModel):
     id: str
@@ -194,27 +168,19 @@ class ChangeRequestRead(BaseModel):
     department: Optional[str]
     process: Optional[str]
     rationale: Optional[str]
-    currency: Optional[str] = "USD"
-    current_limit: Optional[str] = None
-    proposed_limit: Optional[str] = None
-    effective_date: Optional[str] = None
-    priority: Optional[str] = "MEDIUM"
-    due_date: Optional[str] = None
-    risk_impact: Optional[str] = None
     base_version: int
     current_value: Optional[Dict[str, Any]] = None
     proposed_value: Dict[str, Any]
-    status: str # DRAFT, SUBMITTED, UNDER_REVIEW, CLARIFICATION_REQUIRED, APPROVED, REJECTED, PUBLISHED
+    status: str # DRAFT, SUBMITTED, APPROVED, REJECTED, PUBLISHED
+    entity_id: Optional[str] = "ENT-BH-01"
+    classification: Optional[str] = "Board-level DOA"
+    exception_id: Optional[str] = None
     reviewer_id: Optional[int] = None
     reviewer_email: Optional[str] = None
     reviewed_at: Optional[datetime] = None
     decision_comment: Optional[str] = None
-    reviewer_recommendation: Optional[str] = None # RECOMMEND_APPROVAL, RECOMMEND_REJECTION
-    reviewer_comments: Optional[str] = None
-    operational_comments: Optional[str] = None
     operational_impact: Optional[str] = None
     attachments: Optional[List[Dict[str, Any]]] = []
-    clarifications: Optional[List[ClarificationRead]] = []
     created_at: Optional[datetime]
     submitted_at: Optional[datetime] = None
     published_at: Optional[datetime] = None
@@ -277,3 +243,29 @@ class GovernanceActionPayload(BaseModel):
     target_committee: Optional[str] = None
     reason: Optional[str] = None
 
+# Chatbot Schemas
+class ChatbotContext(BaseModel):
+    current_route: Optional[str] = None
+    role: Optional[str] = None
+
+class ChatbotQueryRequest(BaseModel):
+    message: str
+    context: Optional[ChatbotContext] = None
+
+class ChatbotSource(BaseModel):
+    id: str
+    title: str
+    function: Optional[str] = None
+    decision_area: Optional[str] = None
+    details: Optional[str] = None
+
+class ChatbotAction(BaseModel):
+    label: str
+    action_type: str # "navigate" or "suggest_prompt"
+    target: str
+
+class ChatbotQueryResponse(BaseModel):
+    response: str
+    sources: List[ChatbotSource] = []
+    suggested_actions: List[ChatbotAction] = []
+    is_guardrail_triggered: bool = False

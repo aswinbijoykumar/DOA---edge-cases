@@ -1,13 +1,17 @@
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Response, Body
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from datetime import datetime, timezone
 import json
+import re
 
 from app.database.database import get_db
 from app.database.models import User, DOARecord, ChangeRequest
 from app.core.dependencies import get_current_user, require_roles
 from app.schemas.schemas import DOARead, ChangeRequestRead, ChangeRequestCreate
 from app.services import doa_service, change_request_service
+from app.services.version_service import record_to_dict
+from app.services.excel_export_service import generate_doa_master_excel
 from app.api.change_requests import format_cr_response
 
 router = APIRouter(prefix="/user", tags=["Normal User Workspace"])
@@ -88,25 +92,174 @@ def get_user_doa_matrix(
         search=search
     )
 
+def format_authority_flow(flow_str: Optional[str]) -> str:
+    if not flow_str:
+        return ""
+    return re.sub(r'[➔→]|->', '←', flow_str)
+
 @router.get("/designation-matrix")
 def get_designation_wise_authorities(
-    designation_key: str = Query("ceo", description="Column key e.g. board_of_directors, gceo, ceo, chairman, c_level1, board_committees"),
+    designation_key: Optional[str] = Query(None, description="Column key e.g. board_of_directors, gceo, ceo, chairman, c_level1, board_committees"),
+    category_id: Optional[str] = Query(None, description="Governance KPI category e.g. function, board_committee, shareholder, c_level, group_wide"),
+    option_id: Optional[str] = Query(None, description="Dropdown option filter id"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_normal_user)
 ):
     """
     Functionality 5: View designation-wise authorities under one window.
-    Filters all published authorities where the chosen designation possesses an explicit authority role
-    (Approve, Endorse, Recommend, Notification) with exact action highlighting.
+    Supports filtering by specific role designation key OR by top-level governance category & dropdown option.
     """
     all_published = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED").all()
     results = []
 
+    if category_id:
+        for r in all_published:
+            include = False
+            val = ""
+            func = (r.function or "").strip()
+            bline = (r.business_line or "").strip()
+            darea = (r.decision_area or "").strip()
+            bcomm = (r.board_committees or "").strip()
+            sh = (r.shareholders or "").strip()
+            gceo = (r.gceo or "").strip()
+            ceo = (r.ceo or "").strip()
+            c1 = (r.c_level1 or "").strip()
+            c2 = (r.c_level2 or "").strip()
+            reg = (getattr(r, "regulatory", "") or "").strip()
+
+            if category_id == "function":
+                if option_id == "finance_treasury":
+                    include = (func == "Finance")
+                    val = c1 or "Finance Lead"
+                elif option_id == "risk_compliance":
+                    include = (func == "Risk" or "Risk" in bline or "AML" in bline or "Compliance" in bline)
+                    val = c2 or "Risk Lead"
+                elif option_id == "tech_cyber":
+                    include = ("Cyber" in bline or "Security" in bline or "IT" in bline or "Technology" in bline or "Digital" in bline)
+                    val = "IT / Cyber Lead"
+                elif option_id == "ops_logistics":
+                    include = ("Operational" in bline or "Capital" in bline or "Procurement" in darea or "Vendor" in darea or "Asset" in darea or "Expenditure" in darea)
+                    val = "Ops Authority"
+                elif option_id == "legal_regulatory":
+                    include = (reg == "Y" or "Legal" in bline or "Statutory" in darea)
+                    val = "Legal / Compliance"
+                else:
+                    include = True
+                    val = func
+
+            elif category_id == "board_committee":
+                if option_id == "audit_committee":
+                    include = ("AC" in bcomm or "Audit" in bcomm)
+                    val = bcomm
+                elif option_id == "risk_committee":
+                    include = ("BRPC" in bcomm or "Risk" in bcomm)
+                    val = bcomm
+                elif option_id == "exec_committee":
+                    include = ("ExCom" in bcomm or "Exec" in bcomm)
+                    val = bcomm
+                elif option_id == "nom_rem_committee":
+                    include = ("GNRC" in bcomm or "NRC" in bcomm or "Nom" in bcomm)
+                    val = bcomm
+                elif option_id == "it_committee":
+                    include = ("Tech" in bcomm or "IT" in bcomm or "Security" in bline)
+                    val = bcomm or "Board Committee"
+                else:
+                    include = bool(bcomm)
+                    val = bcomm
+
+            elif category_id == "shareholder":
+                if option_id == "agm":
+                    include = ("A" in sh.upper() or "AGM" in sh.upper() or "ANNUAL" in darea.upper())
+                    val = sh or "AGM (A)"
+                elif option_id == "egm":
+                    include = ("EGM" in sh.upper() or "SPECIAL" in darea.upper() or ("A" in sh.upper() and ("Capital" in bline or "Charter" in darea)))
+                    val = sh or "EGM (A)"
+                elif option_id == "founding_shareholders":
+                    include = bool(sh and ("A" in sh.upper()))
+                    val = sh
+                else:
+                    include = bool(sh)
+                    val = sh
+
+            elif category_id == "c_level":
+                if option_id == "gceo":
+                    include = bool(gceo)
+                    val = gceo
+                elif option_id == "ceo":
+                    include = bool(ceo)
+                    val = ceo
+                elif option_id == "c_level1":
+                    include = bool(c1)
+                    val = c1
+                elif option_id == "c_level2":
+                    include = bool(c2)
+                    val = c2
+                elif option_id == "mgmt_committees":
+                    m = (r.mgmt_committees or "").strip()
+                    include = bool(m)
+                    val = m
+                else:
+                    include = bool(gceo or ceo or c1 or c2)
+                    val = gceo or ceo or c1 or c2
+
+            elif category_id == "group_wide":
+                if option_id == "statutory_regulatory":
+                    include = (reg == "Y")
+                    val = "Mandated"
+                elif option_id == "subsidiary_matrix":
+                    sub_b = (getattr(r, "subsidiary_board", "") or "").strip()
+                    include = bool(sub_b) or ("Subsidiary" in darea or "Entity" in darea or "Branch" in darea or "KSA" in darea)
+                    val = sub_b or "Subsidiary Board"
+                elif option_id == "expenditure_limits":
+                    include = ("Budget" in bline or "Limit" in darea or "Capex" in darea or "Expenditure" in darea or "Threshold" in darea)
+                    val = "Limit Matrix"
+                else:
+                    include = True
+                    val = "Matrix 4.2"
+
+            if include:
+                action_type = "OTHER"
+                v_upper = (val or r.composite_authority or "").upper()
+                if "A" in v_upper or "APPROVE" in v_upper:
+                    action_type = "APPROVE"
+                elif "E" in v_upper or "ENDORSE" in v_upper:
+                    action_type = "ENDORSE"
+                elif "R" in v_upper or "RECOMMEND" in v_upper:
+                    action_type = "RECOMMEND"
+                elif "N" in v_upper or "NOTIFY" in v_upper:
+                    action_type = "NOTIFICATION"
+
+                results.append({
+                    **record_to_dict(r),
+                    "id": r.id,
+                    "function": r.function,
+                    "business_line": r.business_line,
+                    "decision_area": r.decision_area,
+                    "key_non_key": r.key_non_key,
+                    "authority_code": val or "Delegated",
+                    "action_type": action_type,
+                    "composite_authority": format_authority_flow(r.composite_authority),
+                    "policy_reference": getattr(r, "policy_reference", ""),
+                    "charter_section": getattr(r, "charter_section", ""),
+                    "regulatory_requirement": getattr(r, "regulatory_requirement", ""),
+                    "regulatory": getattr(r, "regulatory", "N"),
+                    "effective_date": r.effective_date,
+                    "last_update_date": r.created_at.strftime("%Y-%m-%d") if getattr(r, "created_at", None) else (r.effective_date or "2026-02-15")
+                })
+
+        return {
+            "category_id": category_id,
+            "option_id": option_id,
+            "designation_key": designation_key or "category_view",
+            "total_authorities": len(results),
+            "authorities": results
+        }
+
+    key = designation_key or "ceo"
     for r in all_published:
-        val = getattr(r, designation_key, None) or ""
+        val = getattr(r, key, None) or ""
         val = val.strip()
         if val:
-            # Determine action category
             action_type = "OTHER"
             v_upper = val.upper()
             if "A" in v_upper or "APPROVE" in v_upper:
@@ -119,6 +272,7 @@ def get_designation_wise_authorities(
                 action_type = "NOTIFICATION"
 
             results.append({
+                **record_to_dict(r),
                 "id": r.id,
                 "function": r.function,
                 "business_line": r.business_line,
@@ -126,18 +280,26 @@ def get_designation_wise_authorities(
                 "key_non_key": r.key_non_key,
                 "authority_code": val,
                 "action_type": action_type,
-                "composite_authority": r.composite_authority,
+                "composite_authority": format_authority_flow(r.composite_authority),
                 "policy_reference": getattr(r, "policy_reference", ""),
                 "charter_section": getattr(r, "charter_section", ""),
                 "regulatory_requirement": getattr(r, "regulatory_requirement", ""),
-                "effective_date": r.effective_date
+                "regulatory": getattr(r, "regulatory", "N"),
+                "effective_date": r.effective_date,
+                "last_update_date": r.created_at.strftime("%Y-%m-%d") if getattr(r, "created_at", None) else (r.effective_date or "2026-02-15")
             })
 
     return {
-        "designation_key": designation_key,
+        "designation_key": key,
         "total_authorities": len(results),
         "authorities": results
     }
+
+def format_record_dict_for_report(r):
+    d = record_to_dict(r)
+    if "composite_authority" in d and d["composite_authority"]:
+        d["composite_authority"] = format_authority_flow(d["composite_authority"])
+    return d
 
 @router.get("/reports/management")
 def get_management_reports(
@@ -165,7 +327,7 @@ def get_management_reports(
             "title": "Recently Modified Authorities (Version 2+ Updates)",
             "count": len(records),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "data": [record_to_dict(r) for r in records]
+            "data": [format_record_dict_for_report(r) for r in records]
         }
     elif report_type == "regulatory_mandated":
         records = db.query(DOARecord).filter(DOARecord.regulatory == "Y").all()
@@ -173,7 +335,7 @@ def get_management_reports(
             "title": "Regulatory Mandated Authorities Register",
             "count": len(records),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "data": [record_to_dict(r) for r in records]
+            "data": [format_record_dict_for_report(r) for r in records]
         }
     elif report_type == "high_risk":
         records = db.query(DOARecord).filter(DOARecord.key_non_key == "Key").all()
@@ -181,7 +343,7 @@ def get_management_reports(
             "title": "High-Risk & Key Strategic Decisions DOA Report",
             "count": len(records),
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "data": [record_to_dict(r) for r in records]
+            "data": [format_record_dict_for_report(r) for r in records]
         }
     else: # active_by_dept
         all_published = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED").all()
@@ -194,8 +356,74 @@ def get_management_reports(
             "count": len(all_published),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "summary_by_function": by_function,
-            "data": [record_to_dict(r) for r in all_published]
+            "data": [format_record_dict_for_report(r) for r in all_published]
         }
+
+@router.post("/reports/management/export-excel")
+def export_management_reports_excel_post(
+    payload: Dict[str, Any] = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_normal_user)
+):
+    """
+    Export Management Report to formatted Excel matching Master DOA Matrix format.
+    Accepts customized data payload or falls back to querying the database.
+    """
+    report_type = payload.get("report_type", "active_by_dept")
+    title = payload.get("title", "Delegation of Authority Management Report")
+    records = payload.get("data")
+    
+    if not records:
+        if report_type == "regulatory_mandated":
+            recs = db.query(DOARecord).filter(DOARecord.regulatory == "Y").all()
+        elif report_type == "high_risk":
+            recs = db.query(DOARecord).filter(DOARecord.key_non_key == "Key").all()
+        elif report_type == "recently_modified":
+            recs = db.query(DOARecord).filter(DOARecord.current_version > 1).order_by(DOARecord.modified_at.desc()).limit(50).all()
+            if not recs:
+                recs = db.query(DOARecord).order_by(DOARecord.id.desc()).limit(20).all()
+        else:
+            recs = db.query(DOARecord).filter(DOARecord.status == "PUBLISHED").all()
+        records = [format_record_dict_for_report(r) for r in recs]
+
+    excel_io = generate_doa_master_excel(records, title=title)
+    clean_title = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
+    filename = f"{clean_title}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+
+    return Response(
+        content=excel_io.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
+
+@router.get("/reports/management/export-excel")
+def export_management_reports_excel_get(
+    report_type: str = Query("active_by_dept"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_normal_user)
+):
+    """
+    GET endpoint to export pre-set management reports directly as .xlsx file.
+    """
+    report_res = get_management_reports(report_type=report_type, db=db, current_user=current_user)
+    title = report_res.get("title", "Delegation of Authority Management Report")
+    records = report_res.get("data", [])
+    
+    excel_io = generate_doa_master_excel(records, title=title)
+    clean_title = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
+    filename = f"{clean_title}_{datetime.now().strftime('%Y-%m-%d')}.xlsx"
+
+    return Response(
+        content=excel_io.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition"
+        }
+    )
 
 @router.get("/hr-integration")
 def get_hr_integration_data(

@@ -7,11 +7,18 @@ import {
 import { api, getStoredUser, setStoredUser, removeStoredToken, getStoredToken } from './services/api';
 import LoginPage from './components/LoginPage';
 import NormalUserDashboard from './components/dashboards/NormalUserDashboard';
-import UnifiedDoaUserDashboard from './components/dashboards/UnifiedDoaUserDashboard';
 import GovernanceTeamDashboard from './components/dashboards/GovernanceTeamDashboard';
 import DoaAdminDashboard from './components/dashboards/DoaAdminDashboard';
 import SystemAdminDashboard from './components/dashboards/SystemAdminDashboard';
+import ChatbotWidget from './components/ChatbotWidget';
+import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflowInbox';
+import AuthorityChainBuilder from './components/AuthorityChainBuilder';
+import UserProfilePill from './components/common/UserProfilePill';
+import OrgChartModal from './components/common/OrgChartModal';
+import nexusLogo from './assets/nexus-logo.jpg';
+import proNexusBrand from './assets/pro-nexus-brand.png';
 import { 
+  FileSpreadsheet,
   Search, 
   Plus, 
   Trash2, 
@@ -47,9 +54,19 @@ import {
   Eye,
   ArrowUpRight,
   Paperclip,
-  BookOpen
+  BookOpen,
+  AlertOctagon,
+  Download,
+  ArrowUp,
+  CheckCircle2
 } from 'lucide-react';
 
+
+// Helper to format authority chains with leftward flow arrows
+function formatAuthorityFlow(str) {
+  if (!str) return 'A';
+  return str.replace(/[➔→]|->/g, '←');
+}
 
 // Custom Dropdown with Radio Buttons inside each option
 function RadioDropdown({
@@ -160,7 +177,8 @@ function RadioDropdown({
 export default function App() {
   // Navigation State
 
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'search' | 'request' | 'queue' | 'audit'
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showOrgChartModal, setShowOrgChartModal] = useState(false); // 'overview' | 'search' | 'request' | 'queue' | 'audit'
   
   // Authentication State (starts from stored user session or null, requiring manual login)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -168,13 +186,28 @@ export default function App() {
   });
 
   // Role Route Definitions according to requirements:
-  // Login: /login
-  // Normal User: /login/normaluser
-  // Governance Team: /login/governance
-  // DOA Administrator: /login/doa-admin
-  // System Administrator: /login/system-admin
+  // Dedicated routes for all 7 user personas + enterprise admins:
+  // 1. Requestor: /login/requestor
+  // 2. Process Owner: /login/process-owner
+  // 3. Department Owner: /login/dept-owner
+  // 4. Authority Owner: /login/authority-owner
+  // 5. Reviewer: /login/reviewer
+  // 6. Approver: /login/approver
+  // 7. Audit Read-Only: /login/audit
+  // 8. Governance Team: /login/governance
+  // 9. DOA Administrator: /login/doa-admin
+  // 10. System Administrator: /login/system-admin
   const ROLE_ROUTES = {
-    NORMAL_USER: '/login/normaluser',
+    // 7 Personas
+    FRONTEND_USER: '/login/requestor',
+    PROCESS_OWNER: '/login/process-owner',
+    DEPT_OWNER: '/login/dept-owner',
+    AUTHORITY_OWNER: '/login/authority-owner',
+    REVIEWER: '/login/reviewer',
+    APPROVER: '/login/approver',
+    AUDIT_READONLY: '/login/audit',
+    // Fallback role keys
+    NORMAL_USER: '/login/requestor',
     GOVERNANCE_TEAM: '/login/governance',
     DOA_ADMINISTRATOR: '/login/doa-admin',
     SYSTEM_ADMINISTRATOR: '/login/system-admin',
@@ -182,7 +215,14 @@ export default function App() {
   };
 
   const ROUTE_TO_ROLE = {
-    '/login/normaluser': 'NORMAL_USER',
+    '/login/requestor': 'FRONTEND_USER',
+    '/login/process-owner': 'PROCESS_OWNER',
+    '/login/dept-owner': 'DEPT_OWNER',
+    '/login/authority-owner': 'AUTHORITY_OWNER',
+    '/login/reviewer': 'REVIEWER',
+    '/login/approver': 'APPROVER',
+    '/login/audit': 'AUDIT_READONLY',
+    '/login/normaluser': 'FRONTEND_USER',
     '/login/governance': 'GOVERNANCE_TEAM',
     '/login/doa-admin': 'DOA_ADMINISTRATOR',
     '/login/system-admin': 'SYSTEM_ADMINISTRATOR'
@@ -223,8 +263,8 @@ export default function App() {
         navigateTo('/login');
       }
     } else {
-      const userRole = currentUser.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : currentUser.role;
-      const expectedRoute = ROLE_ROUTES[userRole] || '/login/normaluser';
+      const userKey = currentUser.persona_type || (currentUser.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : currentUser.role);
+      const expectedRoute = ROLE_ROUTES[userKey] || (currentUser.role === 'ADMIN' ? '/login/system-admin' : ROLE_ROUTES[currentUser.role] || '/login/requestor');
 
       // If user is at /login or /
       if (currentPath === '/login' || currentPath === '/') {
@@ -234,9 +274,13 @@ export default function App() {
 
       // If user accesses one of the role routes
       const targetRoleForPath = ROUTE_TO_ROLE[currentPath];
-      if (targetRoleForPath && targetRoleForPath !== userRole) {
-        addToast(`Access restricted: Redirected to your authorized ${ROLE_CONFIGS[userRole]?.label || userRole} landing page.`, 'error');
-        navigateTo(expectedRoute);
+      if (targetRoleForPath) {
+        const matchesPersona = currentUser.persona_type && currentUser.persona_type === targetRoleForPath;
+        const matchesRole = currentUser.role === targetRoleForPath || (currentUser.role === 'ADMIN' && targetRoleForPath === 'SYSTEM_ADMINISTRATOR');
+        if (!matchesPersona && !matchesRole) {
+          addToast(`Access restricted: Redirected to your authorized ${ROLE_CONFIGS[currentUser.role]?.label || userKey} landing route (${expectedRoute}).`, 'error');
+          navigateTo(expectedRoute);
+        }
       }
     }
   }, [currentUser, currentPath]);
@@ -248,28 +292,12 @@ export default function App() {
     setStoredUser(userObj);
     addToast(`Logged in successfully as ${userObj.full_name} (${userObj.designation || userObj.role})`, 'success');
     
-    // Role & Persona Task-Specific Landing View:
-    // 1. Requestor / Front-End User -> Lands on 'search' (Search/Lookup & Simple Status Tracker)
-    // 2. Reviewer / Risk & Compliance -> Lands on 'queue' (Review Queue & Diff Engine)
-    // 3. Approver / Executive -> Lands on 'queue' (Executive Approval Inbox)
-    // 4. Department / Process Owner / Auditor -> Lands on 'overview' (Persona Dashboard with Reports & Designations)
-    // 5. System Admin -> Lands on 'overview' (System Health & Telemetry)
-    const pType = userObj.persona_type;
-    if (pType === 'FRONTEND_USER') {
-      setActiveTab('search');
-    } else if (pType === 'REVIEWER' || userObj.role === 'GOVERNANCE_TEAM') {
-      setActiveTab('queue');
-    } else if (pType === 'APPROVER' || userObj.role === 'DOA_ADMINISTRATOR') {
-      setActiveTab('queue');
-    } else if (userObj.role === 'SYSTEM_ADMINISTRATOR') {
-      setActiveTab('overview');
-    } else {
-      setActiveTab('overview');
-    }
+    // First landing page on login for all personas must be 'overview'
+    setActiveTab('overview');
 
-    // Redirect to role-specific landing route
-    const userRole = userObj.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : userObj.role;
-    const targetRoute = ROLE_ROUTES[userRole] || '/login/normaluser';
+    // Redirect to role/persona-specific landing route
+    const userKey = userObj.persona_type || (userObj.role === 'ADMIN' ? 'SYSTEM_ADMINISTRATOR' : userObj.role);
+    const targetRoute = ROLE_ROUTES[userKey] || (userObj.role === 'ADMIN' ? '/login/system-admin' : ROLE_ROUTES[userObj.role] || '/login/requestor');
     navigateTo(targetRoute);
   };
 
@@ -293,8 +321,8 @@ export default function App() {
   const [isLoadingAudit, setIsLoadingAudit] = useState(false);
   const [backendError, setBackendError] = useState(null);
 
-  // Data State
-  const [doaRecords, setDoaRecords] = useState(initialDoaData);
+  // Data State (populated strictly from RBAC-scoped backend API)
+  const [doaRecords, setDoaRecords] = useState([]);
   const [backendSummary, setBackendSummary] = useState(null);
   const [userDashboardStats, setUserDashboardStats] = useState(null);
   const [govDashboardStats, setGovDashboardStats] = useState(null);
@@ -308,11 +336,73 @@ export default function App() {
   const [activeDiffCR, setActiveDiffCR] = useState(null);
   const [diffDetails, setDiffDetails] = useState(null);
   const [isLoadingDiff, setIsLoadingDiff] = useState(false);
+  const [diffRejectBoxOpen, setDiffRejectBoxOpen] = useState(false);
+  const [diffRejectComment, setDiffRejectComment] = useState('');
 
   // Search & Filtering State (Parent / Child Function Filters)
-  const [filterParentFunction, setFilterParentFunction] = useState('Finance'); // 'Finance' | 'Risk' | 'All'
+  const [filterParentFunction, setFilterParentFunction] = useState('All'); // 'All' | 'Finance' | 'Risk'
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const searchTableBodyRef = useRef(null);
+  const searchTableWrapperRef = useRef(null);
+  const searchTableScrollContainerRef = useRef(null);
+  const stickyHeaderScrollRef = useRef(null);
+  const mainHeaderRef = useRef(null);
+  const [searchTableScrolled, setSearchTableScrolled] = useState(false);
+  const [isOuterHeaderSticky, setIsOuterHeaderSticky] = useState(false);
+  const [stickyHeaderMetrics, setStickyHeaderMetrics] = useState({ width: 0, left: 0, top: 0 });
+
+  // Outer Page Scroll Listener to keep Search DOA table header sticky when scrolling page
+  useEffect(() => {
+    if (activeTab !== 'search') {
+      setIsOuterHeaderSticky(false);
+      return;
+    }
+
+    const updateStickyMetrics = () => {
+      if (!searchTableWrapperRef.current) return;
+      const rect = searchTableWrapperRef.current.getBoundingClientRect();
+      const navbarHeight = mainHeaderRef.current ? mainHeaderRef.current.offsetHeight : 88;
+      
+      const shouldStick = (rect.top + 56) <= navbarHeight && rect.bottom > (navbarHeight + 60);
+      setIsOuterHeaderSticky(shouldStick);
+      
+      if (shouldStick) {
+        setStickyHeaderMetrics({
+          width: rect.width,
+          left: rect.left,
+          top: navbarHeight
+        });
+
+        if (searchTableScrollContainerRef.current && stickyHeaderScrollRef.current) {
+          if (stickyHeaderScrollRef.current.scrollLeft !== searchTableScrollContainerRef.current.scrollLeft) {
+            stickyHeaderScrollRef.current.scrollLeft = searchTableScrollContainerRef.current.scrollLeft;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', updateStickyMetrics, { passive: true });
+    window.addEventListener('resize', updateStickyMetrics, { passive: true });
+    updateStickyMetrics();
+
+    return () => {
+      window.removeEventListener('scroll', updateStickyMetrics);
+      window.removeEventListener('resize', updateStickyMetrics);
+    };
+  }, [activeTab]);
+
+  const handleTableHorizontalScroll = (e) => {
+    if (stickyHeaderScrollRef.current && stickyHeaderScrollRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      stickyHeaderScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
+
+  const handleStickyHorizontalScroll = (e) => {
+    if (searchTableScrollContainerRef.current && searchTableScrollContainerRef.current.scrollLeft !== e.currentTarget.scrollLeft) {
+      searchTableScrollContainerRef.current.scrollLeft = e.currentTarget.scrollLeft;
+    }
+  };
 
   // Executive Decision Modal State (Obligatory Rationale Dialog)
   const [decisionModal, setDecisionModal] = useState({
@@ -412,25 +502,25 @@ export default function App() {
         role: res.role,
         persona_type: res.persona_type || 'FRONTEND_USER',
         designation: res.designation || '',
-        department: res.department || ''
+        department: res.department || '',
+        entity_id: res.entity_id || 'ENT-BH-01',
+        allowed_domains: res.allowed_domains || '',
+        permissions: res.permissions || null
       };
       setCurrentUser(userObj);
       addToast(`Switched account to ${userObj.full_name} (${targetConfig.label})`, 'success');
       
-      // Auto-route to role's primary focus tab
-      if (res.role === 'SYSTEM_ADMINISTRATOR') {
-        setActiveTab('overview');
-      } else if (res.role === 'DOA_ADMINISTRATOR' || res.role === 'GOVERNANCE_TEAM') {
-        setActiveTab('queue');
-      } else {
-        setActiveTab('search');
-      }
+      // First landing page on account switch is 'overview'
+      setActiveTab('overview');
 
       // Refresh active datasets with new credentials
       loadDoaRecords();
       loadDashboardSummary();
       loadChangeRequests();
-      if (['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(userObj.role)) {
+      if (
+        ['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(userObj.role) ||
+        ['AUDIT_READONLY', 'REVIEWER'].includes(userObj.persona_type)
+      ) {
         loadAuditLogs();
       }
     } catch (err) {
@@ -457,7 +547,10 @@ export default function App() {
             role: profile.role,
             persona_type: profile.persona_type || storedUser.persona_type || 'FRONTEND_USER',
             designation: profile.designation || storedUser.designation || '',
-            department: profile.department || storedUser.department || ''
+            department: profile.department || storedUser.department || '',
+            entity_id: profile.entity_id || storedUser.entity_id || 'ENT-BH-01',
+            allowed_domains: profile.allowed_domains || storedUser.allowed_domains || '',
+            permissions: profile.permissions || storedUser.permissions || null
           });
         } catch (e) {
           console.warn("Session expired or invalid token:", e);
@@ -475,7 +568,7 @@ export default function App() {
     setIsLoadingDoa(true);
     try {
       const records = await api.getDoaRecords({ status: 'PUBLISHED' });
-      if (records && records.length > 0) {
+      if (Array.isArray(records)) {
         // Map backend snake_case to frontend camelCase while preserving all UI fields
         const mapped = records.map(r => ({
           ...r,
@@ -498,7 +591,8 @@ export default function App() {
           cLevel2: r.c_level2,
           cLevel2Op: r.c_level2_op,
           compositeAuthority: r.composite_authority,
-          currentVersion: r.current_version
+          currentVersion: r.current_version,
+          lastUpdateDate: r.last_update_date || (r.created_at ? (typeof r.created_at === 'string' ? r.created_at.slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10)) : r.effective_date) || '2026-02-15'
         }));
         setDoaRecords(mapped);
       }
@@ -526,29 +620,95 @@ export default function App() {
   const loadChangeRequests = async () => {
     if (!currentUser) return;
     setIsLoadingQueue(true);
+    const start = Date.now();
     try {
       const list = await api.getChangeRequests();
       setChangeRequests(list || []);
     } catch (e) {
       console.warn("Could not fetch change requests:", e);
     } finally {
-      setIsLoadingQueue(false);
+      const elapsed = Date.now() - start;
+      const minDuration = 600;
+      if (elapsed < minDuration) {
+        setTimeout(() => setIsLoadingQueue(false), minDuration - elapsed);
+      } else {
+        setIsLoadingQueue(false);
+      }
     }
   };
 
-  // Fetch Audit Logs from Backend (Elevated roles only)
-  const isAuditRole = currentUser && ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role);
+  // Fetch Audit Logs from Backend (Elevated roles, Audit Read-Only, & 2LoD Reviewer)
+  const isAuditRole = Boolean(currentUser && (
+    ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) ||
+    ['AUDIT_READONLY', 'REVIEWER'].includes(currentUser.persona_type)
+  ));
+
+  // Centralized Frontend RBAC & ABAC Authority Helpers
+  const allowedDomains = useMemo(() => {
+    if (currentUser?.permissions?.allowed_domains?.length) {
+      return currentUser.permissions.allowed_domains;
+    }
+    const raw = (currentUser?.allowed_domains || '').trim();
+    if (raw && raw.toUpperCase() !== 'ALL') {
+      return raw.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    return ['Finance', 'Risk'];
+  }, [currentUser]);
+
+  const userEntityId = currentUser?.permissions?.entity_id || currentUser?.entity_id || 'ENT-BH-01';
+
+  const canPropose = Boolean(
+    currentUser && (
+      currentUser.permissions
+        ? currentUser.permissions.can_propose
+        : (
+          ['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser.role) ||
+          (currentUser.role === 'NORMAL_USER' && ['FRONTEND_USER', 'PROCESS_OWNER', 'DEPT_OWNER', 'AUTHORITY_OWNER'].includes(currentUser.persona_type))
+        )
+    )
+  );
+
+  const canMutateRecord = (rec) => {
+    if (!canPropose || !rec) return false;
+    const recDomain = rec.parentFunction || rec.parent_function || rec.function || 'Finance';
+    if (!allowedDomains.some(d => recDomain.toLowerCase().includes(d.toLowerCase()))) {
+      return false;
+    }
+    const canWriteAll = Boolean(
+      currentUser?.permissions?.can_write_all_entities ||
+      ['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser?.role) ||
+      userEntityId === 'ALL'
+    );
+    if (canWriteAll) return true;
+    const recEntity = (rec.entity_id || 'ENT-BH-01').toUpperCase();
+    return recEntity === userEntityId.toUpperCase();
+  };
+
+  const isOwnChangeRequest = (cr) => {
+    if (!cr || !currentUser) return false;
+    return (
+      (cr.requester_email && currentUser.email && cr.requester_email.toLowerCase() === currentUser.email.toLowerCase()) ||
+      (cr.requester_id && currentUser.id && cr.requester_id === currentUser.id)
+    );
+  };
 
   const loadAuditLogs = async () => {
     if (!isAuditRole) return;
     setIsLoadingAudit(true);
+    const start = Date.now();
     try {
       const logs = await api.getAuditLogs();
       setAuditLogs(logs || []);
     } catch (e) {
       console.warn("Could not fetch audit logs:", e);
     } finally {
-      setIsLoadingAudit(false);
+      const elapsed = Date.now() - start;
+      const minDuration = 600;
+      if (elapsed < minDuration) {
+        setTimeout(() => setIsLoadingAudit(false), minDuration - elapsed);
+      } else {
+        setIsLoadingAudit(false);
+      }
     }
   };
 
@@ -577,11 +737,22 @@ export default function App() {
   // Refresh active datasets on mount and role change
   useEffect(() => {
     if (currentUser) {
+      // Explorer tab provides read-only view of all rules across all functions
+      setFilterParentFunction('All');
+      const formDomain = allowedDomains[0] || 'Finance';
+      setFormData(prev => ({
+        ...prev,
+        parentFunction: formDomain,
+        businessLine: (functionTaxonomy[formDomain] || [])[0] || prev.businessLine
+      }));
       loadDoaRecords();
       loadDashboardSummary();
       loadRoleDashboardData();
       loadChangeRequests();
-      if (['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role)) {
+      if (
+        ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) ||
+        ['AUDIT_READONLY', 'REVIEWER'].includes(currentUser.persona_type)
+      ) {
         loadAuditLogs();
       }
     }
@@ -642,19 +813,41 @@ export default function App() {
   }, [doaRecords, backendSummary, changeRequests]);
 
 
-  // Active child business lines for Search Filter
+  // All business line functions available across the DOA Matrix (Read-Only Explorer)
+  const allAvailableFunctions = useMemo(() => {
+    const funcs = new Set(Object.keys(functionTaxonomy));
+    doaRecords.forEach(r => {
+      const f = r.parentFunction || r.function;
+      if (f) funcs.add(f);
+    });
+    return Array.from(funcs);
+  }, [doaRecords]);
+
+  // Active child business lines for Search Filter mapped to selected Function
   const availableChildCategoriesForFilter = useMemo(() => {
-    if (filterParentFunction === 'Finance') {
-      return functionTaxonomy.Finance || [];
+    if (filterParentFunction && filterParentFunction !== 'All') {
+      const cats = new Set(functionTaxonomy[filterParentFunction] || []);
+      doaRecords.forEach(r => {
+        const parent = r.parentFunction || r.function;
+        if (parent && parent.toLowerCase() === filterParentFunction.toLowerCase()) {
+          const cat = r.category || r.businessLine;
+          if (cat) cats.add(cat);
+          const bl = r.businessLine || r.category;
+          if (bl) cats.add(bl);
+        }
+      });
+      return Array.from(cats).filter(Boolean);
     }
-    if (filterParentFunction === 'Risk') {
-      return functionTaxonomy.Risk || [];
-    }
-    return [
-      ...(functionTaxonomy.Finance || []),
-      ...(functionTaxonomy.Risk || [])
-    ];
-  }, [filterParentFunction]);
+    const allTaxonomyCats = Object.values(functionTaxonomy).flat();
+    const allCats = new Set(allTaxonomyCats);
+    doaRecords.forEach(r => {
+      const cat = r.category || r.businessLine;
+      if (cat) allCats.add(cat);
+      const bl = r.businessLine || r.category;
+      if (bl) allCats.add(bl);
+    });
+    return Array.from(allCats).filter(Boolean);
+  }, [filterParentFunction, doaRecords]);
 
   // Active child business lines for New Request Form
   const availableChildCategoriesForForm = useMemo(() => {
@@ -712,7 +905,7 @@ export default function App() {
     setAuthorityChain(newChain);
     
     // Update formData authority string
-    const chainStr = newChain.map(c => c.display).join(' ➔ ');
+    const chainStr = [...newChain].reverse().map(c => c.display).join(' ← ');
     setFormData(prev => ({ ...prev, authority: chainStr }));
     addToast(`Added '${display}' to proposed authority chain`, 'info');
   };
@@ -721,7 +914,7 @@ export default function App() {
   const handleRemoveFromChain = (indexToRemove) => {
     const newChain = authorityChain.filter((_, idx) => idx !== indexToRemove);
     setAuthorityChain(newChain);
-    const chainStr = newChain.length > 0 ? newChain.map(c => c.display).join(' ➔ ') : '';
+    const chainStr = newChain.length > 0 ? [...newChain].reverse().map(c => c.display).join(' ← ') : '';
     setFormData(prev => ({ ...prev, authority: chainStr }));
   };
 
@@ -739,7 +932,8 @@ export default function App() {
       // Filter 2: Child Business Line / Category
       if (filterChildBusinessLine !== '') {
         const recCat = record.category || record.businessLine || '';
-        if (recCat !== filterChildBusinessLine) {
+        const recBLine = record.businessLine || record.category || '';
+        if (recCat !== filterChildBusinessLine && recBLine !== filterChildBusinessLine) {
           return false;
         }
       }
@@ -772,12 +966,12 @@ export default function App() {
     return groups;
   }, [filteredRecords]);
 
-  // Clear all filters
+  // Clear all filters within user's authorized domain scope
   const handleClearFilters = () => {
     setFilterParentFunction('All');
     setFilterChildBusinessLine('');
     setSearchQuery('');
-    addToast('Filters reset to show all records', 'info');
+    addToast('Filters reset to authorized scope', 'info');
   };
 
   // Handle Modify Select change
@@ -808,8 +1002,9 @@ export default function App() {
       const res = await api.createChangeRequest({
         request_type: 'DELETE',
         doa_id: recordId,
-        department: target?.parentFunction || 'Risk',
+        department: target?.parentFunction || allowedDomains[0] || 'Finance',
         process: target?.businessLine || 'Governance Process',
+        entity_id: target?.entity_id || (userEntityId === 'ALL' ? 'ENT-BH-01' : userEntityId),
         rationale: 'Formal retirement request submitted via DoA governance matrix',
         base_version: target?.currentVersion || 1,
         proposed_value: {
@@ -818,14 +1013,12 @@ export default function App() {
           comments: 'Scheduled for retirement'
         }
       });
-      addToast(`Deletion proposal #${res.id} submitted for Admin review & approval`, 'success');
+      addToast(`Deletion proposal #${res.id} submitted for review & approval`, 'success');
       loadChangeRequests();
       loadDashboardSummary();
     } catch (err) {
       console.error("Delete request error:", err);
-      // Fallback local update
-      setDoaRecords(prev => prev.filter(rec => rec.id !== recordId));
-      addToast(`Proposal to delete rule #${recordId} registered locally`, 'info');
+      addToast(`Delete proposal blocked: ${err.message || 'Unauthorized operation'}`, 'error');
     }
     if (selectedRecord && selectedRecord.id === recordId) {
       setSelectedRecord(null);
@@ -866,12 +1059,20 @@ export default function App() {
       };
 
       try {
+        const attachmentsList = formData.attachedFile 
+          ? [{ filename: formData.attachedFile.name, size: formData.attachedFile.size, uri: `file://${formData.attachedFile.name}` }]
+          : [{ filename: "Board_Approved_Governance_Charter.pdf", uri: "doc://governance/charter.pdf", type: "pdf" }];
+
         const res = await api.createChangeRequest({
           request_type: 'ADD',
           department: formData.parentFunction,
           process: formData.businessLine,
+          entity_id: userEntityId === 'ALL' ? 'ENT-BH-01' : userEntityId,
           rationale: formData.rationale || 'New governance rule proposal',
           base_version: 1,
+          operational_impact: formData.operationalImpact || 'Operational impact verified against departmental framework.',
+          attachments: attachmentsList,
+          authoritative_source_ids: ['SRC-CBB-01'],
           proposed_value: proposedPayload
         });
         addToast(`New proposal #${res.id} submitted to Change Queue!`, 'success');
@@ -880,10 +1081,7 @@ export default function App() {
         setActiveTab('queue');
       } catch (err) {
         console.error("Create request failed:", err);
-        // Fallback local addition
-        const newId = String(Math.max(...doaRecords.map(r => parseInt(r.id) || 0)) + 1);
-        setDoaRecords(prev => [{ ...proposedPayload, id: newId, isCustom: true }, ...prev]);
-        addToast(`New proposal #${newId} added locally`, 'info');
+        addToast(`Submission failed: ${err.message || 'Validation error'}`, 'error');
       }
 
       // Reset form fields
@@ -914,13 +1112,20 @@ export default function App() {
       };
 
       try {
+        const attachmentsList = formData.attachedFile 
+          ? [{ filename: formData.attachedFile.name, size: formData.attachedFile.size, uri: `file://${formData.attachedFile.name}` }]
+          : [{ filename: "Board_Approved_Governance_Charter.pdf", uri: "doc://governance/charter.pdf", type: "pdf" }];
+
         const res = await api.createChangeRequest({
           request_type: 'MODIFY',
           doa_id: selectedModifyId,
           department: formData.parentFunction,
           process: formData.businessLine,
+          entity_id: targetRec?.entity_id || (userEntityId === 'ALL' ? 'ENT-BH-01' : userEntityId),
           rationale: formData.rationale || 'Policy revision request',
           base_version: targetRec?.currentVersion || 1,
+          attachments: attachmentsList,
+          authoritative_source_ids: ['SRC-CBB-01'],
           proposed_value: proposedPayload
         });
         addToast(`Modify request #${res.id} submitted to Change Queue!`, 'success');
@@ -929,17 +1134,7 @@ export default function App() {
         setActiveTab('queue');
       } catch (err) {
         console.error("Modify request failed:", err);
-        setDoaRecords(prev => prev.map(rec => {
-          if (rec.id === selectedModifyId) {
-            return {
-              ...rec,
-              ...proposedPayload,
-              isModified: true
-            };
-          }
-          return rec;
-        }));
-        addToast(`Modified proposal #${selectedModifyId} applied locally`, 'info');
+        addToast(`Modify failed: ${err.message || 'Validation error'}`, 'error');
       }
       
     } else if (actionMode === 'Delete') {
@@ -958,6 +1153,8 @@ export default function App() {
   // Inspect Diff for a Change Request
   const handleInspectDiff = async (cr) => {
     setActiveDiffCR(cr);
+    setDiffRejectBoxOpen(false);
+    setDiffRejectComment('');
     setIsLoadingDiff(true);
     try {
       const diff = await api.getChangeRequestDiff(cr.id);
@@ -1257,33 +1454,41 @@ export default function App() {
                     Close
                   </button>
 
-                  {activeDiffCR.status === 'SUBMITTED' && (
+                  {isOwnChangeRequest(activeDiffCR) ? (
+                    <span className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
+                      VAL-06 SoD: Authored by You (Independent Approval Required)
+                    </span>
+                  ) : (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => handleRejectCR(activeDiffCR.id)}
-                        className="px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1"
-                      >
-                        <X className="h-3.5 w-3.5" /> Reject
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleApproveCR(activeDiffCR.id)}
-                        className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-                      >
-                        <Check className="h-3.5 w-3.5" /> Approve
-                      </button>
-                    </>
-                  )}
+                      {activeDiffCR.status === 'SUBMITTED' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleRejectCR(activeDiffCR.id)}
+                            className="px-3 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            <X className="h-3.5 w-3.5" /> Reject
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleApproveCR(activeDiffCR.id)}
+                            className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                          >
+                            <Check className="h-3.5 w-3.5" /> Approve
+                          </button>
+                        </>
+                      )}
 
-                  {activeDiffCR.status === 'APPROVED' && (
-                    <button
-                      type="button"
-                      onClick={() => handlePublishCR(activeDiffCR.id)}
-                      className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-                    >
-                      <Send className="h-3.5 w-3.5" /> Publish New Version
-                    </button>
+                      {activeDiffCR.status === 'APPROVED' && (
+                        <button
+                          type="button"
+                          onClick={() => handlePublishCR(activeDiffCR.id)}
+                          className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                        >
+                          <Send className="h-3.5 w-3.5" /> Publish New Version
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
@@ -1345,7 +1550,7 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans select-none antialiased">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans select-none antialiased overscroll-none">
       {/* Toast Notification Container */}
       <div className="fixed top-5 right-5 z-50 flex flex-col gap-2">
         {toasts.map(toast => (
@@ -1372,100 +1577,88 @@ export default function App() {
       </div>
 
       {/* Main Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+      <header ref={mainHeaderRef} className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-4">
             
-            {/* Protiviti-Inspired Branding */}
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 bg-teal-600 rounded-lg flex items-center justify-center text-white font-extrabold text-lg tracking-tighter shadow-md">
-                P
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-xl tracking-tight text-slate-800">protiviti</span>
-                  <div className="h-1.5 w-1.5 bg-rose-600 rounded-full mt-2"></div>
-                </div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-                  Risk &amp; Internal Audit
-                </div>
-              </div>
-              <div className="h-8 w-[1px] bg-slate-200 mx-2 hidden sm:block"></div>
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-slate-800 tracking-tight">DoA Management Tool</h1>
-                <p className="text-xs text-slate-500">Delegation of Authority | Risk &amp; Finance Governance</p>
-              </div>
+            {/* Pro Nexus Branding */}
+            <div className="flex items-center">
+              <img 
+                src={proNexusBrand} 
+                alt="Pro Nexus - Delegation of Authority" 
+                className="h-13 sm:h-14 md:h-15 w-auto object-contain cursor-pointer transition-transform" 
+                onClick={() => {
+                  setActiveTab('overview');
+                  setSelectedRecord(null);
+                }}
+              />
             </div>
 
             {/* Navigation Tabs & Role Switcher */}
             <div className="flex items-center gap-3">
-              <nav className="flex space-x-1 bg-slate-100 p-1 rounded-xl">
-                {[
-                  // Role-tailored dashboards and tabs
-                  { id: 'overview', label: 'Overview', icon: Layers, roles: ['NORMAL_USER', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
-                  { id: 'search', label: 'Search DoA', icon: Search, roles: ['NORMAL_USER', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
-                  { id: 'request', label: 'New Request', icon: Edit3, roles: ['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'] },
-                  { 
-                    id: 'queue', 
-                    label: currentUser.role === 'GOVERNANCE_TEAM' ? 'Review Queue' : 'Change Queue', 
-                    icon: GitPullRequest,
-                    roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'NORMAL_USER', 'ADMIN', 'SYSTEM_ADMINISTRATOR'],
-                    badge: changeRequests.filter(c => c.status === 'SUBMITTED').length
-                  },
-                  { 
-                    id: 'audit', 
-                    label: 'Audit Trail', 
-                    icon: History, 
-                    roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
-                  }
-                ]
-                .filter(tab => tab.roles.includes(currentUser.role))
-                .map(tab => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        setActiveTab(tab.id);
-                        setSelectedRecord(null);
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-200 relative ${
-                        isActive 
-                          ? 'bg-white text-teal-600 shadow-sm' 
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
-                      {tab.label}
-                      {Boolean(tab.badge) && (
-                        <span className="px-1.5 py-0.2 bg-teal-600 text-white rounded-full text-[10px] font-extrabold shadow-xs">
-                          {tab.badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </nav>
+              {currentUser?.role !== 'NORMAL_USER' && (
+                <nav className="flex space-x-1 bg-slate-100 p-1 rounded-xl">
+                  {[
+                    // Role-tailored dashboards and tabs
+                    { id: 'overview', label: 'Overview', icon: Layers, roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
+                    { id: 'search', label: 'Search DoA', icon: Search, roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
+                    { id: 'request', label: 'New Request', icon: Edit3, roles: ['DOA_ADMINISTRATOR', 'ADMIN'] },
+                    { 
+                      id: 'queue', 
+                      label: currentUser.role === 'GOVERNANCE_TEAM' ? 'Review Queue' : 'Change Queue', 
+                      icon: GitPullRequest,
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'ADMIN', 'SYSTEM_ADMINISTRATOR'],
+                      badge: changeRequests.filter(c => c.status === 'SUBMITTED').length
+                    },
+                    { 
+                      id: 'exceptions', 
+                      label: 'Exception Workflow', 
+                      icon: AlertOctagon, 
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
+                    },
+                    { 
+                      id: 'audit', 
+                      label: 'Audit Trail', 
+                      icon: History, 
+                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
+                    }
+                  ]
+                  .filter(tab => tab.roles.includes(currentUser.role))
+                  .map(tab => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setSelectedRecord(null);
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-200 relative ${
+                          isActive 
+                            ? 'bg-white text-teal-600 shadow-sm' 
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
+                        {tab.label}
+                        {Boolean(tab.badge) && (
+                          <span className="px-1.5 py-0.2 bg-teal-600 text-white rounded-full text-[10px] font-extrabold shadow-xs">
+                            {tab.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </nav>
+              )}
 
               {/* Active User Profile & Logout */}
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200/80 text-xs font-semibold text-slate-700">
-                  <User className="h-3.5 w-3.5 text-teal-600" />
-                  <div className="text-left">
-                    <span className="font-bold text-slate-800 block text-xs leading-none">
-                      {currentUser.full_name || 'User'}
-                    </span>
-                    {currentUser.designation && (
-                      <span className="text-[10px] text-teal-700 font-semibold block leading-tight mt-0.5">
-                        {currentUser.designation}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`ml-1 px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${ROLE_CONFIGS[currentUser.role]?.badgeClass || 'bg-slate-200 text-slate-700'}`}>
-                    {currentUser.persona_type ? currentUser.persona_type.replace('_', ' ') : (ROLE_CONFIGS[currentUser.role]?.label || currentUser.role)}
-                  </span>
-                </div>
+                <UserProfilePill 
+                  currentUser={currentUser} 
+                  onOpenOrgChart={() => setShowOrgChartModal(true)} 
+                />
 
                 <button
                   type="button"
@@ -1487,25 +1680,40 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {/* Navigation Breadcrumb / Return to Overview for All 7 Normal User Personas */}
+        {currentUser?.role === 'NORMAL_USER' && activeTab !== 'overview' && (
+          <div className="mb-6 flex items-center justify-between bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl border border-slate-800 shadow-md">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  setActiveTab('overview');
+                  setSelectedRecord(null);
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all shadow-sm"
+              >
+                <span>&larr; Back to Overview</span>
+              </button>
+            </div>
+          </div>
+        )}
         
         {/* TAB 1: OVERVIEW / ROLE-DEDICATED LANDING DASHBOARD */}
         {activeTab === 'overview' && (
           <>
             {currentUser.role === 'NORMAL_USER' && (
-              <UnifiedDoaUserDashboard
+              <NormalUserDashboard
                 userStats={userDashboardStats}
                 currentUser={currentUser}
                 kpis={kpis}
+                activeTab={activeTab}
+                pendingQueueCount={changeRequests.filter(c => c.status === 'SUBMITTED').length}
                 onNavigateTab={(tabId) => {
                   setActiveTab(tabId);
                   setSelectedRecord(null);
                 }}
-                onInspectCR={(cr) => handleInspectDiff(cr)}
-                onRefreshData={() => {
-                  loadDoaRecords();
-                  loadChangeRequests();
-                  loadRoleDashboardData();
-                  loadDashboardSummary();
+                onNewRequest={() => {
+                  setActiveTab('request');
+                  setActionMode('Add');
                 }}
               />
             )}
@@ -1561,67 +1769,24 @@ export default function App() {
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Delegation Matrix Explorer</h2>
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">DOA Matrix Explorer</h2>
                 <p className="text-sm text-slate-500 mt-1">
-                  Search, filter, and inspect finance &amp; risk authority layers. Click any row to inspect the full governance breakdown.
+                  Explore and filter authorities across the DOA Matrix
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full font-medium">
                   Showing <span className="font-bold text-teal-600">{filteredRecords.length}</span> of {doaRecords.length} records
                 </span>
-                {['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'].includes(currentUser.role) && (
-                  <button
-                    onClick={() => {
-                      setActiveTab('request');
-                      setActionMode('Add');
-                    }}
-                    className="flex items-center gap-1.5 px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
-                  >
-                    <Plus className="h-3.5 w-3.5" /> New Request
-                  </button>
-                )}
               </div>
             </div>
-
-            {/* Requestor Simple Status Tracker (Requirement 1 & Task Alignment) */}
-            {currentUser?.persona_type === 'FRONTEND_USER' && changeRequests.length > 0 && (
-              <div className="bg-gradient-to-r from-teal-900 to-slate-900 text-white p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border border-teal-800">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-teal-500/20 border border-teal-500/40 rounded-xl text-teal-300">
-                    <Clock className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-teal-300">
-                        Your Authored Request Tracker
-                      </span>
-                      <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-white/10 text-white">
-                        {changeRequests[0].id}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-200 font-medium mt-0.5">
-                      Proposal: <strong>"{changeRequests[0].rationale || 'Authority update'}"</strong> &bull; Status: <span className="text-teal-300 font-bold">{changeRequests[0].status}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleInspectDiff(changeRequests[0])}
-                  className="px-3.5 py-2 bg-teal-500 hover:bg-teal-400 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 flex-shrink-0"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span>Check Submission Comparison</span>
-                </button>
-              </div>
-            )}
 
             {/* Filter Section - Function & Business Line Dropdowns */}
             <div className="bg-white border border-slate-200/80 rounded-xl p-5 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <span className="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-2">
                   <Filter className="h-4 w-4 text-slate-400" />
-                  Function &amp; Decision Filters
+                  Filters
                 </span>
                 {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || searchQuery !== '') && (
                   <button 
@@ -1634,7 +1799,7 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Function Dropdown (Risk / Finance / All) */}
+                {/* Function Dropdown (All Business Line Functions Visible for Read-Only Exploration) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Function
@@ -1645,15 +1810,16 @@ export default function App() {
                       setFilterParentFunction(e.target.value);
                       setFilterChildBusinessLine(''); // reset child when parent changes
                     }}
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
                   >
                     <option value="All">All Functions</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Risk">Risk</option>
+                    {allAvailableFunctions.map(fn => (
+                      <option key={fn} value={fn}>{fn}</option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Business Line / Category Dropdown */}
+                {/* Business Line / Category Dropdown Mapped to Function */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Business Line / Risk Factor
@@ -1661,9 +1827,9 @@ export default function App() {
                   <select 
                     value={filterChildBusinessLine}
                     onChange={(e) => setFilterChildBusinessLine(e.target.value)}
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
                   >
-                    <option value="">All Categories under {filterParentFunction === 'All' ? 'All Functions' : filterParentFunction}</option>
+                    <option value="">{filterParentFunction === 'All' ? 'All Categories / Business Lines' : `All Categories under ${filterParentFunction}`}</option>
                     {availableChildCategoriesForFilter.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -1687,203 +1853,284 @@ export default function App() {
               </div>
             </div>
 
+            {/* Sticky Floating Table Header for Outer Page Scrolling */}
+            {isOuterHeaderSticky && (
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: `${stickyHeaderMetrics.top}px`,
+                  left: `${stickyHeaderMetrics.left}px`,
+                  width: `${stickyHeaderMetrics.width}px`,
+                  zIndex: 25
+                }}
+                className="bg-slate-100 border-x border-b border-slate-300 shadow-lg overflow-hidden animate-fade-in"
+              >
+                <div 
+                  ref={stickyHeaderScrollRef}
+                  onScroll={handleStickyHorizontalScroll}
+                  className="overflow-x-auto no-scrollbar"
+                >
+                  <div className="min-w-[1050px]">
+                    <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
+                      <colgroup>
+                        <col className="w-[7%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[35%]" />
+                        <col className="w-[22%]" />
+                        <col className="w-[13%]" />
+                      </colgroup>
+                      <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                        <tr>
+                          <th className="py-3 px-4 text-center">NO.</th>
+                          <th className="py-3 px-4">FUNCTION</th>
+                          <th className="py-3 px-4 text-center">UPDATE TYPE</th>
+                          <th className="py-3 px-6">DECISION AREA</th>
+                          <th className="py-3 px-4">APPROVAL AUTHORITY CHAIN</th>
+                          <th className="py-3 px-4 text-center whitespace-nowrap">LAST UPDATE DATE</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Data Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-              <div className="overflow-x-auto max-h-[620px] sticky-scrollbar">
-                <table className="w-full border-collapse text-left text-sm text-slate-600">
-                  <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider sticky top-0 z-10">
-                    <tr>
-                      <th className="py-3.5 px-4 font-semibold text-center w-12 border-b border-slate-700">No.</th>
-                      <th className="py-3.5 px-4 font-semibold w-24 border-b border-slate-700">Function</th>
-                      <th className="py-3.5 px-4 font-semibold w-20 border-b border-slate-700">Type</th>
-                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700">Decision Area</th>
-                      <th className="py-3.5 px-4 font-semibold border-b border-slate-700 w-64">Proposed Authority Chain</th>
-                      <th className="py-3.5 px-4 font-semibold text-center w-24 border-b border-slate-700">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredRecords.length === 0 ? (
+            <div ref={searchTableWrapperRef} className="relative bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+              {/* Table Header Bar */}
+              <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                  </div>
+                  <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                    Delegation of Authority Matrix
+                  </h3>
+                </div>
+              </div>
+
+              <div ref={searchTableScrollContainerRef} onScroll={handleTableHorizontalScroll} className="overflow-x-auto">
+                <div className="min-w-[1050px]">
+                  {/* Fixed Table Header (No vertical scrollbar overlapping it) */}
+                  <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
+                    <colgroup>
+                      <col className="w-[7%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[11%]" />
+                      <col className="w-[35%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[13%]" />
+                    </colgroup>
+                    <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                       <tr>
-                        <td colSpan="6" className="py-12 text-center text-slate-400 font-medium">
-                          <div className="flex flex-col items-center justify-center gap-2">
-                            <Info className="h-8 w-8 text-slate-300" />
-                            <span>No records match your selected criteria</span>
-                            <button 
-                              onClick={handleClearFilters}
-                              className="text-xs text-teal-600 hover:text-teal-700 font-semibold underline mt-2"
-                            >
-                              Reset filters
-                            </button>
-                          </div>
-                        </td>
+                        <th className="py-3 px-4 text-center">NO.</th>
+                        <th className="py-3 px-4">FUNCTION</th>
+                        <th className="py-3 px-4 text-center">UPDATE TYPE</th>
+                        <th className="py-3 px-6">DECISION AREA</th>
+                        <th className="py-3 px-4">APPROVAL AUTHORITY CHAIN</th>
+                        <th className="py-3 px-4 text-center whitespace-nowrap">LAST UPDATE DATE</th>
                       </tr>
-                    ) : (
-                      Object.keys(groupedRecords).map(category => {
-                        const recsInGroup = groupedRecords[category];
-                        if (!recsInGroup || recsInGroup.length === 0) return null;
-                        
-                        const isRiskCat = functionTaxonomy.Risk.includes(category);
-
-                        return (
-                          <React.Fragment key={category}>
-                            {/* Category Grouping Header */}
-                            <tr className={isRiskCat ? "bg-teal-50/70 border-y border-teal-100/60" : "bg-blue-50/70 border-y border-blue-100/60"}>
-                              <td colSpan="6" className="py-2.5 px-4 font-bold text-slate-700 text-xs tracking-wide">
-                                <span className={`uppercase text-[10px] mr-2 font-extrabold tracking-widest ${isRiskCat ? 'text-teal-700' : 'text-blue-700'}`}>
-                                  {isRiskCat ? 'Risk Domain:' : 'Finance Domain:'}
-                                </span>
-                                {category}
-                                <span className="ml-2 text-[10px] text-slate-400 font-normal">({recsInGroup.length} rules)</span>
-                              </td>
-                            </tr>
-                            
-                            {/* Records in Category */}
-                            {recsInGroup.map((record) => {
-                              const isReg = record.regulatory === 'Y' || isRegulatoryMandated(record.decisionArea);
-                              const isRisk = record.parentFunction === 'Risk' || record.function === 'Risk';
-
-                              return (
-                                <tr 
-                                  key={record.id}
-                                  onClick={() => setSelectedRecord(record)}
-                                  className="hover:bg-slate-50/80 cursor-pointer transition-colors duration-150 group"
+                    </thead>
+                  </table>
+                  
+                  {/* Scrollable Table Body (Scrollbar starts ONLY below the header!) */}
+                  <div 
+                    ref={searchTableBodyRef}
+                    onScroll={(e) => setSearchTableScrolled(e.currentTarget.scrollTop > 120)}
+                    className="max-h-[580px] overflow-y-auto overscroll-contain scroll-smooth"
+                  >
+                    <table className="w-full text-left text-sm text-slate-600 table-fixed border-collapse">
+                      <colgroup>
+                        <col className="w-[7%]" />
+                        <col className="w-[12%]" />
+                        <col className="w-[11%]" />
+                        <col className="w-[35%]" />
+                        <col className="w-[22%]" />
+                        <col className="w-[13%]" />
+                      </colgroup>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredRecords.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" className="py-12 text-center text-slate-400 font-medium">
+                              <div className="flex flex-col items-center justify-center gap-2">
+                                <Info className="h-8 w-8 text-slate-300" />
+                                <span>No records match your selected criteria</span>
+                                <button 
+                                  onClick={handleClearFilters}
+                                  className="text-xs text-teal-600 hover:text-teal-700 font-semibold underline mt-2"
                                 >
-                                  {/* ID / No. */}
-                                  <td className="py-3 px-4 text-center font-bold text-slate-400 text-xs border-r border-slate-100">
-                                    #{record.id}
-                                  </td>
-                                  
-                                  {/* Function */}
-                                  <td className="py-3 px-4 font-semibold text-xs">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] ${
-                                      isRisk 
-                                        ? 'bg-teal-50 text-teal-700 border border-teal-200/50' 
-                                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200/50'
-                                    }`}>
-                                      {record.parentFunction || record.function}
+                                  Reset filters
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          Object.keys(groupedRecords).map(category => {
+                            const recsInGroup = groupedRecords[category];
+                            if (!recsInGroup || recsInGroup.length === 0) return null;
+                            
+                            const isRiskCat = functionTaxonomy.Risk.includes(category);
+
+                            return (
+                              <React.Fragment key={category}>
+                                {/* Category Grouping Header */}
+                                <tr className={isRiskCat ? "bg-teal-50/70 border-y border-teal-100/60" : "bg-blue-50/70 border-y border-blue-100/60"}>
+                                  <td colSpan="6" className="py-2.5 px-4 font-bold text-slate-700 text-xs tracking-wide">
+                                    <span className={`uppercase text-[10px] mr-2 font-extrabold tracking-widest ${isRiskCat ? 'text-teal-700' : 'text-blue-700'}`}>
+                                      {isRiskCat ? 'Risk Domain:' : 'Finance Domain:'}
                                     </span>
-                                  </td>
-
-                                  {/* Key/Non-Key */}
-                                  <td className="py-3 px-4 text-xs font-semibold">
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                                      record.keyNonKey === 'Key' 
-                                        ? 'bg-amber-50 text-amber-700 border border-amber-200/50' 
-                                        : 'bg-slate-100 text-slate-600'
-                                    }`}>
-                                      {record.keyNonKey}
-                                    </span>
-                                  </td>
-
-                                  {/* Decision Area */}
-                                  <td className="py-3 px-4">
-                                    <div className="flex flex-col gap-0.5">
-                                      <span className="font-semibold text-slate-800 text-xs sm:text-sm line-clamp-2 group-hover:text-teal-600 transition-colors">
-                                        {record.decisionArea}
-                                      </span>
-                                      
-                                      <div className="flex items-center gap-2 mt-1">
-                                        {isReg && (
-                                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-rose-600 uppercase bg-rose-50 border border-rose-200/40 px-1.5 py-0.2 rounded">
-                                            Regulatory Mandated
-                                          </span>
-                                        )}
-                                        {record.isCustom && (
-                                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-200/40 px-1.5 py-0.2 rounded">
-                                            New Proposal
-                                          </span>
-                                        )}
-                                        {record.isModified && (
-                                          <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-blue-600 uppercase bg-blue-50 border border-blue-200/40 px-1.5 py-0.2 rounded">
-                                            Modified
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </td>
-
-                                  {/* Proposed Authority Chain */}
-                                  <td className="py-3 px-4">
-                                    <div className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-2.5 py-1.5 flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-                                      <span className="text-teal-600 flex-shrink-0 font-bold">↳</span>
-                                      <span className="truncate" title={record.compositeAuthority || record.shareholders || record.boardOfDirectors}>
-                                        {record.compositeAuthority || record.shareholders || record.boardOfDirectors || 'A'}
-                                      </span>
-                                    </div>
-                                  </td>
-
-                                  {/* Actions: Role-based Operations */}
-                                  <td className="py-3 px-4 text-center">
-                                    <div className="flex items-center justify-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                      {['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'].includes(currentUser.role) ? (
-                                        <>
-                                          <button
-                                            title="Propose Rule Modification"
-                                            onClick={() => {
-                                              setActionMode('Modify');
-                                              setSelectedModifyId(record.id);
-                                              handleModifySelect(record.id);
-                                              setActiveTab('request');
-                                            }}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                                          >
-                                            <Edit3 className="h-4 w-4" />
-                                          </button>
-                                          <button
-                                            title="Propose Rule Deletion"
-                                            onClick={() => setDeleteModalRecord(record)}
-                                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </button>
-                                        </>
-                                      ) : (
-                                        <button
-                                          title="Inspect Governance Rule"
-                                          onClick={() => setSelectedRecord(record)}
-                                          className="p-1.5 rounded-lg text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-colors"
-                                        >
-                                          <Eye className="h-4 w-4" />
-                                        </button>
-                                      )}
-                                    </div>
+                                    {category}
+                                    <span className="ml-2 text-[10px] text-slate-400 font-normal">({recsInGroup.length} decision areas)</span>
                                   </td>
                                 </tr>
-                              );
-                            })}
-                          </React.Fragment>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                                
+                                {/* Records in Category */}
+                                {recsInGroup.map((record) => {
+                                  const isReg = record.regulatory === 'Y' || isRegulatoryMandated(record.decisionArea);
+                                  const isRisk = record.parentFunction === 'Risk' || record.function === 'Risk';
+
+                                  return (
+                                    <tr 
+                                      key={record.id}
+                                      onClick={() => setSelectedRecord(record)}
+                                      className="hover:bg-slate-50/80 cursor-pointer transition-colors duration-150 group"
+                                    >
+                                      {/* ID / No. */}
+                                      <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400 text-xs border-r border-slate-100">
+                                        #{record.id}
+                                      </td>
+                                      
+                                      {/* Function */}
+                                      <td className="py-3 px-4 font-semibold text-xs">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] ${
+                                          isRisk 
+                                            ? 'bg-teal-50 text-teal-700 border border-teal-200/50' 
+                                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200/50'
+                                        }`}>
+                                          {record.parentFunction || record.function}
+                                        </span>
+                                      </td>
+
+                                      {/* Key/Non-Key */}
+                                      <td className="py-3.5 px-4 text-center text-xs font-semibold">
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] ${
+                                          record.keyNonKey === 'Key' 
+                                            ? 'bg-amber-50 text-amber-700 border border-amber-200/50' 
+                                            : 'bg-slate-100 text-slate-600'
+                                        }`}>
+                                          {record.keyNonKey}
+                                        </span>
+                                      </td>
+
+                                      {/* Decision Area */}
+                                      <td className="py-3 px-4">
+                                        <div className="flex flex-col gap-0.5">
+                                          <span className="font-semibold text-slate-800 text-xs sm:text-sm line-clamp-2 group-hover:text-teal-600 transition-colors">
+                                            {record.decisionArea}
+                                          </span>
+                                          
+                                          <div className="flex items-center gap-2 mt-1">
+                                            {record.entity_id && record.entity_id !== 'ENT-BH-01' && (
+                                              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-indigo-700 uppercase bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded">
+                                                {record.entity_id}
+                                              </span>
+                                            )}
+                                            {isReg && (
+                                              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-rose-600 uppercase bg-rose-50 border border-rose-200/40 px-1.5 py-0.2 rounded">
+                                                Regulatory Mandated
+                                              </span>
+                                            )}
+                                            {record.isCustom && (
+                                              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-200/40 px-1.5 py-0.2 rounded">
+                                                New Proposal
+                                              </span>
+                                            )}
+                                            {record.isModified && (
+                                              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-blue-600 uppercase bg-blue-50 border border-blue-200/40 px-1.5 py-0.2 rounded">
+                                                Modified
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </td>
+
+                                      {/* Authority Chain */}
+                                      <td className="py-3 px-4">
+                                        <div className="text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200/60 rounded-lg px-2.5 py-1.5 flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
+                                          <span className="truncate" title={formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors)}>
+                                            {formatAuthorityFlow(record.compositeAuthority || record.shareholders || record.boardOfDirectors || 'A')}
+                                          </span>
+                                        </div>
+                                      </td>
+
+                                      {/* Last Update Date */}
+                                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200/90 px-2.5 py-1 rounded-md" title="Last Update Date">
+                                          <Clock className="h-3 w-3 text-slate-400 shrink-0" />
+                                          <span>{record.lastUpdateDate || record.effective_date || '2026-02-15'}</span>
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </React.Fragment>
+                            );
+                          })
+                        )}
+
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Table Bottom Action / Status Bar */}
+                  <div className="bg-slate-50/95 px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="font-medium text-slate-600">
+                        Displaying <strong className="text-slate-800 font-bold">{filteredRecords.length}</strong> of {doaRecords.length} authorities
+                      </span>
+                    </div>
+
+                  </div>
+                </div>
               </div>
+
+              {/* Floating "Top" Quick Action Pill Pop-up */}
+              {searchTableScrolled && (
+                <button
+                  type="button"
+                  onClick={() => searchTableBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="absolute bottom-16 right-6 z-20 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 hover:bg-teal-700 text-white text-xs font-bold shadow-xl border border-white/10 transition-all transform hover:scale-105 backdrop-blur-xs cursor-pointer animate-fade-in"
+                  title="Scroll back to top of table"
+                >
+                  <ArrowUp className="h-3.5 w-3.5 text-teal-300" />
+                  <span>Top</span>
+                </button>
+              )}
             </div>
           </div>
         )}
 
-        {/* TAB 3: NEW REQUEST (Formerly Request Change) */}
-        {activeTab === 'request' && (
-          <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+        {/* TAB 3: NEW REQUEST (Authorized Proposers Only) */}
+        {activeTab === 'request' && canPropose && (
+          <div className="w-full space-y-6 animate-fade-in">
             {/* Title Section */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">New Request / DoA Amendment</h2>
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">New Request</h2>
                 <p className="text-sm text-slate-500 mt-1">
                   Submit a new proposal, modify existing thresholds, or delete an outdated delegation rule.
                 </p>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-teal-50 text-teal-700 border border-teal-200">
-                Governance Workflow
-              </span>
             </div>
 
             {/* Action Mode Selector with Explicit Delete Proposal */}
-            <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full border border-slate-200/80 shadow-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl w-full border border-slate-200/80 shadow-xs">
               {[
-                { id: 'Add', label: 'Add Proposal', icon: Plus, activeBg: 'bg-white text-emerald-600 shadow-sm border border-emerald-100' },
-                { id: 'Modify', label: 'Modify Proposal', icon: Edit3, activeBg: 'bg-white text-blue-600 shadow-sm border border-blue-100' },
-                { id: 'Delete', label: 'Delete Proposal', icon: Trash2, activeBg: 'bg-white text-rose-600 shadow-sm border border-rose-200' },
+                { id: 'Add', label: 'Add Descision Area', icon: Plus, activeBg: 'bg-white text-emerald-600 shadow-sm border border-emerald-100' },
+                { id: 'Modify', label: 'Modify Descision Area', icon: Edit3, activeBg: 'bg-white text-blue-600 shadow-sm border border-blue-100' },
+                { id: 'Delete', label: 'Delete Descision Area', icon: Trash2, activeBg: 'bg-white text-rose-600 shadow-sm border border-rose-200' },
               ].map(mode => {
                 const Icon = mode.icon;
                 const isActive = actionMode === mode.id;
@@ -1895,9 +2142,10 @@ export default function App() {
                       setActionMode(mode.id);
                       setSelectedModifyId('');
                       if (mode.id === 'Add') {
+                        const defFunc = allowedDomains[0] || 'Finance';
                         setFormData({
-                          parentFunction: 'Finance',
-                          businessLine: 'Bank Capital and Capital Management',
+                          parentFunction: defFunc,
+                          businessLine: (functionTaxonomy[defFunc] || [])[0] || 'Bank Capital and Capital Management',
                           decisionArea: '',
                           keyNonKey: 'Key',
                           regulatory: 'N',
@@ -1937,9 +2185,9 @@ export default function App() {
                       className="w-full text-sm border border-slate-300 rounded-lg p-3 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium"
                     >
                       <option value="">-- Choose an existing decision row from DoA store --</option>
-                      {doaRecords.map(rec => (
+                      {doaRecords.filter(rec => canMutateRecord(rec)).map(rec => (
                         <option key={rec.id} value={rec.id}>
-                          #{rec.id} [{rec.parentFunction || rec.function}] [{rec.category || rec.businessLine}] - {rec.decisionArea.substring(0, 65)}...
+                          #{rec.id} [{rec.entity_id || 'ENT-BH-01'}] [{rec.parentFunction || rec.function}] - {(rec.decisionArea || '').substring(0, 60)}...
                         </option>
                       ))}
                     </select>
@@ -1973,34 +2221,21 @@ export default function App() {
                         <Briefcase className="h-4 w-4 text-teal-600" />
                         Function / Business Line
                       </span>
-                      <span className="text-[10px] text-teal-600 font-semibold uppercase bg-teal-50 px-2 py-0.5 rounded border border-teal-200/50">
-                        Governance Domain
-                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Function Dropdown */}
+                      {/* Function Field (Mandatory & Non-Editable) */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-600">
-                          Function
+                        <label className="text-xs font-bold text-slate-600 flex items-center gap-1">
+                          Function <span className="text-rose-500">*</span>
                         </label>
-                        <select 
-                          value={formData.parentFunction}
-                          onChange={(e) => {
-                            const newParent = e.target.value;
-                            const newCategories = functionTaxonomy[newParent] || [];
-                            setFormData(prev => ({
-                              ...prev,
-                              parentFunction: newParent,
-                              businessLine: newCategories[0] || ''
-                            }));
-                          }}
+                        <input
+                          type="text"
+                          readOnly
+                          value={formData.parentFunction || (allowedDomains && allowedDomains[0]) || 'Finance'}
                           required
-                          className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                        >
-                          <option value="Risk">Risk</option>
-                          <option value="Finance">Finance</option>
-                        </select>
+                          className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-100 font-semibold text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
+                        />
                       </div>
 
                       {/* Business Line / Risk Factor Dropdown */}
@@ -2022,45 +2257,44 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Decision Area Content */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Decision Area / Authority Description
-                    </label>
-                    <input 
-                      type="text"
-                      value={formData.decisionArea}
-                      onChange={(e) => setFormData(prev => ({ ...prev, decisionArea: e.target.value }))}
-                      placeholder="e.g. Approve single obligor credit limit for wholesale portfolio above USD 50 million"
-                      required={actionMode !== 'Delete'}
-                      className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-                    />
-                  </div>
+                  {/* Decision Area, Classification, & Regulatory Mandated Aligned Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    <div className="md:col-span-6 space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Decision Area / Authority Description <span className="text-rose-500">*</span>
+                      </label>
+                      <input 
+                        type="text"
+                        value={formData.decisionArea}
+                        onChange={(e) => setFormData(prev => ({ ...prev, decisionArea: e.target.value }))}
+                        placeholder="e.g. Approve single obligor credit limit for wholesale portfolio above USD 50 million"
+                        required={actionMode !== 'Delete'}
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800"
+                      />
+                    </div>
 
-                  {/* Key/Non-Key & Regulatory */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
+                    <div className="md:col-span-3 space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Decision Classification
                       </label>
                       <select
                         value={formData.keyNonKey}
                         onChange={(e) => setFormData(prev => ({ ...prev, keyNonKey: e.target.value }))}
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800"
                       >
                         <option value="Key">Key Decision</option>
                         <option value="Non-Key">Non-Key Decision</option>
                       </select>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="md:col-span-3 space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Regulatory Mandated
                       </label>
                       <select
                         value={formData.regulatory}
                         onChange={(e) => setFormData(prev => ({ ...prev, regulatory: e.target.value }))}
-                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium text-slate-800"
                       >
                         <option value="N">No (Internal Corporate Governance)</option>
                         <option value="Y">Yes (Central Bank / CBB Mandated)</option>
@@ -2068,167 +2302,64 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Proposed Authority Section with Custom Radio Dropdowns */}
-                  <div className="p-5 bg-gradient-to-br from-slate-50 to-teal-50/20 border border-slate-200 rounded-2xl space-y-4 w-full">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200/80 pb-3">
-                      <div>
-                        <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                          <SlidersHorizontal className="h-4 w-4 text-teal-600" />
-                          PROPOSED AUTHORITY BUILDER
+                  {/* Authority Hierarchy Studio & Proposed Authority Chain Builder */}
+                  <div className="space-y-4 w-full">
+                    <AuthorityChainBuilder
+                      initialChain={authorityChain.map((item, idx) => ({
+                        id: `init-${idx}`,
+                        authorityBody: item.parentName || 'Board Committees',
+                        entity: item.childName || item.parentName || 'AC – Audit Committee',
+                        code: item.display ? item.display.split(' ')[0] : 'AC',
+                        operator: item.operator || (idx === 0 ? 'P' : idx === 1 ? 'R' : 'A'),
+                        operatorLabel: item.operator === 'P' ? 'Proposer (P)' : item.operator === 'R' ? 'General Reviewer (R)' : item.operator === 'A' ? 'Approver (A)' : `Endorse (${item.operator || 'E1'})`,
+                        roleType: item.operator === 'P' ? 'proposer' : (item.operator === 'R' || item.operator === 'R1' || item.operator === 'R2') ? 'reviewer' : (item.operator === 'A' || item.operator === 'BA') ? 'approver' : 'endorser',
+                        display: item.display
+                      }))}
+                      onChange={(newChain, compositeStr) => {
+                        setAuthorityChain(newChain);
+                        setFormData(prev => ({ ...prev, authority: compositeStr }));
+                      }}
+                      onSave={(newChain, compositeStr) => {
+                        setAuthorityChain(newChain);
+                        setFormData(prev => ({ ...prev, authority: compositeStr }));
+                        addToast('Authority Matrix Validated & Saved', 'success');
+                      }}
+                    />
+
+                    {/* Authority preview input (Non-Editable) */}
+                    <div className="space-y-1.5 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Composite Authority String (Generated Sequence)
+                        </label>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase bg-white px-2 py-0.5 rounded border border-slate-200">
+                          Read-Only
                         </span>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          Click any dropdown to select an option via radio button, then click the round <span className="font-bold text-teal-700">(+)</span> button to add to the delegation chain.
-                        </p>
                       </div>
-                      
-                      {/* Round toggle button for builder expansion */}
-                      <button
-                        type="button"
-                        onClick={() => setIsChildOpen(prev => !prev)}
-                        className="self-start sm:self-auto flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 bg-white border border-slate-200 text-teal-700 hover:bg-teal-50 rounded-full shadow-xs transition-all"
-                      >
-                        <span className="h-2 w-2 rounded-full bg-teal-500 animate-pulse"></span>
-                        {isChildOpen ? 'Hide Builder Steps' : 'Open Round Stepper (+)'}
-                      </button>
-                    </div>
-
-                    {isChildOpen && (
-                      <div className="space-y-4 animate-fade-in w-full">
-                        {/* 3-Column Radio Dropdowns - Perfectly Aligned with textboxes below */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full items-end">
-                          
-                          {/* Column 1: Authority Body Dropdown */}
-                          <div className="space-y-1.5 w-full">
-                            <label className="text-xs font-bold text-slate-700 block">
-                              Authority Body
-                            </label>
-                            <RadioDropdown
-                              selectedValue={selectedAuthParent}
-                              options={authorityTaxonomy.parents.map(p => ({ value: p.id, label: p.name }))}
-                              onChange={(val) => handleAuthParentChange(val)}
-                              accentColor="teal"
-                            />
-                          </div>
-
-                          {/* Column 2: Specific Body / Role Dropdown */}
-                          <div className="space-y-1.5 w-full">
-                            <label className="text-xs font-bold text-slate-700 block truncate">
-                              {currentAuthParentDef.hasChildDropdown ? currentAuthParentDef.childLabel || 'Specific Body / Role' : 'Specific Body / Role'}
-                            </label>
-                            <RadioDropdown
-                              selectedValue={selectedAuthChild}
-                              options={(currentAuthParentDef.children || []).map(c => ({ value: c.code, label: c.name }))}
-                              onChange={(val) => setSelectedAuthChild(val)}
-                              disabled={!currentAuthParentDef.hasChildDropdown}
-                              disabledPlaceholder={`Direct: ${currentAuthParentDef.name}`}
-                              accentColor="indigo"
-                            />
-                          </div>
-
-                          {/* Column 3: Action Operator Dropdown + Round (+) Button */}
-                          <div className="space-y-1.5 w-full">
-                            <label className="text-xs font-bold text-slate-700 block">
-                              Action Operator
-                            </label>
-                            <div className="flex items-center gap-2 w-full">
-                              <div className="flex-1 min-w-0">
-                                <RadioDropdown
-                                  selectedValue={selectedAuthOperator}
-                                  options={currentAuthParentDef.operators.map(op => ({ value: op.code, label: op.label }))}
-                                  onChange={(val) => setSelectedAuthOperator(val)}
-                                  accentColor="amber"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleAddAuthorityToChain}
-                                title="Add selected authority step to delegation chain"
-                                className="h-[38px] w-[38px] flex-shrink-0 bg-teal-600 hover:bg-teal-700 text-white rounded-full flex items-center justify-center shadow-md transition-all transform hover:scale-105 active:scale-95"
-                              >
-                                <Plus className="h-5 w-5" />
-                              </button>
-                            </div>
-                          </div>
-
-                        </div>
-
-                        {/* Visual Chain representation - Exact Width Alignment */}
-                        <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2 w-full shadow-2xs">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Active Proposed Authority Chain (Click x on any pill to remove)
-                          </span>
-                          
-                          <div className="flex flex-wrap items-center gap-2">
-                            {authorityChain.length === 0 ? (
-                              <span className="text-xs text-slate-400 italic">No authority steps added yet. Click the round (+) button above to add steps.</span>
-                            ) : (
-                              authorityChain.map((item, idx) => (
-                                <React.Fragment key={idx}>
-                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-50 border border-teal-200 text-teal-800 font-bold text-xs rounded-full shadow-xs">
-                                    <span>{item.display}</span>
-                                    <button 
-                                      type="button" 
-                                      onClick={() => handleRemoveFromChain(idx)}
-                                      className="text-teal-400 hover:text-rose-600 rounded-full"
-                                    >
-                                      <X className="h-3.5 w-3.5" />
-                                    </button>
-                                  </span>
-                                  {idx < authorityChain.length - 1 && (
-                                    <ChevronRight className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                                  )}
-                                </React.Fragment>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Authority preview input */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Composite Authority String
-                      </label>
                       <input 
                         type="text"
+                        readOnly
                         value={formData.authority}
-                        onChange={(e) => setFormData(prev => ({ ...prev, authority: e.target.value }))}
-                        placeholder="e.g. BoD (A) ➔ BRPC (E1) ➔ GCFO (R)"
-                        className="w-full text-xs font-semibold border border-slate-200 rounded-lg p-2.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                        placeholder="e.g. CEO (A) ← BRC (E1) ← CRO (R) ← AC (P)"
+                        className="w-full text-xs font-mono font-semibold border border-slate-200 rounded-lg p-2.5 bg-slate-100 text-slate-700 cursor-not-allowed select-none focus:outline-none transition-all"
                       />
                     </div>
                   </div>
 
                 </div>
 
-                {/* Rationale (Mandatory for change control) */}
+                                {/* Rationale for Request */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    Rationale for Request / Proposal Justification
+                    Rationale for Request / Proposal Justification <span className="text-rose-500">*</span>
                   </label>
                   <textarea 
-                    rows="2"
+                    rows="3"
                     value={formData.rationale}
                     onChange={(e) => setFormData(prev => ({ ...prev, rationale: e.target.value }))}
                     placeholder="State justification, audit recommendations, risk committee mandates or CBB references..."
                     required
-                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
-                  ></textarea>
-                </div>
-
-                {/* Operational Impact Analysis (For Process & Dept Owners) */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-                    <span>Operational &amp; Process Impact Assessment</span>
-                    <span className="text-[10px] text-teal-600 font-semibold lowercase">Optional / Process Owner review</span>
-                  </label>
-                  <textarea 
-                    rows="2"
-                    value={formData.operationalImpact || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, operationalImpact: e.target.value }))}
-                    placeholder="Describe how this change affects ERP controls, SLA processing times, segregation of duties, or departmental handovers..."
-                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs"
+                    className="w-full text-xs font-semibold border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all shadow-2xs resize-none"
                   ></textarea>
                 </div>
 
@@ -2237,7 +2368,7 @@ export default function App() {
                   <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Paperclip className="h-3.5 w-3.5 text-teal-600" />
-                      Attach Governance Evidence / Policy Document
+                      Attach Governance Evidence / Policy Document <span className="text-rose-500 font-bold">*</span>
                     </span>
                     <span className="text-[10px] text-slate-400 font-normal">PDF / Board Resolution / Charter Excerpt</span>
                   </label>
@@ -2283,7 +2414,7 @@ export default function App() {
                       type="submit"
                       className="w-full py-3.5 px-4 rounded-xl text-white font-bold text-sm tracking-wide bg-emerald-600 hover:bg-emerald-700 shadow-md transition-all flex items-center justify-center gap-2"
                     >
-                      <Plus className="h-4 w-4" /> Submit Add Proposal
+                      <Plus className="h-4 w-4" /> Submit
                     </button>
                   )}
 
@@ -2319,10 +2450,7 @@ export default function App() {
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Governance Change Queue</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Controlled approval queue: inspect field-level Diffs, review rationale, approve, reject, and publish active master versions.
-                </p>
+                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Change Queue</h2>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-xs bg-slate-100 border border-slate-200 text-slate-600 px-3 py-1.5 rounded-full font-medium">
@@ -2330,25 +2458,39 @@ export default function App() {
                 </span>
                 <button
                   onClick={loadChangeRequests}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all"
+                  disabled={isLoadingQueue}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all disabled:opacity-75 disabled:cursor-not-allowed"
                 >
-                  <RefreshCw className="h-3.5 w-3.5" /> Refresh
+                  <RefreshCw className={`h-3.5 w-3.5 ${isLoadingQueue ? 'animate-spin' : ''}`} /> Refresh
                 </button>
               </div>
             </div>
 
             {/* Change Requests Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            {/* Change Requests Table */}
+            <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
+              {/* Table Header Bar */}
+              <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                    <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+                  </div>
+                  <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
+                    Delegation of Authority Change Queue
+                  </h3>
+                </div>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-left text-sm text-slate-600">
-                  <thead className="bg-slate-800 text-slate-200 text-xs uppercase tracking-wider">
+                  <thead className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
                     <tr>
-                      <th className="py-3.5 px-4 font-semibold w-24">CR ID</th>
-                      <th className="py-3.5 px-4 font-semibold w-24">Type</th>
-                      <th className="py-3.5 px-4 font-semibold w-24">Target DOA</th>
-                      <th className="py-3.5 px-4 font-semibold">Requester &amp; Details</th>
-                      <th className="py-3.5 px-4 font-semibold w-32 text-center">Status</th>
-                      <th className="py-3.5 px-4 font-semibold text-center w-48">Governance Action</th>
+                      <th className="py-3 px-4 text-center w-24">NO.</th>
+                      <th className="py-3 px-4 text-center w-28">UPDATE TYPE</th>
+                      <th className="py-3 px-4 text-center w-28">TARGET DOA</th>
+                      <th className="py-3 px-6">REQUESTER &amp; DETAILS</th>
+                      <th className="py-3 px-4 text-center w-36">STATUS</th>
+                      <th className="py-3 px-4 text-center w-48">GOVERNANCE ACTION</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -2358,15 +2500,17 @@ export default function App() {
                           <div className="flex flex-col items-center justify-center gap-2">
                             <GitPullRequest className="h-8 w-8 text-slate-300" />
                             <span>No change requests submitted yet.</span>
-                            <button
-                              onClick={() => {
-                                setActiveTab('request');
-                                setActionMode('Add');
-                              }}
-                              className="text-xs text-teal-600 hover:text-teal-700 font-semibold underline mt-2"
-                            >
-                              Create a new change request
-                            </button>
+                            {canPropose && (
+                              <button
+                                onClick={() => {
+                                  setActiveTab('request');
+                                  setActionMode('Add');
+                                }}
+                                className="text-xs text-teal-600 hover:text-teal-700 font-semibold underline mt-2"
+                              >
+                                Create a new change request
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -2376,13 +2520,14 @@ export default function App() {
                         const isApproved = cr.status === 'APPROVED';
                         const isPublished = cr.status === 'PUBLISHED';
                         const isRejected = cr.status === 'REJECTED';
+                        const isOwnCR = isOwnChangeRequest(cr);
 
                         return (
                           <tr key={cr.id} className="hover:bg-slate-50/80 transition-colors">
-                            <td className="py-3 px-4 font-bold text-slate-700 text-xs">
-                              {cr.id}
+                            <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400 text-xs">
+                              #{cr.id}
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3.5 px-4 text-center">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                                 cr.request_type === 'ADD' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                                 cr.request_type === 'MODIFY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
@@ -2391,10 +2536,10 @@ export default function App() {
                                 {cr.request_type}
                               </span>
                             </td>
-                            <td className="py-3 px-4 font-semibold text-xs text-slate-700">
+                            <td className="py-3.5 px-4 text-center font-mono font-semibold text-xs text-slate-700">
                               {cr.doa_id ? `#${cr.doa_id}` : 'New Record'}
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-3.5 px-6">
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-semibold text-xs text-slate-800">
                                   {cr.proposed_value?.decision_area || cr.proposed_value?.decisionArea || cr.rationale || 'Change Request proposal'}
@@ -2404,14 +2549,18 @@ export default function App() {
                                 </span>
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-center">
+                            <td className="py-3.5 px-4 text-center">
                               <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
+                                cr.status === 'PENDING_PROCESS_OWNER' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
+                                cr.status === 'PENDING_DEPT_OWNER' ? 'bg-teal-50 text-teal-700 border border-teal-200' :
+                                cr.status === 'PENDING_2LOD_REVIEW' ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' :
+                                cr.status === 'UNDER_REVIEW' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                                 isSubmitted ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                                 isApproved ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                                 isPublished ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                                 'bg-rose-50 text-rose-700 border border-rose-200'
                               }`}>
-                                {cr.status}
+                                {cr.status?.replace(/_/g, ' ')}
                               </span>
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -2423,11 +2572,80 @@ export default function App() {
                                   title="Inspect Current vs Proposed Field Differences"
                                   className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all flex items-center gap-1"
                                 >
-                                  <Eye className="h-3.5 w-3.5 text-teal-600" /> Diff
+                                  <Eye className="h-3.5 w-3.5 text-teal-600" /> Review
                                 </button>
 
+                                {/* Process Owner Endorsement Action */}
+                                {!isOwnCR && currentUser.persona_type === 'PROCESS_OWNER' && (isSubmitted || cr.status === 'PENDING_PROCESS_OWNER' || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const impact = window.prompt("Enter Operational & Process Impact Assessment comment for " + cr.id + ":", "SOP verified, operational controls in compliance.");
+                                      if (impact) {
+                                        try {
+                                          await api.endorseProcessImpact(cr.id, impact);
+                                          addToast(`Process Owner endorsed operational impact for ${cr.id}, routed to Functional Owner.`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Endorsement failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Endorse Operational Impact & Forward"
+                                    className="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Layers className="h-3.5 w-3.5 text-blue-600" /> Endorse
+                                  </button>
+                                )}
+
+                                {/* Authority Owner Charter Verification Action */}
+                                {!isOwnCR && currentUser.persona_type === 'AUTHORITY_OWNER' && (isSubmitted || cr.status === 'PENDING_DEPT_OWNER' || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const note = window.prompt("Enter Board / Committee Charter Mandate Verification remark for " + cr.id + ":", "Mandate verified against Schedule B of Corporate Governance Charter.");
+                                      if (note) {
+                                        try {
+                                          await api.verifyAuthorityMandate(cr.id, note);
+                                          addToast(`Charter mandate verified for ${cr.id}`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Verification failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Verify Charter Mandate"
+                                    className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" /> Verify
+                                  </button>
+                                )}
+
+                                {/* Reviewer 2LoD Recommendation Action */}
+                                {!isOwnCR && (currentUser.persona_type === 'REVIEWER' || currentUser.role === 'GOVERNANCE_TEAM') && (cr.status === 'PENDING_2LOD_REVIEW' || isSubmitted || cr.status === 'UNDER_REVIEW') && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      const rec = window.prompt("Enter 2LoD Technical Risk Recommendation for " + cr.id + ":", "2LoD technical risk assessment completed with no policy objections.");
+                                      if (rec) {
+                                        try {
+                                          await api.recommendReviewerCR(cr.id, rec);
+                                          addToast(`2LoD recommendation submitted for ${cr.id}, cleared for Executive Approver.`, 'success');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Recommendation failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Submit 2LoD Risk Recommendation & Clear"
+                                    className="px-2 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 border border-cyan-300 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5 text-cyan-600" /> Recommend
+                                  </button>
+                                )}
+
                                 {/* Admin / Approver Action Buttons */}
-                                {(['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) || currentUser.persona_type === 'APPROVER') && isSubmitted && (
+                                {!isOwnCR && (['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser.role) || (currentUser.role === 'NORMAL_USER' && currentUser.persona_type === 'APPROVER')) && (isSubmitted || cr.status === 'UNDER_REVIEW' || cr.status === 'PENDING_2LOD_REVIEW' || cr.status === 'PENDING_DEPT_OWNER') && (
                                   <>
                                     <button
                                       type="button"
@@ -2448,7 +2666,29 @@ export default function App() {
                                   </>
                                 )}
 
-                                {['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) && isApproved && (
+                                {/* Proposer Self-Withdrawal Button */}
+                                {canPropose && isSubmitted && isOwnCR && (
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (window.confirm(`Are you sure you want to withdraw your proposal ${cr.id}?`)) {
+                                        try {
+                                          await api.withdrawRequestorProposal(cr.id);
+                                          addToast(`Proposal ${cr.id} withdrawn successfully.`, 'info');
+                                          loadChangeRequests();
+                                        } catch (e) {
+                                          addToast(`Withdrawal failed: ${e.message}`, 'error');
+                                        }
+                                      }
+                                    }}
+                                    title="Withdraw My Proposal"
+                                    className="px-2 py-1 bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-2xs"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 text-slate-500" /> Withdraw
+                                  </button>
+                                )}
+
+                                {!isOwnCR && ['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && isApproved && (
                                   <button
                                     type="button"
                                     onClick={() => handlePublishCR(cr.id)}
@@ -2458,6 +2698,8 @@ export default function App() {
                                     <Send className="h-3 w-3" /> Publish
                                   </button>
                                 )}
+
+
 
 
                                 {isPublished && (
@@ -2478,8 +2720,16 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 5: AUDIT TRAIL (Governance, DOA Admin, System Admin) */}
-        {activeTab === 'audit' && ['ADMIN', 'SYSTEM_ADMINISTRATOR', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && (
+        {/* TAB 4.5: EXCEPTIONAL WORKFLOW COCKPIT (BRD Section 4.3 & 4.5) */}
+        {activeTab === 'exceptions' && (
+          <ExceptionWorkflowInbox
+            currentUser={currentUser}
+            onRefreshStats={loadDashboardSummary}
+          />
+        )}
+
+        {/* TAB 5: AUDIT TRAIL (Governance, DOA Admin, System Admin, Audit Read-Only) */}
+        {activeTab === 'audit' && isAuditRole && (
           <div className="space-y-6 animate-fade-in">
             {/* Title Section */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -2491,9 +2741,10 @@ export default function App() {
               </div>
               <button
                 onClick={loadAuditLogs}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all self-start sm:self-auto"
+                disabled={isLoadingAudit}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all self-start sm:self-auto disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                <RefreshCw className="h-3.5 w-3.5" /> Refresh Logs
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoadingAudit ? 'animate-spin' : ''}`} /> Refresh Logs
               </button>
             </div>
 
@@ -2623,6 +2874,15 @@ export default function App() {
                       {selectedRecord.regulatory === 'Y' || isRegulatoryMandated(selectedRecord.decisionArea) ? 'Yes (Mandated)' : 'No (Internal)'}
                     </span>
                   </div>
+
+                  <div className="space-y-1 bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                    <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5 text-slate-400" /> Last Update Date (LUD)
+                    </h5>
+                    <span className="text-xs font-mono font-bold text-slate-800">
+                      {selectedRecord.lastUpdateDate || selectedRecord.effective_date || '2026-02-15'}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Policy & Regulatory Citations (Functionality 3 & 6) */}
@@ -2699,7 +2959,7 @@ export default function App() {
                 <div className="space-y-2">
                   <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Composite Delegation Flow</h4>
                   <div className="p-3.5 bg-teal-50/60 border border-teal-200/60 rounded-xl text-xs font-bold text-teal-900 font-mono">
-                    {selectedRecord.compositeAuthority || selectedRecord.composite_authority || selectedRecord.shareholders || selectedRecord.boardOfDirectors || 'A'}
+                    {formatAuthorityFlow(selectedRecord.compositeAuthority || selectedRecord.composite_authority || selectedRecord.shareholders || selectedRecord.boardOfDirectors || 'A')}
                   </div>
                 </div>
 
@@ -2794,7 +3054,7 @@ export default function App() {
 
               {/* Footer with Role-based Actions */}
               <div className="p-4 border-t border-slate-100 flex gap-3 bg-slate-50">
-                {['NORMAL_USER', 'DOA_ADMINISTRATOR', 'ADMIN'].includes(currentUser.role) ? (
+                {canMutateRecord(selectedRecord) ? (
                   <>
                     <button
                       onClick={() => {
@@ -2808,16 +3068,18 @@ export default function App() {
                     >
                       <Edit3 className="h-4 w-4" /> Edit Authority
                     </button>
-                    <button
-                      onClick={() => {
-                        const rec = selectedRecord;
-                        setSelectedRecord(null);
-                        setDeleteModalRecord(rec);
-                      }}
-                      className="py-2.5 px-4 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete Proposal
-                    </button>
+                    {['ADMIN', 'DOA_ADMINISTRATOR'].includes(currentUser?.role) && (
+                      <button
+                        onClick={() => {
+                          const rec = selectedRecord;
+                          setSelectedRecord(null);
+                          setDeleteModalRecord(rec);
+                        }}
+                        className="py-2.5 px-4 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" /> Delete Proposal
+                      </button>
+                    )}
                   </>
                 ) : (
                   <button
@@ -2847,11 +3109,11 @@ export default function App() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-slate-800">Proposal Diff Inspector</h3>
-                    <span className="px-2 py-0.2 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-700">
+                    <h3 className="text-base font-bold text-slate-800">Review Proposal</h3>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-700">
                       {activeDiffCR.id}
                     </span>
-                    <span className={`px-2 py-0.2 rounded text-[10px] font-extrabold uppercase ${
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
                       activeDiffCR.request_type === 'ADD' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                       activeDiffCR.request_type === 'MODIFY' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                       'bg-rose-50 text-rose-700 border border-rose-200'
@@ -2859,9 +3121,6 @@ export default function App() {
                       {activeDiffCR.request_type}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Target DOA: {activeDiffCR.doa_id ? `#${activeDiffCR.doa_id}` : 'New Record'} &bull; Base Version: v{activeDiffCR.base_version}
-                  </p>
                 </div>
               </div>
               <button 
@@ -2925,6 +3184,78 @@ export default function App() {
                   </p>
                 </div>
               )}
+
+              {/* Supporting Attachments Section */}
+              {(() => {
+                let attList = [];
+                if (Array.isArray(activeDiffCR.attachments)) {
+                  attList = activeDiffCR.attachments;
+                } else if (typeof activeDiffCR.attachments === 'string') {
+                  try {
+                    attList = JSON.parse(activeDiffCR.attachments) || [];
+                  } catch {
+                    attList = [];
+                  }
+                }
+
+                return (
+                  <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-2 shadow-2xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Paperclip className="h-3.5 w-3.5 text-teal-600" /> Supporting Attachments &amp; Documentation
+                      </span>
+                      {attList.length > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                          {attList.length} {attList.length === 1 ? 'document' : 'documents'}
+                        </span>
+                      )}
+                    </div>
+
+                    {attList.length === 0 ? (
+                      <div className="p-3 bg-slate-50 border border-slate-100 rounded-lg text-xs text-slate-400 italic flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-slate-300 shrink-0" />
+                        <span>No supporting attachments uploaded for this proposal.</span>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {attList.map((att, idx) => {
+                          const fileName = att.name || att.filename || `Document_${idx + 1}.pdf`;
+                          const fileType = att.type || (fileName.toLowerCase().endsWith('.pdf') ? 'PDF Document' : 'Document');
+                          const fileSize = att.size || '450 KB';
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-lg transition-colors group"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <div className="p-1.5 bg-white border border-slate-200 rounded text-teal-600 shadow-2xs shrink-0">
+                                  <FileText className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-slate-700 truncate" title={fileName}>
+                                    {fileName}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400">
+                                    {fileType} &bull; {fileSize}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => addToast(`Opening attachment: ${fileName}`, 'info')}
+                                title="View / Download Document"
+                                className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-white rounded transition-colors shrink-0"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* VIEW A: FOR REQUESTORS (Simple comparison status) */}
               {currentUser?.persona_type === 'FRONTEND_USER' ? (
@@ -3026,9 +3357,6 @@ export default function App() {
                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
                       Field Comparison (Automatic Change Highlighting)
                     </span>
-                    <span className="text-[10px] font-bold text-slate-500">
-                      Comparing: Base v{activeDiffCR.base_version} vs Proposed
-                    </span>
                   </div>
                   
                   {isLoadingDiff ? (
@@ -3090,54 +3418,108 @@ export default function App() {
 
             </div>
 
-            {/* Modal Footer with Actions */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-              <span className="text-[11px] text-slate-400">
-                Status: <strong className="text-slate-700">{activeDiffCR.status}</strong>
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveDiffCR(null);
-                    setDiffDetails(null);
-                  }}
-                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  Close
-                </button>
-
-                {(['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) || currentUser.persona_type === 'APPROVER') && activeDiffCR.status === 'SUBMITTED' && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => triggerDecisionModal(activeDiffCR.id, 'REJECT')}
-                      className="px-3.5 py-2 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs"
-                    >
-                      <X className="h-3.5 w-3.5" /> Reject with Rationale
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerDecisionModal(activeDiffCR.id, 'APPROVE')}
-                      className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
-                    >
-                      <Check className="h-3.5 w-3.5" /> Approve Proposal
-                    </button>
-                  </>
-                )}
-
-                {['ADMIN', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR'].includes(currentUser.role) && activeDiffCR.status === 'APPROVED' && (
+            {/* Inline Rejection Comments Box */}
+            {diffRejectBoxOpen && (
+              <div className="p-3.5 bg-rose-50/70 border border-rose-200 rounded-xl space-y-2.5 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800">
+                    Comments
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={diffRejectComment}
+                  onChange={(e) => setDiffRejectComment(e.target.value)}
+                  placeholder="Type here..."
+                  className="w-full text-xs font-medium border border-rose-200 bg-white rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-slate-400 shadow-2xs"
+                  autoFocus
+                />
+                <div className="flex items-center justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => handlePublishCR(activeDiffCR.id)}
-                    className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                    onClick={() => {
+                      setDiffRejectBoxOpen(false);
+                      setDiffRejectComment('');
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                   >
-                    <Send className="h-3.5 w-3.5" /> Publish New Version
+                    Cancel
                   </button>
-                )}
-
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!diffRejectComment.trim()) {
+                        addToast('Please enter comments explaining the rejection rationale.', 'error');
+                        return;
+                      }
+                      await handleRejectCR(activeDiffCR.id, diffRejectComment);
+                      setDiffRejectBoxOpen(false);
+                      setDiffRejectComment('');
+                      setActiveDiffCR(prev => prev ? { ...prev, status: 'REJECTED' } : null);
+                    }}
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <X className="h-3.5 w-3.5" /> Confirm Rejection
+                  </button>
+                </div>
               </div>
+            )}
+
+            {/* Modal Footer with Actions */}
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              {isOwnChangeRequest(activeDiffCR) ? (
+                <span className="px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-bold">
+                  VAL-06 SoD: Self-Authored Proposal (Independent Review Required)
+                </span>
+              ) : activeDiffCR.status === 'REJECTED' ? (
+                <span className="px-3 py-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-1.5">
+                  <X className="h-3.5 w-3.5" /> Proposal Rejected
+                </span>
+              ) : activeDiffCR.status === 'APPROVED' ? (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5" /> Proposal Approved
+                  </span>
+                  {['ADMIN', 'DOA_ADMINISTRATOR', 'GOVERNANCE_TEAM'].includes(currentUser.role) && (
+                    <button
+                      type="button"
+                      onClick={() => handlePublishCR(activeDiffCR.id)}
+                      className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                    >
+                      <Send className="h-3.5 w-3.5" /> Publish New Version
+                    </button>
+                  )}
+                </div>
+              ) : activeDiffCR.status === 'PUBLISHED' ? (
+                <span className="px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold flex items-center gap-1.5">
+                  <CheckCheck className="h-3.5 w-3.5" /> Published to Active Matrix
+                </span>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDiffRejectBoxOpen(prev => !prev)}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 ${
+                      diffRejectBoxOpen
+                        ? 'bg-rose-200 text-rose-900 border border-rose-300'
+                        : 'text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 shadow-2xs'
+                    }`}
+                  >
+                    <X className="h-3.5 w-3.5" /> Reject
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handleApproveCR(activeDiffCR.id, 'Approved in Proposal Review session');
+                      setActiveDiffCR(prev => prev ? { ...prev, status: 'APPROVED' } : null);
+                    }}
+                    className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
+                  >
+                    <Check className="h-3.5 w-3.5" /> Approve
+                  </button>
+                </div>
+              )}
             </div>
 
           </div>
@@ -3186,14 +3568,14 @@ export default function App() {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>Obligatory Rationale &amp; Decision Comments <span className="text-rose-500">*</span></span>
+                  <span>{decisionModal.action === 'REJECT' ? 'Comments' : 'Obligatory Rationale & Decision Comments'} <span className="text-rose-500">*</span></span>
                   <span className="text-[10px] text-slate-400 font-normal">Audit-logged</span>
                 </label>
                 <textarea
                   rows={4}
                   value={decisionModal.rationale}
                   onChange={(e) => setDecisionModal(prev => ({ ...prev, rationale: e.target.value }))}
-                  placeholder="State your formal justification, executive sign-off remarks, or required amendments..."
+                  placeholder={decisionModal.action === 'REJECT' ? 'Type here...' : 'State your formal justification, executive sign-off remarks, or required amendments...'}
                   className="w-full text-xs font-medium border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 shadow-2xs"
                   required
                 />
@@ -3234,21 +3616,43 @@ export default function App() {
       )}
 
 
+      {/* Floating DOA Governance Policy Assistant Bot */}
+      {currentUser && (
+        <ChatbotWidget
+          userRole={currentUser.role}
+          onNavigate={(target) => {
+            if (target === 'new-proposal') {
+              setIsAddModalOpen(true);
+            } else if (target === 'doa-matrix') {
+              setActiveView && setActiveView('matrix');
+            } else if (target === 'audit-trail') {
+              setActiveView && setActiveView('audit');
+            } else if (target === 'diff-inspector') {
+              setActiveView && setActiveView('requests');
+            }
+          }}
+        />
+      )}
+
+      {/* Organization Hierarchy Modal (MS Teams Style) */}
+      <OrgChartModal 
+        isOpen={showOrgChartModal} 
+        onClose={() => setShowOrgChartModal(false)} 
+        initialUser={currentUser} 
+      />
+
       {/* Footer Branding */}
-      <footer className="bg-slate-950 text-slate-400 text-xs py-6 border-t border-slate-900 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-200 text-sm">protiviti</span>
-            <div className="h-1 w-1 bg-rose-600 rounded-full mt-1.5"></div>
-            <span className="text-[10px] text-slate-500 font-medium">DoA Governance Matrix v2.0</span>
+      <footer className="bg-white border-t border-slate-200 shadow-sm mt-auto py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center">
+            <img 
+              src={proNexusBrand} 
+              alt="Pro Nexus" 
+              className="h-9 sm:h-10 w-auto object-contain" 
+            />
           </div>
-          <div className="flex gap-4 text-[11px]">
-            <span className="hover:text-slate-300 cursor-pointer">Risk Governance</span>
-            <span className="hover:text-slate-300 cursor-pointer">Finance Limits</span>
-            <span className="hover:text-slate-300 cursor-pointer">Internal Audit Standard</span>
-          </div>
-          <p className="text-[10px] text-slate-500">
-            &copy; 2026 Protiviti Inc. All rights reserved. Confidential governance prototype.
+          <p className="text-xs text-slate-400">
+            &copy; {new Date().getFullYear()} Pro Nexus. All rights reserved.
           </p>
         </div>
       </footer>

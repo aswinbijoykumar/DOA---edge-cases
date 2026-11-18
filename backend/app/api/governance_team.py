@@ -6,13 +6,14 @@ import json
 from app.database.database import get_db
 from app.database.models import User, DOARecord, ChangeRequest, AuditLog
 from app.core.dependencies import require_roles
+from app.core.rbac import assert_sod_not_proposer
 from app.schemas.schemas import ChangeRequestRead, DiffResponse, AuditLogRead, GovernanceActionPayload
 from app.services import change_request_service, diff_service
 from app.api.change_requests import format_cr_response
 
 router = APIRouter(prefix="/governance", tags=["Governance Team Console"])
 
-require_governance_role = require_roles(["GOVERNANCE_TEAM", "ADMIN", "SYSTEM_ADMINISTRATOR", "DOA_ADMINISTRATOR"])
+require_governance_role = require_roles(["GOVERNANCE_TEAM", "ADMIN", "DOA_ADMINISTRATOR"])
 
 @router.get("/dashboard")
 def get_governance_dashboard(
@@ -150,6 +151,7 @@ def request_governance_clarification(
     cr = change_request_service.get_change_request_by_id(db, cr_id)
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
+    assert_sod_not_proposer(db, cr, current_user, "Governance clarification request")
 
     old_status = cr.status
     cr.status = "CLARIFICATION_REQUIRED"
@@ -224,6 +226,7 @@ def reroute_change_request(
     cr = change_request_service.get_change_request_by_id(db, cr_id)
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
+    assert_sod_not_proposer(db, cr, current_user, "Governance re-route")
 
     target = payload.target_committee or "Board Audit Committee"
     reroute_comment = f"[Re-routed to {target} by {current_user.full_name}]: {payload.reason or 'Workflow re-assignment'}"
@@ -258,6 +261,7 @@ def escalate_change_request(
     cr = change_request_service.get_change_request_by_id(db, cr_id)
     if not cr:
         raise HTTPException(status_code=404, detail="Change request not found")
+    assert_sod_not_proposer(db, cr, current_user, "Governance escalation")
 
     escalate_comment = f"[ESCALATED by {current_user.full_name}]: {payload.reason or 'Urgent governance escalation'}"
     cr.status = "UNDER_REVIEW"

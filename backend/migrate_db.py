@@ -1,43 +1,56 @@
 import sqlite3
+import os
 
-conn = sqlite3.connect('doa.db')
-cursor = conn.cursor()
 
-# Check user columns
-cursor.execute('PRAGMA table_info(users)')
-cols = [r[1] for r in cursor.fetchall()]
-if 'can_request' not in cols:
-    cursor.execute('ALTER TABLE users ADD COLUMN can_request BOOLEAN DEFAULT 1 NOT NULL')
-    print("Added can_request to users")
-if 'can_review' not in cols:
-    cursor.execute('ALTER TABLE users ADD COLUMN can_review BOOLEAN DEFAULT 0 NOT NULL')
-    print("Added can_review to users")
+def migrate():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    for db_name in ["doa.db", "test_doa.db"]:
+        db_path = os.path.join(base_dir, db_name)
+        if not os.path.exists(db_path):
+            continue
+        try:
+            con = sqlite3.connect(db_path)
+            cur = con.cursor()
 
-# Check change_requests columns
-cursor.execute('PRAGMA table_info(change_requests)')
-cr_cols = [r[1] for r in cursor.fetchall()]
+            # 1. Users table columns
+            cols_users = [col[1] for col in cur.execute("PRAGMA table_info(users)").fetchall()]
+            if cols_users:
+                if "entity_id" not in cols_users:
+                    print(f"Adding entity_id to users in {db_name}")
+                    cur.execute("ALTER TABLE users ADD COLUMN entity_id VARCHAR(50) DEFAULT 'ENT-BH-01'")
+                if "allowed_domains" not in cols_users:
+                    print(f"Adding allowed_domains to users in {db_name}")
+                    cur.execute("ALTER TABLE users ADD COLUMN allowed_domains VARCHAR(255) DEFAULT NULL")
 
-migrations = [
-    ('currency', "VARCHAR(20) DEFAULT 'USD'"),
-    ('current_limit', 'VARCHAR(100)'),
-    ('proposed_limit', 'VARCHAR(100)'),
-    ('effective_date', 'VARCHAR(50)'),
-    ('priority', "VARCHAR(20) DEFAULT 'MEDIUM'"),
-    ('due_date', 'VARCHAR(50)'),
-    ('risk_impact', 'TEXT')
-]
+            # 2. DOA records table columns
+            cols_doa = [col[1] for col in cur.execute("PRAGMA table_info(doa_records)").fetchall()]
+            if cols_doa:
+                if "entity_id" not in cols_doa:
+                    print(f"Adding entity_id to doa_records in {db_name}")
+                    cur.execute("ALTER TABLE doa_records ADD COLUMN entity_id VARCHAR(50) DEFAULT 'ENT-BH-01'")
+                if "classification" not in cols_doa:
+                    print(f"Adding classification to doa_records in {db_name}")
+                    cur.execute("ALTER TABLE doa_records ADD COLUMN classification VARCHAR(50) DEFAULT 'Board-level DOA'")
 
-for col_name, col_def in migrations:
-    if col_name not in cr_cols:
-        cursor.execute(f"ALTER TABLE change_requests ADD COLUMN {col_name} {col_def}")
-        print(f"Added {col_name} to change_requests")
+            # 3. Change requests table columns
+            cols_cr = [col[1] for col in cur.execute("PRAGMA table_info(change_requests)").fetchall()]
+            if cols_cr:
+                if "entity_id" not in cols_cr:
+                    print(f"Adding entity_id to change_requests in {db_name}")
+                    cur.execute("ALTER TABLE change_requests ADD COLUMN entity_id VARCHAR(50) DEFAULT 'ENT-BH-01'")
+                if "classification" not in cols_cr:
+                    print(f"Adding classification to change_requests in {db_name}")
+                    cur.execute("ALTER TABLE change_requests ADD COLUMN classification VARCHAR(50) DEFAULT 'Board-level DOA'")
+                if "exception_id" not in cols_cr:
+                    print(f"Adding exception_id to change_requests in {db_name}")
+                    cur.execute("ALTER TABLE change_requests ADD COLUMN exception_id VARCHAR(50) DEFAULT NULL")
 
-# Update permissions
-cursor.execute("""
-    UPDATE users SET can_review = 1 WHERE persona_type IN ('REVIEWER', 'APPROVER') OR role IN ('ADMIN', 'GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR')
-""")
-cursor.execute("UPDATE users SET can_request = 1")
+            con.commit()
+            print(f"[+] Successfully migrated {db_name}")
+            con.close()
+        except Exception as e:
+            print(f"Error migrating {db_name}: {e}")
 
-conn.commit()
-print("Migration completed successfully!")
-conn.close()
+
+if __name__ == "__main__":
+    migrate()

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.database.models import AuditLog, User
-from app.core.dependencies import require_admin, require_governance_or_admin
+from app.core.dependencies import require_audit_viewer
 from app.schemas.schemas import AuditLogRead
 
 
@@ -16,9 +16,9 @@ def list_audit_logs(
     record_id: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=500),
     db: Session = Depends(get_db),
-    authorized_user: User = Depends(require_governance_or_admin)
+    authorized_user: User = Depends(require_audit_viewer)
 ):
-    """Audit trail query accessible to Administrators and Governance Team."""
+    """Audit trail query accessible to Administrators, Governance Team, Reviewers, and Internal Audit."""
 
     query = db.query(AuditLog)
     if action:
@@ -51,9 +51,9 @@ def list_audit_logs(
 def get_record_audit_logs(
     record_id: str,
     db: Session = Depends(get_db),
-    admin_user: User = Depends(require_admin)
+    authorized_user: User = Depends(require_audit_viewer)
 ):
-    """Admin-only audit trail for a specific record ID."""
+    """Audit trail for a specific record ID accessible to authorized audit/governance/admin roles."""
     logs = (
         db.query(AuditLog)
         .filter(AuditLog.record_id == record_id)
