@@ -3620,15 +3620,26 @@ export default function App() {
       {currentUser && (
         <ChatbotWidget
           userRole={currentUser.role}
+          currentUser={currentUser}
+          onInspectRecord={(recordId) => {
+            const found = doaRecords.find((r) => String(r.id) === String(recordId));
+            if (found) {
+              setSelectedRecord(found);
+            } else {
+              setActiveTab('search');
+              setSearchQuery(String(recordId));
+            }
+          }}
           onNavigate={(target) => {
             if (target === 'new-proposal') {
-              setIsAddModalOpen(true);
+              setActiveTab('request');
+              setActionMode('Add');
             } else if (target === 'doa-matrix') {
-              setActiveView && setActiveView('matrix');
+              setActiveTab('search');
             } else if (target === 'audit-trail') {
-              setActiveView && setActiveView('audit');
+              setActiveTab('audit');
             } else if (target === 'diff-inspector') {
-              setActiveView && setActiveView('requests');
+              setActiveTab('queue');
             }
           }}
         />

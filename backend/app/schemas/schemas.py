@@ -244,13 +244,19 @@ class GovernanceActionPayload(BaseModel):
     reason: Optional[str] = None
 
 # Chatbot Schemas
+class ChatbotHistoryMessage(BaseModel):
+    role: str
+    content: str
+
 class ChatbotContext(BaseModel):
     current_route: Optional[str] = None
     role: Optional[str] = None
+    persona_type: Optional[str] = None
 
 class ChatbotQueryRequest(BaseModel):
     message: str
     context: Optional[ChatbotContext] = None
+    history: Optional[List[ChatbotHistoryMessage]] = None
 
 class ChatbotSource(BaseModel):
     id: str
@@ -258,6 +264,8 @@ class ChatbotSource(BaseModel):
     function: Optional[str] = None
     decision_area: Optional[str] = None
     details: Optional[str] = None
+    authority_chain: Optional[str] = None
+    regulatory: Optional[str] = None
 
 class ChatbotAction(BaseModel):
     label: str

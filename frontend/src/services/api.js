@@ -469,10 +469,10 @@ export const api = {
   },
 
   // 9. Governance Assistant Chatbot
-  async queryChatbot(message, context = {}) {
+  async queryChatbot(message, context = {}, history = []) {
     return await request('/chatbot/query', {
       method: 'POST',
-      body: JSON.stringify({ message, context })
+      body: JSON.stringify({ message, context, history })
     });
   },
 

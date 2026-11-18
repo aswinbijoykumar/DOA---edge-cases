@@ -43,3 +43,41 @@ def test_chatbot_authorized_checklist_inquiry(client, user_token):
     data = response.json()
     assert data["is_guardrail_triggered"] is False
     assert "Checklist" in data["response"] or "Mandatory" in data["response"]
+
+
+def test_chatbot_toc_acronym_lookup(client, user_token):
+    payload = {"message": "What does BRPC and ICAAP mean?"}
+    headers = {"Authorization": f"Bearer {user_token}"}
+    response = client.post("/api/chatbot/query", json=payload, headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["is_guardrail_triggered"] is False
+    assert "Board Risk Policy Committee" in data["response"] or "BRPC" in data["response"]
+
+
+def test_chatbot_live_workspace_status_and_multiturn(client, user_token):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    # 1. Live workspace status query
+    res1 = client.post(
+        "/api/chatbot/query",
+        json={"message": "What is the status of my change requests?"},
+        headers=headers
+    )
+    assert res1.status_code == 200
+    assert res1.json()["is_guardrail_triggered"] is False
+
+    # 2. Multi-turn follow-up referencing Rule #245 from history
+    res2 = client.post(
+        "/api/chatbot/query",
+        json={
+            "message": "Is it regulatory mandated and who proposes it?",
+            "history": [
+                {"role": "user", "content": "Explain Rule #245"},
+                {"role": "assistant", "content": "[DOA #245] Approve Public Disclosure Policy"}
+            ]
+        },
+        headers=headers
+    )
+    assert res2.status_code == 200
+    assert res2.json()["is_guardrail_triggered"] is False
+
