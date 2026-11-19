@@ -34,7 +34,8 @@ import {
   History,
   Edit3,
   Bookmark,
-  ArrowUp
+  ArrowUp,
+  LayoutDashboard
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { exportReportToExcel, exportReportToPdf } from '../../utils/reportExport';
@@ -136,6 +137,150 @@ const DEMO_FREQUENTLY_VISITED_AREAS = [
     lastUpdateDate: '22-Oct-26'
   }
 ];
+
+/**
+ * Movie-credits style smooth auto-scrolling table with fixed header.
+ * Pauses automatically on hover/touch/wheel interaction and resumes smoothly.
+ */
+function AutoScrollingOverviewTable({
+  title,
+  icon,
+  items,
+  columns,
+  renderCells,
+  hoverRowClass = 'hover:bg-teal-50/30'
+}) {
+  const scrollRef = useRef(null);
+  const isPausedRef = useRef(false);
+  const isHoveredRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+  const accScrollRef = useRef(0);
+
+  const loopItems = items && items.length > 0 ? [...items, ...items] : [];
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || loopItems.length === 0) return;
+
+    let animId;
+    let lastTs = performance.now();
+    const SPEED_PX_PER_SEC = 24;
+
+    const step = (now) => {
+      const dt = Math.min((now - lastTs) / 1000, 0.1);
+      lastTs = now;
+
+      if (!isPausedRef.current && el) {
+        accScrollRef.current += SPEED_PX_PER_SEC * dt;
+        if (accScrollRef.current >= 1) {
+          const px = Math.floor(accScrollRef.current);
+          accScrollRef.current -= px;
+          el.scrollTop += px;
+
+          const halfHeight = el.scrollHeight / 2;
+          if (halfHeight > 0 && el.scrollTop >= halfHeight) {
+            el.scrollTop -= halfHeight;
+          }
+        }
+      }
+      animId = requestAnimationFrame(step);
+    };
+
+    animId = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(animId);
+      if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    };
+  }, [loopItems.length]);
+
+  const pauseScrolling = (autoResumeAfterMs = null) => {
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    isPausedRef.current = true;
+
+    if (autoResumeAfterMs) {
+      resumeTimerRef.current = setTimeout(() => {
+        if (!isHoveredRef.current) {
+          isPausedRef.current = false;
+        }
+      }, autoResumeAfterMs);
+    }
+  };
+
+  const handleMouseEnter = () => {
+    isHoveredRef.current = true;
+    pauseScrolling();
+  };
+
+  const handleMouseLeave = () => {
+    isHoveredRef.current = false;
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+    isPausedRef.current = false;
+  };
+
+  return (
+    <div
+      className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden flex flex-col"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* Card Header */}
+      <div className="px-4 py-2 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+        <div className="flex items-center gap-2 min-w-0">
+          {icon}
+          <h3 className="font-bold text-xs sm:text-sm tracking-tight text-white truncate">
+            {title}
+          </h3>
+        </div>
+      </div>
+
+      {/* Fixed Column Header */}
+      <div className="overflow-x-auto">
+        <div className="min-w-[420px]">
+          <table className="w-full text-left border-collapse table-fixed">
+            <colgroup>
+              {columns.map((col) => (
+                <col key={col.key} className={col.widthClass} />
+              ))}
+            </colgroup>
+            <thead>
+              <tr className="bg-slate-50/95 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
+                {columns.map((col) => (
+                  <th key={col.key} className={`py-3 px-4 ${col.alignClass || ''}`}>
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+          </table>
+
+          {/* Auto-Scrolling Body */}
+          <div
+            ref={scrollRef}
+            onWheel={() => pauseScrolling(1800)}
+            onTouchStart={() => pauseScrolling(2200)}
+            onPointerDown={() => pauseScrolling(2000)}
+            className="h-[260px] overflow-y-auto overscroll-contain"
+          >
+            <table className="w-full text-left border-collapse table-fixed">
+              <colgroup>
+                {columns.map((col) => (
+                  <col key={col.key} className={col.widthClass} />
+                ))}
+              </colgroup>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {loopItems.map((item, idx) => (
+                  <tr key={idx} className={`${hoverRowClass} transition-colors`}>
+                    {renderCells(item)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function NormalUserDashboard({ 
   userStats, 
@@ -707,121 +852,99 @@ export default function NormalUserDashboard({
       {/* SUB-VIEW 1: OVERVIEW & PERSONAL STATS */}
       {/* ========================================================================= */}
       {activeSubTab === 'overview' && (
-        <div className="space-y-7">
-          {/* Latest amendments to the Delegation of Authority Matrix (Excel Demo Model) */}
-          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
-            {/* Table Header Bar */}
-            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="h-4 w-4 text-teal-300" />
+        <div className="space-y-6">
+          {/* Side-by-Side Auto-Scrolling Tables (Frequently visited + DOA amendments in the past 30 days) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Card: Frequently visited */}
+            <AutoScrollingOverviewTable
+              title="Frequently visited"
+              icon={
+                <div className="w-6 h-6 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0">
+                  <Bookmark className="h-3.5 w-3.5 text-indigo-300" />
                 </div>
-                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
-                  Latest amendments to the Delegation of Authority Matrix
-                </h3>
-              </div>
-            </div>
+              }
+              items={DEMO_FREQUENTLY_VISITED_AREAS}
+              hoverRowClass="hover:bg-indigo-50/30"
+              columns={[
+                { key: 'no', label: 'No', widthClass: 'w-[16%]', alignClass: 'text-center' },
+                { key: 'decisionArea', label: 'Decision area', widthClass: 'w-[60%]' },
+                { key: 'function', label: 'Function', widthClass: 'w-[24%]' }
+              ]}
+              renderCells={(item) => (
+                <>
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-400 text-center align-top">
+                    {item.no}
+                  </td>
+                  <td className="py-3.5 px-4 font-semibold text-slate-900 align-top">
+                    {item.decisionArea}
+                  </td>
+                  <td className="py-3.5 px-4 font-medium text-slate-700 align-top">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-slate-100 text-slate-700 border border-slate-200/70">
+                      {item.function}
+                    </span>
+                  </td>
+                </>
+              )}
+            />
 
-            {/* Table Content */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6 w-24 text-center">NO.</th>
-                    <th className="py-3 px-4 sm:px-6">Decision area</th>
-                    <th className="py-3 px-4 sm:px-6">Update Type</th>
-                    <th className="py-3 px-4 sm:px-6">Function</th>
-                    <th className="py-3 px-4 sm:px-6 text-right">Last update date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {DEMO_LATEST_AMENDMENTS.map((item, idx) => (
-                    <tr 
-                      key={idx}
-                      className="hover:bg-teal-50/30 transition-colors"
+            {/* Right Card: DOA amendments in the past 30 days */}
+            <AutoScrollingOverviewTable
+              title="DOA amendments in the past 30 days"
+              icon={
+                <div className="w-6 h-6 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-teal-300" />
+                </div>
+              }
+              items={DEMO_LATEST_AMENDMENTS}
+              hoverRowClass="hover:bg-teal-50/30"
+              columns={[
+                { key: 'no', label: 'No', widthClass: 'w-[14%]', alignClass: 'text-center' },
+                { key: 'decisionArea', label: 'Decision area', widthClass: 'w-[42%]' },
+                { key: 'updateType', label: 'Update type', widthClass: 'w-[24%]' },
+                { key: 'function', label: 'Function', widthClass: 'w-[20%]' }
+              ]}
+              renderCells={(item) => (
+                <>
+                  <td className="py-3.5 px-4 font-mono font-bold text-slate-400 text-center align-top">
+                    {item.id}
+                  </td>
+                  <td className="py-3.5 px-4 font-semibold text-slate-900 align-top">
+                    {item.decisionArea}
+                  </td>
+                  <td className="py-3.5 px-4 align-top">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
+                        item.updateType === 'New/Amended'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : item.updateType === 'Modified'
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                      }`}
                     >
-                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-400 text-center">
-                        {item.id}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
-                        {item.decisionArea}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
-                          item.updateType === 'New/Amended' 
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                            : item.updateType === 'Modified'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                        }`}>
-                          {item.updateType}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
-                        {item.department}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium whitespace-nowrap">
-                        {item.lastUpdateDate}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      {item.updateType}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4 font-medium text-slate-700 align-top">
+                    {item.department}
+                  </td>
+                </>
+              )}
+            />
           </div>
 
-          {/* Frequently visited decision areas (View-only Demo Card) */}
+          {/* Blank Dashboard Placeholder Card */}
           <div className="bg-white border border-slate-200/90 rounded-2xl shadow-2xs overflow-hidden">
-            {/* Table Header Bar */}
-            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0">
-                  <Bookmark className="h-4 w-4 text-indigo-300" />
+            <div className="px-4 py-2 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex items-center justify-between border-b border-slate-700">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-lg bg-teal-500/20 border border-teal-400/30 flex items-center justify-center shrink-0">
+                  <LayoutDashboard className="h-3.5 w-3.5 text-teal-300" />
                 </div>
-                <h3 className="font-black text-sm sm:text-base tracking-tight text-white">
-                  Frequently visited decision areas
+                <h3 className="font-bold text-xs sm:text-sm tracking-tight text-white">
+                  Dashboard
                 </h3>
               </div>
             </div>
-
-            {/* Table Content */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold text-slate-700 uppercase tracking-wider">
-                    <th className="py-3 px-4 sm:px-6 w-24 text-center">NO.</th>
-                    <th className="py-3 px-4 sm:px-6">Decision area</th>
-                    <th className="py-3 px-4 sm:px-6 w-32">Function</th>
-                    <th className="py-3 px-4 sm:px-6">Authority Chain</th>
-                    <th className="py-3 px-4 sm:px-6 text-right whitespace-nowrap">Last Update Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
-                  {DEMO_FREQUENTLY_VISITED_AREAS.map((item, idx) => (
-                    <tr 
-                      key={idx}
-                      className="hover:bg-indigo-50/30 transition-colors"
-                    >
-                      <td className="py-3.5 px-4 sm:px-6 font-mono font-bold text-slate-400 text-center">
-                        {item.no}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 font-semibold text-slate-900">
-                        {item.decisionArea}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 font-medium text-slate-700">
-                        {item.function}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 font-mono text-[11px] text-slate-700 font-medium">
-                        {item.authorityChain}
-                      </td>
-                      <td className="py-3.5 px-4 sm:px-6 text-right font-mono text-slate-600 font-medium whitespace-nowrap">
-                        {item.lastUpdateDate}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <div className="min-h-[240px] p-6 bg-white" />
           </div>
         </div>
       )}
