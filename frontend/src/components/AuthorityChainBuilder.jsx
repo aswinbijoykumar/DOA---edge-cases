@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   GitMerge, 
   Layers, 
@@ -124,6 +124,21 @@ export default function AuthorityChainBuilder({
   const [jsonModalOpen, setJsonModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
+  const statusTimerRef = useRef(null);
+
+  const showStatus = (type, text, duration = 3000) => {
+    if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    setStatusMessage({ type, text });
+    statusTimerRef.current = setTimeout(() => {
+      setStatusMessage(null);
+    }, duration);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (statusTimerRef.current) clearTimeout(statusTimerRef.current);
+    };
+  }, []);
 
   // Entities available for current body
   const availableEntities = AUTHORITY_TAXONOMY[selectedBody] || [];
@@ -199,7 +214,7 @@ export default function AuthorityChainBuilder({
   // Add node to chain
   const handleAddNode = () => {
     if (hasApprover && selectedOperator !== 'BA' && selectedOperator !== 'A') {
-      setStatusMessage({ type: 'warning', text: 'Approver is already set. Move or remove the Approver before adding more pre-approval steps.' });
+      showStatus('warning', 'Approver is already set. Move or remove the Approver before adding more pre-approval steps.');
       return;
     }
 
@@ -219,16 +234,14 @@ export default function AuthorityChainBuilder({
 
     const updated = [...chain, newNode];
     notifyChange(updated);
-    setStatusMessage({ type: 'success', text: `Added ${newNode.display} to hierarchy.` });
-    setTimeout(() => setStatusMessage(null), 3000);
+    showStatus('success', `Added ${newNode.display} to hierarchy.`);
   };
 
   // Remove node from chain
   const handleRemoveNode = (index) => {
     const updated = chain.filter((_, idx) => idx !== index);
     notifyChange(updated);
-    setStatusMessage({ type: 'info', text: 'Step removed from authority hierarchy.' });
-    setTimeout(() => setStatusMessage(null), 3000);
+    showStatus('info', 'Step removed from authority hierarchy.');
   };
 
   // Reorder node
@@ -243,8 +256,7 @@ export default function AuthorityChainBuilder({
     const pIdx = updated.findIndex(n => n.roleType === 'proposer');
     const aIdx = updated.findIndex(n => n.roleType === 'approver');
     if (pIdx !== -1 && aIdx !== -1 && pIdx > aIdx) {
-      setStatusMessage({ type: 'error', text: 'Invalid order: Proposer (P) cannot appear after an Approver (A).' });
-      setTimeout(() => setStatusMessage(null), 4000);
+      showStatus('error', 'Invalid order: Proposer (P) cannot appear after an Approver (A).', 4000);
       return;
     }
 
@@ -256,8 +268,7 @@ export default function AuthorityChainBuilder({
     if (chain.length === 0) return;
     if (window.confirm('Are you sure you want to reset the proposed authority chain?')) {
       notifyChange([]);
-      setStatusMessage({ type: 'info', text: 'Authority chain cleared.' });
-      setTimeout(() => setStatusMessage(null), 3000);
+      showStatus('info', 'Authority chain cleared.');
     }
   };
 
@@ -306,8 +317,7 @@ export default function AuthorityChainBuilder({
       }
     ];
     notifyChange(preset);
-    setStatusMessage({ type: 'success', text: 'Standard 4-tier approval preset loaded.' });
-    setTimeout(() => setStatusMessage(null), 3000);
+    showStatus('success', 'Standard 4-tier approval preset loaded.');
   };
 
   // Export JSON payload
@@ -357,36 +367,33 @@ export default function AuthorityChainBuilder({
     if (onSave) {
       onSave(chain, compositeString);
     }
-    setStatusMessage({ type: 'success', text: 'Authority matrix validated & saved to proposal!' });
-    setTimeout(() => setStatusMessage(null), 3500);
+    showStatus('success', 'Authority matrix validated & saved to proposal!', 3500);
   };
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Status Feedback Toast/Banner */}
-      {statusMessage && (
-        <div className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 border animate-fade-in ${
-          statusMessage.type === 'error' ? 'bg-rose-50 text-rose-800 border-rose-200' :
-          statusMessage.type === 'warning' ? 'bg-amber-50 text-amber-800 border-amber-200' :
-          statusMessage.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
-          'bg-blue-50 text-blue-800 border-blue-200'
-        }`}>
-          {statusMessage.type === 'error' || statusMessage.type === 'warning' ? (
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          ) : (
-            <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-          )}
-          <span>{statusMessage.text}</span>
-        </div>
-      )}
-
       {/* Authority Builder */}
       <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-white">
-        {/* Navy Header */}
-        <div className="bg-slate-900 px-5 py-4 flex items-center text-white">
-          <h4 className="text-sm font-bold text-white tracking-tight">
+        {/* Navy Header (Status feedback renders inline inside fixed-height header to prevent scroll twitching) */}
+        <div className="bg-slate-900 px-5 py-3.5 min-h-[52px] flex items-center justify-between gap-3 text-white">
+          <h4 className="text-sm font-bold text-white tracking-tight shrink-0">
             Authority Builder
           </h4>
+          {statusMessage && (
+            <div className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border truncate ${
+              statusMessage.type === 'error' ? 'bg-rose-500/20 text-rose-200 border-rose-400/40' :
+              statusMessage.type === 'warning' ? 'bg-amber-500/20 text-amber-200 border-amber-400/40' :
+              statusMessage.type === 'success' ? 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40' :
+              'bg-blue-500/20 text-blue-200 border-blue-400/40'
+            }`}>
+              {statusMessage.type === 'error' || statusMessage.type === 'warning' ? (
+                <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+              ) : (
+                <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" />
+              )}
+              <span className="truncate">{statusMessage.text}</span>
+            </div>
+          )}
         </div>
 
         {/* Builder Form Body */}
@@ -395,14 +402,9 @@ export default function AuthorityChainBuilder({
             
             {/* 1. Authority Body */}
             <div className="md:col-span-4 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700">
-                  AUTHORITY BODY
-                </label>
-                <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/60">
-                  CATEGORY
-                </span>
-              </div>
+              <label className="block text-xs font-bold text-slate-700">
+                AUTHORITY BODY
+              </label>
               <div className="relative">
                 <select
                   value={selectedBody}
@@ -419,14 +421,9 @@ export default function AuthorityChainBuilder({
 
             {/* 2. Select Committee / Entity */}
             <div className="md:col-span-4 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700 truncate">
-                  SELECT COMMITTEE / ENTITY
-                </label>
-                <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                  {availableEntities.length} OPTIONS
-                </span>
-              </div>
+              <label className="block text-xs font-bold text-slate-700 truncate">
+                SELECT COMMITTEE / ENTITY
+              </label>
               <div className="relative">
                 <select
                   value={selectedEntityCode}
@@ -443,19 +440,9 @@ export default function AuthorityChainBuilder({
 
             {/* 3. Action Operator */}
             <div className="md:col-span-3 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-700">
-                  ACTION OPERATOR
-                </label>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                  currentPhase === 1 ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                  currentPhase === 2 ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                  currentPhase === 3 ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                  'bg-emerald-50 text-emerald-700 border-emerald-200'
-                }`}>
-                  {operatorBadgeMode}
-                </span>
-              </div>
+              <label className="block text-xs font-bold text-slate-700">
+                ACTION OPERATOR
+              </label>
               <div className="relative">
                 {isOperatorLocked ? (
                   <div className="w-full text-xs sm:text-sm font-semibold border border-slate-200 rounded-xl p-2.5 bg-slate-100 text-slate-600 flex items-center justify-between cursor-not-allowed">

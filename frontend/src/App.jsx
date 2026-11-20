@@ -342,6 +342,7 @@ export default function App() {
   // Search & Filtering State (Parent / Child Function Filters)
   const [filterParentFunction, setFilterParentFunction] = useState('All'); // 'All' | 'Finance' | 'Risk'
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
+  const [filterKeyNonKey, setFilterKeyNonKey] = useState('All'); // 'All' | 'Key' | 'Non-Key'
   const [searchQuery, setSearchQuery] = useState('');
   const searchTableBodyRef = useRef(null);
   const searchTableWrapperRef = useRef(null);
@@ -929,7 +930,7 @@ export default function App() {
         }
       }
 
-      // Filter 2: Child Business Line / Category
+      // Filter 2: Child Business Line / Process
       if (filterChildBusinessLine !== '') {
         const recCat = record.category || record.businessLine || '';
         const recBLine = record.businessLine || record.category || '';
@@ -938,7 +939,14 @@ export default function App() {
         }
       }
 
-      // Filter 3: Free-text search across decision area, ID, and authority
+      // Filter 3: Key / Non-Key
+      if (filterKeyNonKey !== 'All') {
+        if ((record.keyNonKey || '').toLowerCase() !== filterKeyNonKey.toLowerCase()) {
+          return false;
+        }
+      }
+
+      // Filter 4: Free-text search across decision area, ID, and authority
       const q = searchQuery.toLowerCase().trim();
       if (q === '') return true;
 
@@ -951,7 +959,7 @@ export default function App() {
 
       return matchText;
     });
-  }, [doaRecords, filterParentFunction, filterChildBusinessLine, searchQuery]);
+  }, [doaRecords, filterParentFunction, filterChildBusinessLine, filterKeyNonKey, searchQuery]);
 
   // Group records by category / business line for hierarchical rendering
   const groupedRecords = useMemo(() => {
@@ -970,6 +978,7 @@ export default function App() {
   const handleClearFilters = () => {
     setFilterParentFunction('All');
     setFilterChildBusinessLine('');
+    setFilterKeyNonKey('All');
     setSearchQuery('');
     addToast('Filters reset to authorized scope', 'info');
   };
@@ -1578,15 +1587,15 @@ export default function App() {
 
       {/* Main Header */}
       <header ref={mainHeaderRef} className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-4 gap-4">
+        <div className={`${currentUser?.role === 'NORMAL_USER' ? 'max-w-5xl' : 'max-w-7xl'} mx-auto px-4 sm:px-6 lg:px-8`}>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-2 gap-2.5">
             
             {/* Pro Nexus Branding */}
             <div className="flex items-center">
               <img 
                 src={proNexusBrand} 
                 alt="Pro Nexus - Delegation of Authority" 
-                className="h-13 sm:h-14 md:h-15 w-auto object-contain cursor-pointer transition-transform" 
+                className="h-9 sm:h-10 w-auto object-contain cursor-pointer transition-transform" 
                 onClick={() => {
                   setActiveTab('overview');
                   setSelectedRecord(null);
@@ -1688,18 +1697,16 @@ export default function App() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         {/* Navigation Breadcrumb / Return to Overview for All 7 Normal User Personas */}
         {currentUser?.role === 'NORMAL_USER' && activeTab !== 'overview' && (
-          <div className="mb-6 flex items-center justify-between bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl border border-slate-800 shadow-md">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => {
-                  setActiveTab('overview');
-                  setSelectedRecord(null);
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-xl text-xs font-bold transition-all shadow-sm"
-              >
-                <span>&larr; Back to Overview</span>
-              </button>
-            </div>
+          <div className="mb-4 inline-flex items-center bg-slate-900/90 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-slate-800 shadow-md">
+            <button
+              onClick={() => {
+                setActiveTab('overview');
+                setSelectedRecord(null);
+              }}
+              className="flex items-center gap-2 px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+            >
+              <span>&larr; Back to Overview</span>
+            </button>
           </div>
         )}
         
@@ -1794,7 +1801,7 @@ export default function App() {
                   <Filter className="h-4 w-4 text-slate-400" />
                   Filters
                 </span>
-                {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || searchQuery !== '') && (
+                {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || filterKeyNonKey !== 'All' || searchQuery !== '') && (
                   <button 
                     onClick={handleClearFilters}
                     className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
@@ -1804,7 +1811,7 @@ export default function App() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Function Dropdown (All Business Line Functions Visible for Read-Only Exploration) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
@@ -1825,20 +1832,36 @@ export default function App() {
                   </select>
                 </div>
 
-                {/* Business Line / Category Dropdown Mapped to Function */}
+                {/* Business Line / Process Dropdown Mapped to Function */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
-                    Business Line / Risk Factor
+                    Business Line / Process
                   </label>
                   <select 
                     value={filterChildBusinessLine}
                     onChange={(e) => setFilterChildBusinessLine(e.target.value)}
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
                   >
-                    <option value="">{filterParentFunction === 'All' ? 'All Categories / Business Lines' : `All Categories under ${filterParentFunction}`}</option>
+                    <option value="">{filterParentFunction === 'All' ? 'All Processes / Business Lines' : `All Processes under ${filterParentFunction}`}</option>
                     {availableChildCategoriesForFilter.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
+                  </select>
+                </div>
+
+                {/* Key / Non-Key Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600">
+                    Key / Non-Key
+                  </label>
+                  <select
+                    value={filterKeyNonKey}
+                    onChange={(e) => setFilterKeyNonKey(e.target.value)}
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
+                  >
+                    <option value="All">All Types</option>
+                    <option value="Key">Key</option>
+                    <option value="Non-Key">Non-Key</option>
                   </select>
                 </div>
 

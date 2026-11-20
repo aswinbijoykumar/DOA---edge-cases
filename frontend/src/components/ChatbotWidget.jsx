@@ -199,10 +199,23 @@ export default function ChatbotWidget({ onNavigate, onInspectRecord, userRole, c
   };
 
   return (
-    <aside aria-label="DOA Governance Assistant" className="fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end gap-3">
+    <aside aria-label="DOA Governance Assistant" className="fixed left-4 top-1/2 -translate-y-1/2 z-50 font-sans flex items-center gap-3">
+      {/* Persistent Floating Bot Icon Button (Left Middle, Always Visible to Open / Minimize) */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex items-center justify-center w-12 h-12 bg-[#0b2240] hover:bg-[#13325b] text-white rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 border border-cyan-500/40 group cursor-pointer shrink-0"
+        title={isOpen ? "Minimize DOA Governance Assistant" : "Open DOA Governance Assistant"}
+      >
+        <div className="relative">
+          <Bot className="w-6 h-6 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-[#0b2240]"></span>
+        </div>
+      </button>
+
       {/* Main Chat Window */}
       {isOpen && (
-        <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col transition-all duration-300 overflow-hidden w-[410px] sm:w-[450px] h-[540px] max-h-[calc(85vh-70px)]">
+        <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col transition-all duration-300 overflow-hidden w-[380px] sm:w-[430px] h-[540px] max-h-[85vh]">
           {/* Header */}
           <div className="bg-[#0b2240] text-white px-4 py-3 flex items-center justify-between border-b border-cyan-900/40 select-none">
             <div className="flex items-center gap-2.5">
@@ -375,19 +388,6 @@ export default function ChatbotWidget({ onNavigate, onInspectRecord, userRole, c
               </form>
         </div>
       )}
-
-      {/* Persistent Floating Bot Icon Button (Always Visible to Open / Minimize) */}
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center justify-center w-13 h-13 bg-[#0b2240] hover:bg-[#13325b] text-white rounded-full shadow-2xl transition-all duration-300 transform hover:scale-105 border border-cyan-500/40 group cursor-pointer"
-        title={isOpen ? "Minimize DOA Governance Assistant" : "Open DOA Governance Assistant"}
-      >
-        <div className="relative">
-          <Bot className="w-6 h-6 text-cyan-400 group-hover:rotate-12 transition-transform duration-300" />
-          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-[#0b2240]"></span>
-        </div>
-      </button>
     </aside>
   );
 }
