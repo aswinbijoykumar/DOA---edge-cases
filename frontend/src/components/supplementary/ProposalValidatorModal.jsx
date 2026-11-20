@@ -111,13 +111,7 @@ export default function ProposalValidatorModal({
             <div>
               <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                 DOA Decision Area Pre-Submission Validator
-                <span className="text-xs bg-indigo-500/30 text-indigo-300 font-medium px-2.5 py-0.5 rounded-full border border-indigo-400/30">
-                  VAL-01 — VAL-12
-                </span>
               </h2>
-              <p className="text-xs text-slate-400">
-                Executes regulatory hard-stop validations, SoD checks, and Audit Committee sequencing prior to submission.
-              </p>
             </div>
           </div>
           <button 

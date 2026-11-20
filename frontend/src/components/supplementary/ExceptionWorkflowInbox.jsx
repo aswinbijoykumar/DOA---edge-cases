@@ -151,18 +151,9 @@ export default function ExceptionWorkflowInbox({
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-2xl shadow-sm border border-slate-800 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-              BRD Section 4.3 &amp; 4.5
-            </span>
-            <span className="text-xs text-slate-400">Multi-Stage Permission-Controlled Route</span>
-          </div>
           <h2 className="text-xl font-bold text-slate-100">
             Exceptional Decision Areas &amp; Workflow Cockpit
           </h2>
-          <p className="text-xs text-slate-400 max-w-2xl mt-1">
-            Permission-controlled routing for justified deviations from standard DOA principles. Captures mandatory rationales, amendments, returns, and decision history.
-          </p>
         </div>
 
         <button 

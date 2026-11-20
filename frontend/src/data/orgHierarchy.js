@@ -32,7 +32,7 @@ export const ORG_MEMBERS = {
       email: 'gceo@ambbank.local',
       avatar: null
     },
-    directReportsEmails: ['dept.owner@doa.local', 'risk.owner@doa.local', 'ksa.owner@doa.local'],
+    directReportsEmails: ['dept.owner@doa.local', 'doaadmin@doa.local', 'risk.owner@doa.local', 'ksa.owner@doa.local'],
     tier: 'Executive Management (Tier 1)',
     status: 'Available'
   },
@@ -170,11 +170,11 @@ export const ORG_MEMBERS = {
     entity: 'Group-Wide (ALL)',
     avatar: avatarNormal5,
     reportsTo: {
-      name: 'Company Secretary & Board of Directors',
-      role: 'Board Secretariat',
-      designation: 'Group Corporate Secretary',
-      email: 'board.secretariat@ambbank.local',
-      avatar: null
+      name: 'Claire Sterling',
+      role: 'Governance Team Lead',
+      designation: 'Head of Governance & Policy Oversight',
+      email: 'governance@doa.local',
+      avatar: avatarGovernance
     },
     directReportsEmails: [],
     tier: 'Governance & Board Oversight',
@@ -194,11 +194,11 @@ export const ORG_MEMBERS = {
     entity: 'Group-Wide (ALL)',
     avatar: avatarNormal8,
     reportsTo: {
-      name: 'Chief Risk Officer (CRO)',
-      role: 'Executive Committee',
-      designation: 'Chief Risk Officer',
-      email: 'cro@ambbank.local',
-      avatar: null
+      name: 'Claire Sterling',
+      role: 'Governance Team Lead',
+      designation: 'Head of Governance & Policy Oversight',
+      email: 'governance@doa.local',
+      avatar: avatarGovernance
     },
     directReportsEmails: [],
     tier: 'Second Line of Defense (2LoD)',
@@ -229,72 +229,72 @@ export const ORG_MEMBERS = {
     status: 'Available'
   },
 
-  // 10. Governance Team (Admin)
+  // 10. Claire Sterling (Governance Team Lead)
   'governance@doa.local': {
     id: 'governance_team',
-    name: 'Governance Secretariat Team',
+    name: 'Claire Sterling',
     email: 'governance@doa.local',
-    role: 'Governance Team Admin',
-    roleKey: 'ADMIN',
+    role: 'Governance Team Lead',
+    roleKey: 'GOVERNANCE_TEAM',
     personaType: 'GOVERNANCE_TEAM',
-    designation: '2LoD Governance Officer / Secretariat',
+    designation: 'Head of Governance & Policy Oversight',
     department: 'Enterprise Governance & Compliance',
-    entity: 'Group-Wide (ALL)',
+    entity: 'AMB Bank B.S.C. – Bahrain (Parent Company)',
     avatar: avatarGovernance,
     reportsTo: {
-      name: 'Chief Compliance Officer (CCO)',
-      role: 'Executive Committee',
-      designation: 'Chief Compliance Officer',
-      email: 'cco@ambbank.local',
-      avatar: null
+      name: 'Alexander Vance',
+      role: 'DOA Administrator',
+      designation: 'Chief Delegation Officer (DOA Admin)',
+      email: 'doaadmin@doa.local',
+      avatar: avatarDoaAdmin
     },
-    directReportsEmails: [],
+    directReportsEmails: ['reviewer@doa.local', 'authority.owner@doa.local'],
     tier: 'Enterprise Governance & Policy',
     status: 'Available'
   },
 
-  // 11. DOA Admin (Super Admin)
+  // 11. Alexander Vance (DOA Admin / Chief Delegation Officer)
   'doaadmin@doa.local': {
     id: 'doa_admin',
-    name: 'DOA Administrator',
+    name: 'Alexander Vance',
     email: 'doaadmin@doa.local',
-    role: 'DOA Super Admin',
-    roleKey: 'ADMIN',
+    role: 'DOA Administrator',
+    roleKey: 'DOA_ADMINISTRATOR',
     personaType: 'DOA_ADMIN',
-    designation: 'Chief Delegation Officer / Super Admin',
+    designation: 'Chief Delegation Officer (DOA Admin)',
     department: 'Executive Office / DOA Governance',
-    entity: 'Group-Wide (ALL)',
+    entity: 'AMB Bank B.S.C. – Bahrain (Parent Company)',
     avatar: avatarDoaAdmin,
     reportsTo: {
-      name: 'Group Chief Executive Officer (GCEO)',
-      role: 'Executive Office',
-      designation: 'Group CEO',
-      email: 'gceo@ambbank.local',
-      avatar: null
+      name: 'Julian Hayes',
+      role: 'Executive Approver',
+      designation: 'Executive Committee Approver (VP Finance)',
+      email: 'approver@doa.local',
+      avatar: avatarNormal3
     },
-    directReportsEmails: [],
+    directReportsEmails: ['governance@doa.local', 'sysadmin@doa.local'],
     tier: 'System Administration & Master DOA',
     status: 'Available'
   },
 
-  // 12. System Admin
+  // 12. Lucas Meyer (System Admin)
   'sysadmin@doa.local': {
     id: 'sysadmin',
-    name: 'System Administrator',
+    name: 'Lucas Meyer',
     email: 'sysadmin@doa.local',
     role: 'System Administrator',
-    roleKey: 'ADMIN',
+    roleKey: 'SYSTEM_ADMIN',
     personaType: 'SYSTEM_ADMIN',
     designation: 'Platform Architect & IT Administrator',
     department: 'Information Technology / Platform IAM',
-    entity: 'Infrastructure & Cloud',
+    entity: 'AMB Bank B.S.C. – Bahrain (Parent Company)',
     avatar: avatarSysadmin,
     reportsTo: {
-      name: 'Chief Information Officer (CIO)',
-      role: 'Executive Committee',
-      designation: 'Chief Information Officer',
-      email: 'cio@ambbank.local',
-      avatar: null
+      name: 'Alexander Vance',
+      role: 'DOA Administrator',
+      designation: 'Chief Delegation Officer (DOA Admin)',
+      email: 'doaadmin@doa.local',
+      avatar: avatarDoaAdmin
     },
     directReportsEmails: [],
     tier: 'Infrastructure & IAM Security',

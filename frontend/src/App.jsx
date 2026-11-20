@@ -1740,6 +1740,16 @@ export default function App() {
               <DoaAdminDashboard
                 adminStats={doaAdminStats}
                 currentUser={currentUser}
+                doaRecords={doaRecords}
+                changeRequests={changeRequests}
+                functionTaxonomy={functionTaxonomy}
+                authorityTaxonomy={authorityTaxonomy}
+                onLogout={handleLogout}
+                onRefreshData={() => {
+                  loadDoaRecords();
+                  loadChangeRequests();
+                  loadDashboardSummary();
+                }}
                 onNavigateTab={(tabId) => {
                   setActiveTab(tabId);
                   setSelectedRecord(null);

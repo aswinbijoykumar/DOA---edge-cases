@@ -42,18 +42,9 @@ export default function PointInTimeReconstructionView() {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 text-white p-6 rounded-2xl shadow-sm border border-slate-800 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-400/30">
-              BRD Section 5: Auditable Reconstruction
-            </span>
-            <span className="text-xs text-slate-400">Point-in-Time Temporal Audit Engine</span>
-          </div>
           <h2 className="text-xl font-bold text-slate-100">
             Historical Point-in-Time DOA Reconstruction
           </h2>
-          <p className="text-xs text-slate-400 max-w-2xl mt-1">
-            Select any past date to reconstruct and inspect the exact legally binding authority matrix, authority holders, limits, and governing sources that were effective on that date.
-          </p>
         </div>
       </div>
 

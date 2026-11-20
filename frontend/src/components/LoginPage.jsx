@@ -142,6 +142,7 @@ export default function LoginPage({ onLoginSuccess }) {
     {
       id: 'governance_team',
       title: 'Governance Team (2LoD Secretariat)',
+      name: 'Claire Sterling',
       email: 'governance@doa.local',
       password: 'GovTeam@123',
       role: 'ADMIN',
@@ -151,6 +152,7 @@ export default function LoginPage({ onLoginSuccess }) {
     {
       id: 'doa_admin',
       title: 'DOA Admin (Super Admin)',
+      name: 'Alexander Vance',
       email: 'doaadmin@doa.local',
       password: 'DoaAdmin@123',
       role: 'ADMIN',
@@ -160,6 +162,7 @@ export default function LoginPage({ onLoginSuccess }) {
     {
       id: 'sysadmin',
       title: 'System Admin (Platform Operations)',
+      name: 'Lucas Meyer',
       email: 'sysadmin@doa.local',
       password: 'SysAdmin@123',
       role: 'ADMIN',
@@ -359,130 +362,14 @@ export default function LoginPage({ onLoginSuccess }) {
         </div>
       </header>
 
-      {/* Main Container: Compact, Centered to give background animation maximum visibility */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10 min-h-0 overflow-y-auto">
-        <div className="w-full max-w-[800px] bg-[#171614]/92 border border-[#c59e2b]/30 rounded-[24px] sm:rounded-[28px] p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative my-auto animate-fade-in overflow-hidden">
+      {/* Main Container: Inner div covering screen vertically in grey color */}
+      <main className="flex-1 flex items-stretch justify-center p-0 z-10 min-h-0 overflow-y-auto">
+        <div className="w-full max-w-[840px] lg:max-w-[880px] h-full bg-[#1e232a]/95 border-x border-slate-700/60 shadow-2xl backdrop-blur-xl relative flex items-center justify-center p-6 sm:p-10 overflow-hidden animate-fade-in">
           
-          {/* ========================================================================= */}
-          {/* DYNAMIC YELLOW FLOWING LINES ACROSS OUTER DIV (EXACT REPLICA OF INNER DIV)*/}
-          {/* ========================================================================= */}
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-            <svg 
-              className="w-full h-full" 
-              viewBox="0 0 800 420" 
-              preserveAspectRatio="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <filter id="goldGlowOuter" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="2.5" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-                <style>{`
-                  @keyframes travelOuterExact {
-                    0% { stroke-dashoffset: 45; }
-                    55% { stroke-dashoffset: -450; }
-                    100% { stroke-dashoffset: -450; }
-                  }
-                  .outer-pulse-replica {
-                    fill: none;
-                    stroke: #F0CF86;
-                    stroke-width: 1.6;
-                    stroke-linecap: round;
-                    stroke-dasharray: 45 450;
-                    animation: travelOuterExact 5.2s linear infinite;
-                  }
-                  .outer-track-replica {
-                    fill: none;
-                    stroke: #c59e2b;
-                    stroke-width: 0.9;
-                    opacity: 0.22;
-                  }
-                `}</style>
-              </defs>
-
-              {/* Exact Circuit Tracks weaved across outer div left section */}
-              <g className="outer-track-replica">
-                {/* Upper Left Branch */}
-                <path d="M 30,60 H 140 V 30 H 260 V 75 H 350" />
-                <path d="M 190,30 V 90 H 350" />
-
-                {/* Mid-Left Branch (Passing above & around Zero Bottlenecks) */}
-                <path d="M 20,165 H 120 V 135 H 240 V 180 H 340" />
-                <path d="M 240,135 H 340" />
-
-                {/* Lower-Mid Branch (Passing below Zero Bottlenecks) */}
-                <path d="M 20,255 H 120 V 285 H 240 V 240 H 340" />
-                <path d="M 240,285 H 340" />
-
-                {/* Bottom Left Branch */}
-                <path d="M 30,360 H 140 V 390 H 260 V 345 H 350" />
-                <path d="M 190,390 V 330 H 350" />
-
-                {/* Stubs connecting toward the inner card */}
-                <path d="M 340,180 H 430 V 140 H 480" />
-                <path d="M 340,240 H 430 V 280 H 480" />
-              </g>
-
-              {/* Exact Dynamic Yellow Flowing Pulses */}
-              <g filter="url(#goldGlowOuter)">
-                <path 
-                  className="outer-pulse-replica" 
-                  d="M 30,60 H 140 V 30 H 260 V 75 H 350" 
-                  style={{ animationDelay: '0.3s' }} 
-                />
-                <path 
-                  className="outer-pulse-replica" 
-                  d="M 190,30 V 90 H 350" 
-                  style={{ animationDelay: '2.7s' }} 
-                />
-                <path 
-                  className="outer-pulse-replica" 
-                  d="M 20,165 H 120 V 135 H 240 V 180 H 340 H 430 V 140 H 480" 
-                  style={{ animationDelay: '1.2s' }} 
-                />
-                <path 
-                  className="outer-pulse-replica" 
-                  d="M 20,255 H 120 V 285 H 240 V 240 H 340 H 430 V 280 H 480" 
-                  style={{ animationDelay: '3.5s' }} 
-                />
-                <path 
-                  className="outer-pulse-replica" 
-                  d="M 30,360 H 140 V 390 H 260 V 345 H 350" 
-                  style={{ animationDelay: '1.9s' }} 
-                />
-              </g>
-
-              {/* Nodes at every junction and terminal (Matching Inner Div) */}
-              <g fill="#F0CF86" opacity="0.75">
-                <circle cx="140" cy="30" r="2.5" />
-                <circle cx="260" cy="30" r="2.5" />
-                <circle cx="260" cy="75" r="2.5" />
-                <circle cx="350" cy="75" r="2" />
-                <circle cx="190" cy="90" r="2.5" />
-                <circle cx="350" cy="90" r="2" />
-                <circle cx="120" cy="135" r="2.5" />
-                <circle cx="240" cy="135" r="2.5" />
-                <circle cx="240" cy="180" r="2.5" />
-                <circle cx="340" cy="180" r="2" />
-                <circle cx="120" cy="285" r="2.5" />
-                <circle cx="240" cy="285" r="2.5" />
-                <circle cx="240" cy="240" r="2.5" />
-                <circle cx="340" cy="240" r="2" />
-                <circle cx="140" cy="390" r="2.5" />
-                <circle cx="260" cy="390" r="2.5" />
-                <circle cx="260" cy="345" r="2.5" />
-                <circle cx="350" cy="345" r="2" />
-                <circle cx="430" cy="140" r="2.5" />
-                <circle cx="480" cy="140" r="2" />
-                <circle cx="430" cy="280" r="2.5" />
-                <circle cx="480" cy="280" r="2" />
-              </g>
-            </svg>
-          </div>
+          
 
           {/* Grid Layout: Left Jazzy Scripted 1-2 Word Text, Right Floating Sign-In Card */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10 w-full my-auto">
             
             {/* ==================== LEFT COLUMN: VERY SMALL 1-2 WORD JAZZY SCRIPTED TEXT ==================== */}
             <div className="md:col-span-5 text-center md:text-left pr-0 md:pr-2 select-none relative z-10">
@@ -495,100 +382,16 @@ export default function LoginPage({ onLoginSuccess }) {
             <div className="md:col-span-7 relative">
               
               {/* Floating Dark Glass Sign-In Card */}
-              <div className="bg-gradient-to-b from-[#24221d] via-[#1f1d19] to-[#1a1815] border border-[#c59e2b]/35 rounded-2xl p-5 sm:p-6 shadow-2xl relative z-10 overflow-hidden">
+              <div className="bg-[#272d37]/95 border border-slate-600/50 rounded-2xl p-5 sm:p-6 shadow-2xl relative z-10">
                 
-                {/* ========================================================================= */}
-                {/* DYNAMIC YELLOW FLOWING LINES INSIDE THE INNER DIV (CARD FLOW)             */}
-                {/* ========================================================================= */}
-                <div className="absolute inset-0 pointer-events-none z-0 opacity-70">
-                  <svg 
-                    className="w-full h-full" 
-                    viewBox="0 0 400 360" 
-                    preserveAspectRatio="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <defs>
-                      <filter id="goldGlowInner" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="2.5" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
-                      <style>{`
-                        @keyframes travelInner {
-                          0% { stroke-dashoffset: 45; }
-                          55% { stroke-dashoffset: -450; }
-                          100% { stroke-dashoffset: -450; }
-                        }
-                        .inner-pulse {
-                          fill: none;
-                          stroke: #F0CF86;
-                          stroke-width: 1.6;
-                          stroke-linecap: round;
-                          stroke-dasharray: 45 450;
-                          animation: travelInner 5.2s linear infinite;
-                        }
-                        .inner-track {
-                          fill: none;
-                          stroke: #c59e2b;
-                          stroke-width: 0.9;
-                          opacity: 0.22;
-                        }
-                      `}</style>
-                    </defs>
-
-                    {/* Circuit tracks weaved inside the inner card */}
-                    <g className="inner-track">
-                      {/* Top Right Corner Tracks */}
-                      <path d="M 170,18 H 280 V 55 H 370" />
-                      <path d="M 230,18 V 75 H 370" />
-                      {/* Bottom Tracks */}
-                      <path d="M 30,345 H 180 V 315 H 340" />
-                      <path d="M 120,345 V 330 H 260" />
-                      {/* Right Edge Stubs */}
-                      <path d="M 370,140 H 395" />
-                      <path d="M 370,220 H 395" />
-                    </g>
-
-                    {/* Dynamic Yellow Pulses flowing inside card */}
-                    <g filter="url(#goldGlowInner)">
-                      <path 
-                        className="inner-pulse" 
-                        d="M 170,18 H 280 V 55 H 370" 
-                        style={{ animationDelay: '0.4s' }} 
-                      />
-                      <path 
-                        className="inner-pulse" 
-                        d="M 230,18 V 75 H 370" 
-                        style={{ animationDelay: '2.8s' }} 
-                      />
-                      <path 
-                        className="inner-pulse" 
-                        d="M 30,345 H 180 V 315 H 340" 
-                        style={{ animationDelay: '1.6s' }} 
-                      />
-                    </g>
-
-                    {/* Subtle Corner Nodes */}
-                    <g fill="#F0CF86" opacity="0.75">
-                      <circle cx="280" cy="18" r="2.5" />
-                      <circle cx="280" cy="55" r="2.5" />
-                      <circle cx="370" cy="55" r="2" />
-                      <circle cx="230" cy="75" r="2.5" />
-                      <circle cx="370" cy="75" r="2" />
-                      <circle cx="180" cy="345" r="2.5" />
-                      <circle cx="180" cy="315" r="2.5" />
-                      <circle cx="340" cy="315" r="2" />
-                      <circle cx="395" cy="140" r="1.8" />
-                      <circle cx="395" cy="220" r="1.8" />
-                    </g>
-                  </svg>
-                </div>
+                
 
                 {/* ===================== VIEW 1: SIGN IN ===================== */}
                 {viewMode === 'signin' && (
                   <div className="relative z-10">
                     {/* Card Header: Lock icon & Sign In Title */}
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-xl bg-[#2a261e] border border-[#c59e2b]/40 flex items-center justify-center text-[#e5c068] shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-[#1e242d] border border-slate-600/60 flex items-center justify-center text-[#e5c068] shrink-0">
                         <Lock className="h-4 w-4" />
                       </div>
                       <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
@@ -611,10 +414,10 @@ export default function LoginPage({ onLoginSuccess }) {
                           <select
                             value={selectedEntity}
                             onChange={(e) => setSelectedEntity(e.target.value)}
-                            className="w-full bg-[#141312] border border-[#3d382f] text-slate-200 text-xs sm:text-[13px] font-semibold rounded-xl py-2.5 pl-9 pr-8 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none appearance-none cursor-pointer truncate"
+                            className="w-full bg-[#181d24] border border-slate-700/80 text-slate-200 text-xs sm:text-[13px] font-semibold rounded-xl py-2.5 pl-9 pr-8 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none appearance-none cursor-pointer truncate"
                           >
                             {ENTITIES.map((ent) => (
-                              <option key={ent} value={ent} className="bg-[#181715] text-slate-200">
+                              <option key={ent} value={ent} className="bg-[#1e242d] text-slate-200">
                                 {ent}
                               </option>
                             ))}
@@ -637,18 +440,18 @@ export default function LoginPage({ onLoginSuccess }) {
                           <select
                             value={selectedPersonaId}
                             onChange={(e) => handleSelectPersonaById(e.target.value)}
-                            className="w-full bg-[#141312] border border-[#3d382f] text-slate-200 text-xs sm:text-[13px] font-semibold rounded-xl py-2.5 pl-9 pr-8 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none appearance-none cursor-pointer truncate"
+                            className="w-full bg-[#181d24] border border-slate-700/80 text-slate-200 text-xs sm:text-[13px] font-semibold rounded-xl py-2.5 pl-9 pr-8 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none appearance-none cursor-pointer truncate"
                           >
-                            <optgroup label="── Normal Users ──" className="bg-[#181715] text-slate-300 font-bold">
+                            <optgroup label="── Normal Users ──" className="bg-[#1e242d] text-slate-300 font-bold">
                               {NORMAL_USER_PERSONAS.map((p) => (
-                                <option key={p.id} value={p.id} className="bg-[#181715] text-slate-200 font-normal">
+                                <option key={p.id} value={p.id} className="bg-[#1e242d] text-slate-200 font-normal">
                                   {p.email}
                                 </option>
                               ))}
                             </optgroup>
-                            <optgroup label="── Governance &amp; Admin ──" className="bg-[#181715] text-slate-300 font-bold">
+                            <optgroup label="── Governance &amp; Admin ──" className="bg-[#1e242d] text-slate-300 font-bold">
                               {ENTERPRISE_ROLES.map((p) => (
-                                <option key={p.id} value={p.id} className="bg-[#181715] text-slate-200 font-normal">
+                                <option key={p.id} value={p.id} className="bg-[#1e242d] text-slate-200 font-normal">
                                   {p.email}
                                 </option>
                               ))}
@@ -684,7 +487,7 @@ export default function LoginPage({ onLoginSuccess }) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
-                            className="w-full bg-[#141312] border border-[#3d382f] text-slate-200 text-xs sm:text-[13px] font-semibold rounded-xl py-2.5 pl-9 pr-9 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none transition-all placeholder:text-slate-600"
+                            className="w-full bg-[#181d24] border border-slate-700/80 text-slate-200 text-xs sm:text-[13px] font-semibold rounded-xl py-2.5 pl-9 pr-9 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none transition-all placeholder:text-slate-600"
                           />
                           <button
                             type="button"
@@ -765,7 +568,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     {forgotStep === 1 && (
                       <div className="space-y-3 pt-1">
                         <div>
-                          <div className="w-9 h-9 rounded-xl bg-[#2a261e] border border-[#c59e2b]/40 text-[#e5c068] flex items-center justify-center mb-2 shadow-xs">
+                          <div className="w-9 h-9 rounded-xl bg-[#1e242d] border border-slate-600/60 text-[#e5c068] flex items-center justify-center mb-2 shadow-xs">
                             <KeyRound className="h-4 w-4" />
                           </div>
                           <h2 className="text-lg font-black text-white tracking-tight">
@@ -791,7 +594,7 @@ export default function LoginPage({ onLoginSuccess }) {
                                 value={forgotEmail}
                                 onChange={(e) => setForgotEmail(e.target.value)}
                                 placeholder="e.g. dept.owner@doa.local"
-                                className="w-full bg-[#141312] border border-[#3d382f] text-slate-200 text-xs sm:text-sm font-semibold rounded-xl py-2.5 pl-9 pr-3.5 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none transition-all placeholder:text-slate-600"
+                                className="w-full bg-[#181d24] border border-slate-700/80 text-slate-200 text-xs sm:text-sm font-semibold rounded-xl py-2.5 pl-9 pr-3.5 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none transition-all placeholder:text-slate-600"
                               />
                             </div>
                           </div>
@@ -821,7 +624,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     {forgotStep === 2 && (
                       <div className="space-y-3 pt-1">
                         <div>
-                          <div className="w-9 h-9 rounded-xl bg-[#2a261e] border border-[#c59e2b]/40 text-[#e5c068] flex items-center justify-center mb-2 shadow-xs">
+                          <div className="w-9 h-9 rounded-xl bg-[#1e242d] border border-slate-600/60 text-[#e5c068] flex items-center justify-center mb-2 shadow-xs">
                             <Lock className="h-4 w-4" />
                           </div>
                           <h2 className="text-lg font-black text-white tracking-tight">
@@ -834,7 +637,7 @@ export default function LoginPage({ onLoginSuccess }) {
 
                         {/* Auto-fill Code Helper */}
                         {devOtpCode && (
-                          <div className="p-2 rounded-xl bg-[#141312] border border-[#3d382f] flex items-center justify-between gap-2 shadow-xs">
+                          <div className="p-2 rounded-xl bg-[#181d24] border border-slate-700/80 flex items-center justify-between gap-2 shadow-xs">
                             <button
                               type="button"
                               onClick={() => setForgotOtp(devOtpCode)}
@@ -860,7 +663,7 @@ export default function LoginPage({ onLoginSuccess }) {
                               value={forgotOtp}
                               onChange={(e) => setForgotOtp(e.target.value.replace(/[^0-9]/g, ''))}
                               placeholder="000000"
-                              className="w-full text-center tracking-widest font-mono text-base py-2 bg-[#141312] border border-[#3d382f] rounded-xl font-bold text-[#f0cf86] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none"
+                              className="w-full text-center tracking-widest font-mono text-base py-2 bg-[#181d24] border border-slate-700/80 rounded-xl font-bold text-[#f0cf86] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none"
                             />
                           </div>
 
@@ -901,7 +704,7 @@ export default function LoginPage({ onLoginSuccess }) {
                     {forgotStep === 3 && (
                       <div className="space-y-3 pt-1">
                         <div>
-                          <div className="w-9 h-9 rounded-xl bg-[#2a261e] border border-[#c59e2b]/40 text-[#e5c068] flex items-center justify-center mb-2 shadow-xs">
+                          <div className="w-9 h-9 rounded-xl bg-[#1e242d] border border-slate-600/60 text-[#e5c068] flex items-center justify-center mb-2 shadow-xs">
                             <KeyRound className="h-4 w-4" />
                           </div>
                           <h2 className="text-lg font-black text-white tracking-tight">
@@ -924,7 +727,7 @@ export default function LoginPage({ onLoginSuccess }) {
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="At least 6 characters"
-                                className="w-full bg-[#141312] border border-[#3d382f] text-slate-200 text-xs sm:text-sm font-semibold rounded-xl py-2 pl-3 pr-9 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none"
+                                className="w-full bg-[#181d24] border border-slate-700/80 text-slate-200 text-xs sm:text-sm font-semibold rounded-xl py-2 pl-3 pr-9 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none"
                               />
                               <button
                                 type="button"
@@ -946,7 +749,7 @@ export default function LoginPage({ onLoginSuccess }) {
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               placeholder="Re-enter new password"
-                              className="w-full bg-[#141312] border border-[#3d382f] text-slate-200 text-xs sm:text-sm font-semibold rounded-xl py-2 pl-3 pr-3 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none"
+                              className="w-full bg-[#181d24] border border-slate-700/80 text-slate-200 text-xs sm:text-sm font-semibold rounded-xl py-2 pl-3 pr-3 focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/40 outline-none"
                             />
                           </div>
 
