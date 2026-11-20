@@ -142,6 +142,7 @@ export default function LoginPage({ onLoginSuccess }) {
     {
       id: 'governance_team',
       title: 'Governance Team (2LoD Secretariat)',
+      name: 'Claire Sterling',
       email: 'governance@doa.local',
       password: 'GovTeam@123',
       role: 'ADMIN',
@@ -151,6 +152,7 @@ export default function LoginPage({ onLoginSuccess }) {
     {
       id: 'doa_admin',
       title: 'DOA Admin (Super Admin)',
+      name: 'Alexander Vance',
       email: 'doaadmin@doa.local',
       password: 'DoaAdmin@123',
       role: 'ADMIN',
@@ -160,6 +162,7 @@ export default function LoginPage({ onLoginSuccess }) {
     {
       id: 'sysadmin',
       title: 'System Admin (Platform Operations)',
+      name: 'Lucas Meyer',
       email: 'sysadmin@doa.local',
       password: 'SysAdmin@123',
       role: 'ADMIN',

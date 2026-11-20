@@ -72,36 +72,36 @@ const OPERATOR_DEFINITIONS = [
 
 export const ROLE_STYLES = {
   proposer: {
-    bg: 'bg-blue-50/90',
-    border: 'border-blue-300',
-    text: 'text-blue-900',
-    badgeBg: 'bg-blue-100 text-blue-800 border-blue-200',
+    bg: 'bg-blue-100',
+    border: 'border-blue-400',
+    text: 'text-blue-950',
+    badgeBg: 'bg-blue-200 text-blue-950 border-blue-300 font-bold',
     dot: 'bg-blue-600',
-    stepColor: 'text-blue-600'
+    stepColor: 'text-blue-700'
   },
   reviewer: {
-    bg: 'bg-purple-50/90',
-    border: 'border-purple-300',
-    text: 'text-purple-900',
-    badgeBg: 'bg-purple-100 text-purple-800 border-purple-200',
+    bg: 'bg-purple-100',
+    border: 'border-purple-400',
+    text: 'text-purple-950',
+    badgeBg: 'bg-purple-200 text-purple-950 border-purple-300 font-bold',
     dot: 'bg-purple-600',
-    stepColor: 'text-purple-600'
+    stepColor: 'text-purple-700'
   },
   endorser: {
-    bg: 'bg-amber-50/90',
-    border: 'border-amber-300',
-    text: 'text-amber-900',
-    badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
+    bg: 'bg-amber-100',
+    border: 'border-amber-400',
+    text: 'text-amber-950',
+    badgeBg: 'bg-amber-200 text-amber-950 border-amber-300 font-bold',
     dot: 'bg-amber-600',
-    stepColor: 'text-amber-600'
+    stepColor: 'text-amber-700'
   },
   approver: {
-    bg: 'bg-emerald-50/90',
-    border: 'border-emerald-300',
-    text: 'text-emerald-900',
-    badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    bg: 'bg-emerald-100',
+    border: 'border-emerald-400',
+    text: 'text-emerald-950',
+    badgeBg: 'bg-emerald-200 text-emerald-950 border-emerald-300 font-bold',
     dot: 'bg-emerald-600',
-    stepColor: 'text-emerald-600'
+    stepColor: 'text-emerald-700'
   }
 };
 
@@ -533,7 +533,7 @@ export default function AuthorityChainBuilder({
                             type="button"
                             onClick={() => handleRemoveNode(index)}
                             title="Remove step"
-                            className="h-5 w-5 rounded-full hover:bg-rose-100 text-slate-400 hover:text-rose-600 flex items-center justify-center transition-colors"
+                            className="h-5 w-5 rounded-full hover:bg-rose-100 text-slate-500 hover:text-rose-600 flex items-center justify-center transition-colors"
                           >
                             <X className="h-3.5 w-3.5" />
                           </button>
@@ -544,7 +544,7 @@ export default function AuthorityChainBuilder({
                           <h6 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug line-clamp-2">
                             {node.entity}
                           </h6>
-                          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                          <p className="text-[10px] text-slate-600 font-medium mt-0.5 truncate">
                             {node.authorityBody}
                           </p>
                         </div>

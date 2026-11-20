@@ -41,18 +41,9 @@ export default function BahrainKsaAlignmentReportView() {
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-slate-900 via-teal-950 to-slate-900 text-white p-6 rounded-2xl shadow-sm border border-slate-800 flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-teal-500/20 text-teal-300 border border-teal-400/30">
-              Cross-Geography Acceptance Criterion
-            </span>
-            <span className="text-xs text-slate-400">Jurisdiction Reconciliation Engine</span>
-          </div>
           <h2 className="text-xl font-bold text-slate-100">
             Bahrain–KSA DOA Alignment & Reconciliation Dossier
           </h2>
-          <p className="text-xs text-slate-400 max-w-2xl mt-1">
-            Reconciles underlying mapped decision areas between Bahrain B.S.C. and KSA LLC, separating complete matches from authority limit and pathway mismatches.
-          </p>
         </div>
 
         <button 

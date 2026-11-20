@@ -73,13 +73,7 @@ export default function ExceptionRequestModal({
             <div>
               <h2 className="text-lg font-bold text-slate-100 flex items-center gap-2">
                 Submit Governance Exception Request
-                <span className="text-xs bg-amber-500/30 text-amber-200 font-medium px-2 py-0.5 rounded-full border border-amber-400/30">
-                  Section 4.3
-                </span>
               </h2>
-              <p className="text-xs text-amber-200/70">
-                Routes via Reporting Manager $\rightarrow$ Division Head $\rightarrow$ Central DOA Governance Reviewer.
-              </p>
             </div>
           </div>
           <button 

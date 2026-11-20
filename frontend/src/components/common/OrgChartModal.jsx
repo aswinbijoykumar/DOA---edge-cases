@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Network, 
@@ -13,6 +13,12 @@ import { ORG_MEMBERS, getUserProfile } from '../../data/orgHierarchy';
 export default function OrgChartModal({ isOpen, onClose, initialUser }) {
   const initialProfile = getUserProfile(initialUser);
   const [focusedEmail, setFocusedEmail] = useState(initialProfile.email);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFocusedEmail(initialProfile.email);
+    }
+  }, [isOpen, initialProfile.email]);
 
   if (!isOpen) return null;
 
