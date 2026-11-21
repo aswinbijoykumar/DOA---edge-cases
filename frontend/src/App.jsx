@@ -1603,100 +1603,31 @@ export default function App() {
               />
             </div>
 
-            {/* Navigation Tabs & Role Switcher */}
-            <div className="flex items-center gap-3">
-              {currentUser?.role !== 'NORMAL_USER' && (
-                <nav className="flex space-x-1 bg-slate-100 p-1 rounded-xl">
-                  {[
-                    // Role-tailored dashboards and tabs
-                    { id: 'overview', label: 'Overview', icon: Layers, roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
-                    { id: 'search', label: 'Search DoA', icon: Search, roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] },
-                    { id: 'request', label: 'New Request', icon: Edit3, roles: ['DOA_ADMINISTRATOR', 'ADMIN'] },
-                    { 
-                      id: 'queue', 
-                      label: currentUser.role === 'GOVERNANCE_TEAM' ? 'Review Queue' : 'Change Queue', 
-                      icon: GitPullRequest,
-                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'ADMIN', 'SYSTEM_ADMINISTRATOR'],
-                      badge: changeRequests.filter(c => c.status === 'SUBMITTED').length
-                    },
-                    { 
-                      id: 'exceptions', 
-                      label: 'Exception Workflow', 
-                      icon: AlertOctagon, 
-                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'],
-                      disabled: true
-                    },
-                    { 
-                      id: 'audit', 
-                      label: 'Audit Trail', 
-                      icon: History, 
-                      roles: ['GOVERNANCE_TEAM', 'DOA_ADMINISTRATOR', 'SYSTEM_ADMINISTRATOR', 'ADMIN'] 
-                    }
-                  ]
-                  .filter(tab => tab.roles.includes(currentUser.role))
-                  .map(tab => {
-                    const Icon = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        disabled={Boolean(tab.disabled)}
-                        title={tab.disabled ? 'Exception Workflow is currently restricted' : undefined}
-                        onClick={() => {
-                          if (tab.disabled) return;
-                          setActiveTab(tab.id);
-                          setSelectedRecord(null);
-                        }}
-                        className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-lg transition-all duration-200 relative ${
-                          tab.disabled
-                            ? 'text-slate-400 opacity-50 cursor-not-allowed'
-                            : isActive 
-                              ? 'bg-white text-teal-600 shadow-sm' 
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-                        }`}
-                      >
-                        <Icon className={`h-4 w-4 ${isActive ? 'text-teal-600' : 'text-slate-400'}`} />
-                        {tab.label}
-                        {Boolean(tab.badge) && (
-                          <span className="px-1.5 py-0.2 bg-teal-600 text-white rounded-full text-[10px] font-extrabold shadow-xs">
-                            {tab.badge}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </nav>
-              )}
+            {/* Active User Profile & Logout */}
+            <div className="flex items-center gap-2">
+              <UserProfilePill 
+                currentUser={currentUser} 
+                onOpenOrgChart={() => setShowOrgChartModal(true)} 
+              />
 
-              {/* Active User Profile & Logout */}
-              <div className="flex items-center gap-2">
-                <UserProfilePill 
-                  currentUser={currentUser} 
-                  onOpenOrgChart={() => setShowOrgChartModal(true)} 
-                />
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  title="Log out of session"
-                  className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all shadow-2xs"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  <span className="hidden md:inline">Sign Out</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleLogout}
+                title="Log out of session"
+                className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-all shadow-2xs"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Sign Out</span>
+              </button>
             </div>
-
-
-            
           </div>
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        {/* Navigation Breadcrumb / Return to Overview for All 7 Normal User Personas */}
-        {currentUser?.role === 'NORMAL_USER' && activeTab !== 'overview' && (
+        {/* Navigation Breadcrumb / Return to Overview for Personas using KPI Hero Card Navigation */}
+        {(currentUser?.role === 'NORMAL_USER' || currentUser?.role === 'SYSTEM_ADMINISTRATOR' || currentUser?.role === 'ADMIN') && activeTab !== 'overview' && (
           <div className="mb-4 inline-flex items-center bg-slate-900/90 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-slate-800 shadow-md">
             <button
               onClick={() => {
@@ -1776,6 +1707,8 @@ export default function App() {
               <SystemAdminDashboard
                 sysStats={sysAdminStats}
                 currentUser={currentUser}
+                activeTab={activeTab}
+                pendingQueueCount={changeRequests.filter(c => c.status === 'SUBMITTED').length}
                 onNavigateTab={(tabId) => {
                   setActiveTab(tabId);
                   setSelectedRecord(null);
