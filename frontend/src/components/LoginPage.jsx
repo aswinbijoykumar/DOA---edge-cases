@@ -366,147 +366,17 @@ export default function LoginPage({ onLoginSuccess }) {
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10 min-h-0 overflow-y-auto">
         <div className="w-full max-w-[840px] bg-gradient-to-br from-slate-900/92 via-[#0b2240]/92 to-indigo-950/92 border border-cyan-400/25 rounded-[24px] sm:rounded-[28px] p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative my-auto animate-fade-in overflow-hidden">
 
-          {/* ========================================================================= */}
-          {/* DYNAMIC CYAN/BLUE FLOWING LINES ACROSS OUTER DIV (DOA NEXUS THEME)        */}
-          {/* ========================================================================= */}
-          <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-            <svg
-              className="w-full h-full"
-              viewBox="0 0 800 420"
-              preserveAspectRatio="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <filter id="blueGlowOuter" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="2.5" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-                <style>{`
-                  @keyframes travelOuterExact {
-                    0% { stroke-dashoffset: 45; }
-                    55% { stroke-dashoffset: -450; }
-                    100% { stroke-dashoffset: -450; }
-                  }
-                  .outer-pulse-replica {
-                    fill: none;
-                    stroke: #38bdf8;
-                    stroke-width: 1.6;
-                    stroke-linecap: round;
-                    stroke-dasharray: 45 450;
-                    animation: travelOuterExact 5.2s linear infinite;
-                  }
-                  .outer-track-replica {
-                    fill: none;
-                    stroke: #0ea5e9;
-                    stroke-width: 0.9;
-                    opacity: 0.22;
-                  }
-                `}</style>
-              </defs>
-
-              {/* Exact Circuit Tracks weaved across outer div left section */}
-              <g className="outer-track-replica">
-                {/* Upper Left Branch */}
-                <path d="M 30,60 H 140 V 30 H 260 V 75 H 350" />
-                <path d="M 190,30 V 90 H 350" />
-
-                {/* Mid-Left Branch (Passing above & around Zero Bottlenecks) */}
-                <path d="M 20,165 H 120 V 135 H 240 V 180 H 340" />
-                <path d="M 240,135 H 340" />
-
-                {/* Lower-Mid Branch (Passing below Zero Bottlenecks) */}
-                <path d="M 20,255 H 120 V 285 H 240 V 240 H 340" />
-                <path d="M 240,285 H 340" />
-
-                {/* Bottom Left Branch */}
-                <path d="M 30,360 H 140 V 390 H 260 V 345 H 350" />
-                <path d="M 190,390 V 330 H 350" />
-
-                {/* Stubs connecting toward the inner card */}
-                <path d="M 340,180 H 430 V 140 H 480" />
-                <path d="M 340,240 H 430 V 280 H 480" />
-              </g>
-
-              {/* Exact Dynamic Blue/Cyan Flowing Pulses */}
-              <g filter="url(#blueGlowOuter)">
-                <path
-                  className="outer-pulse-replica"
-                  d="M 30,60 H 140 V 30 H 260 V 75 H 350"
-                  style={{ animationDelay: '0.3s' }}
-                />
-                <path
-                  className="outer-pulse-replica"
-                  d="M 190,30 V 90 H 350"
-                  style={{ animationDelay: '2.7s' }}
-                />
-                <path
-                  className="outer-pulse-replica"
-                  d="M 20,165 H 120 V 135 H 240 V 180 H 340 H 430 V 140 H 480"
-                  style={{ animationDelay: '1.2s' }}
-                />
-                <path
-                  className="outer-pulse-replica"
-                  d="M 20,255 H 120 V 285 H 240 V 240 H 340 H 430 V 280 H 480"
-                  style={{ animationDelay: '3.5s' }}
-                />
-                <path
-                  className="outer-pulse-replica"
-                  d="M 30,360 H 140 V 390 H 260 V 345 H 350"
-                  style={{ animationDelay: '1.9s' }}
-                />
-              </g>
-
-              {/* Nodes at every junction and terminal */}
-              <g fill="#38bdf8" opacity="0.75">
-                <circle cx="140" cy="30" r="2.5" />
-                <circle cx="260" cy="30" r="2.5" />
-                <circle cx="260" cy="75" r="2.5" />
-                <circle cx="350" cy="75" r="2" />
-                <circle cx="190" cy="90" r="2.5" />
-                <circle cx="350" cy="90" r="2" />
-                <circle cx="120" cy="135" r="2.5" />
-                <circle cx="240" cy="135" r="2.5" />
-                <circle cx="240" cy="180" r="2.5" />
-                <circle cx="340" cy="180" r="2" />
-                <circle cx="120" cy="285" r="2.5" />
-                <circle cx="240" cy="285" r="2.5" />
-                <circle cx="240" cy="240" r="2.5" />
-                <circle cx="340" cy="240" r="2" />
-                <circle cx="140" cy="390" r="2.5" />
-                <circle cx="260" cy="390" r="2.5" />
-                <circle cx="260" cy="345" r="2.5" />
-                <circle cx="350" cy="345" r="2" />
-                <circle cx="430" cy="140" r="2.5" />
-                <circle cx="480" cy="140" r="2" />
-                <circle cx="430" cy="280" r="2.5" />
-                <circle cx="480" cy="280" r="2" />
-              </g>
-            </svg>
-          </div>
-
           {/* Grid Layout: Left Branded Headline, Right White & Blue Sign-In Card */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center relative z-10">
 
-            {/* ==================== LEFT COLUMN: HEADLINE & TRUST INDICATORS ==================== */}
+            {/* ==================== LEFT COLUMN: HEADLINE ==================== */}
             <div className="md:col-span-5 text-center md:text-left pr-0 md:pr-2 select-none relative z-10 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-[10px] font-bold uppercase tracking-widest">
-                <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-                <span>Enterprise Governance</span>
-              </div>
               <h1 className="font-serif italic text-3xl sm:text-4xl text-white tracking-wide leading-tight drop-shadow-[0_2px_16px_rgba(56,189,248,0.35)]">
                 Zero <span className="text-cyan-300">Bottlenecks</span>
               </h1>
               <p className="text-xs text-slate-300/90 leading-relaxed max-w-xs mx-auto md:mx-0">
                 Streamlined Delegation of Authority workflows with role-scoped signoffs and real-time compliance tracking.
               </p>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 pt-1">
-                <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-[10px] font-semibold text-cyan-100">
-                  2LoD Compliant
-                </span>
-                <span className="px-2.5 py-1 rounded-lg bg-white/10 border border-white/15 text-[10px] font-semibold text-teal-100">
-                  Audit Ready
-                </span>
-              </div>
             </div>
 
             {/* ==================== RIGHT COLUMN: WHITE & BLUE FLOATING SIGN-IN CARD ==================== */}
@@ -514,9 +384,6 @@ export default function LoginPage({ onLoginSuccess }) {
 
               {/* Floating Crisp White & Blue Sign-In Card */}
               <div className="bg-white/95 border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-2xl relative z-10 overflow-hidden">
-
-                {/* Top Blue/Teal Accent Strip */}
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#0b2240] via-blue-600 to-teal-500" />
 
                 {/* Subtle Blue Circuit Accents inside the White Card */}
                 <div className="absolute inset-0 pointer-events-none z-0 opacity-20">
