@@ -15,6 +15,7 @@ import ExceptionWorkflowInbox from './components/supplementary/ExceptionWorkflow
 import AuthorityChainBuilder from './components/AuthorityChainBuilder';
 import UserProfilePill from './components/common/UserProfilePill';
 import OrgChartModal from './components/common/OrgChartModal';
+import CompanyEmailModal from './components/common/CompanyEmailModal';
 import nexusLogo from './assets/nexus-logo.jpg';
 import proNexusBrand from './assets/pro-nexus-brand.png';
 import { 
@@ -179,6 +180,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showOrgChartModal, setShowOrgChartModal] = useState(false); // 'overview' | 'search' | 'request' | 'queue' | 'audit'
+  const [showEmailModal, setShowEmailModal] = useState(false);
   
   // Authentication State (starts from stored user session or null, requiring manual login)
   const [currentUser, setCurrentUser] = useState(() => {
@@ -1607,7 +1609,8 @@ export default function App() {
             <div className="flex items-center gap-2">
               <UserProfilePill 
                 currentUser={currentUser} 
-                onOpenOrgChart={() => setShowOrgChartModal(true)} 
+                onOpenOrgChart={() => setShowOrgChartModal(true)}
+                onOpenEmails={() => setShowEmailModal(true)}
               />
 
               <button
@@ -3589,6 +3592,19 @@ export default function App() {
         onClose={() => setShowOrgChartModal(false)} 
         initialUser={currentUser} 
       />
+
+      {/* Company Internal Email Notifications Prototype */}
+      {currentUser && (
+        <CompanyEmailModal
+          isOpen={showEmailModal}
+          onClose={() => setShowEmailModal(false)}
+          currentUser={currentUser}
+          onNavigateTab={(tabId) => {
+            setActiveTab(tabId);
+            setSelectedRecord(null);
+          }}
+        />
+      )}
 
       {/* Footer Branding */}
       <footer className="bg-white border-t border-slate-200 shadow-sm mt-auto py-4">

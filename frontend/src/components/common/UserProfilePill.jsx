@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { getUserProfile } from '../../data/orgHierarchy';
 
-export default function UserProfilePill({ currentUser, onOpenOrgChart }) {
+export default function UserProfilePill({ currentUser, onOpenOrgChart, onOpenEmails }) {
   const [isHovered, setIsHovered] = useState(false);
   const hoverTimeoutRef = useRef(null);
   const profile = getUserProfile(currentUser);
@@ -127,6 +127,27 @@ export default function UserProfilePill({ currentUser, onOpenOrgChart }) {
                 <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                 <span className="truncate text-[11px]">{profile.entity}</span>
               </div>
+            </div>
+
+            {/* Company Email Inbox Action Button */}
+            <div className="mt-3 pt-2.5 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsHovered(false);
+                  if (onOpenEmails) onOpenEmails();
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100/80 text-blue-800 border border-blue-200/80 text-xs font-bold transition-all shadow-2xs cursor-pointer group"
+              >
+                <span className="flex items-center gap-2">
+                  <Mail className="h-3.5 w-3.5 text-blue-600 group-hover:scale-110 transition-transform" />
+                  <span>Company Emails</span>
+                </span>
+                <span className="px-1.5 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-extrabold leading-none">
+                  4
+                </span>
+              </button>
             </div>
 
           </div>
