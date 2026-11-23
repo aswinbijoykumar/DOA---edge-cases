@@ -13,6 +13,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { api } from '../../services/api';
+import { formatDateDDMMYY } from '../../utils/dateUtils';
 
 export default function BahrainKsaAlignmentReportView() {
   const [report, setReport] = useState(null);
@@ -115,7 +116,7 @@ export default function BahrainKsaAlignmentReportView() {
           </div>
 
           <span className="text-xs text-slate-500">
-            Reconciliation generated: {report ? new Date(report.generated_at).toLocaleString() : ''}
+            Reconciliation generated: {report ? formatDateDDMMYY(report.generated_at, true) : ''}
           </span>
         </div>
 

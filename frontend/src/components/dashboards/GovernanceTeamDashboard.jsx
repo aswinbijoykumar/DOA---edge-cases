@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { formatDateDDMMYY } from '../../utils/dateUtils';
 import { 
   Menu,
   ShieldAlert, 
@@ -784,7 +785,7 @@ export default function GovernanceTeamDashboard({
                               <span>&bull;</span>
                               <span>Base: <strong className="text-slate-900">v{cr.base_version || 1}</strong></span>
                               <span>&bull;</span>
-                              <span>Created: {new Date(cr.created_at).toLocaleDateString()}</span>
+                              <span>Created: {formatDateDDMMYY(cr.created_at)}</span>
                             </div>
                           </div>
 
@@ -1050,7 +1051,7 @@ export default function GovernanceTeamDashboard({
                     <tbody className="divide-y divide-slate-200 text-slate-900">
                       {auditLogs.map(log => (
                         <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3 px-4 font-mono text-slate-800 text-[11px] font-semibold">{new Date(log.timestamp).toLocaleString()}</td>
+                          <td className="py-3 px-4 font-mono text-slate-800 text-[11px] font-semibold">{formatDateDDMMYY(log.timestamp, true)}</td>
                           <td className="py-3 px-4 font-bold text-slate-900">{log.user_email}</td>
                           <td className="py-3 px-4">
                             <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-blue-100 text-blue-800 border border-blue-300">

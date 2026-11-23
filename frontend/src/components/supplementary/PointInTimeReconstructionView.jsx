@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatDateDDMMYY } from '../../utils/dateUtils';
 import { 
   History, 
   Calendar, 
@@ -107,7 +108,7 @@ export default function PointInTimeReconstructionView() {
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Audit Dossier</span>
               <h3 className="text-base font-bold text-slate-900">
-                Active Authority Matrix on {snapshot.target_date} ({snapshot.entity_scope})
+                Active Authority Matrix on {formatDateDDMMYY(snapshot.target_date)} ({snapshot.entity_scope})
               </h3>
             </div>
             <span className="text-xs font-semibold px-3 py-1 bg-purple-50 text-purple-700 border border-purple-200 rounded-full">

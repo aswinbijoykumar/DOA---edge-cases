@@ -497,7 +497,7 @@ export default function InitiateProposalModal({
               <div className="flex items-center justify-between">
                 <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                   <Paperclip className="h-4 w-4 text-cyan-600" />
-                  Attach Governance Evidence / Policy Charter <span className="text-rose-500 font-black">*</span>
+                  Attach Governance Evidence / Policy Charter
                 </label>
                 <span className="text-[10px] text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">Mandatory</span>
               </div>
@@ -531,7 +531,7 @@ export default function InitiateProposalModal({
                   </span>
                 ) : (
                   <span className="text-xs text-rose-600 font-bold flex items-center gap-1">
-                    * Governance policy document attachment is required
+                    Governance policy document attachment is required
                   </span>
                 )}
               </div>

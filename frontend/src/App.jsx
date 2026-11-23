@@ -4,6 +4,7 @@ import {
   functionTaxonomy,
   authorityTaxonomy
 } from './data/doaData';
+import { formatDateDDMMYY, parseRecordDate, matchesLastUpdatedFilter } from './utils/dateUtils';
 import { api, getStoredUser, setStoredUser, removeStoredToken, getStoredToken } from './services/api';
 import LoginPage from './components/LoginPage';
 import NormalUserDashboard from './components/dashboards/NormalUserDashboard';
@@ -345,6 +346,7 @@ export default function App() {
   const [filterParentFunction, setFilterParentFunction] = useState('All'); // 'All' | 'Finance' | 'Risk'
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
   const [filterKeyNonKey, setFilterKeyNonKey] = useState('All'); // 'All' | 'Key' | 'Non-Key'
+  const [filterLastUpdated, setFilterLastUpdated] = useState('All'); // 'All' | 'yesterday' | '7days' | '15days' | '30days'
   const [searchQuery, setSearchQuery] = useState('');
   const searchTableBodyRef = useRef(null);
   const searchTableWrapperRef = useRef(null);
@@ -595,7 +597,7 @@ export default function App() {
           cLevel2Op: r.c_level2_op,
           compositeAuthority: r.composite_authority,
           currentVersion: r.current_version,
-          lastUpdateDate: r.last_update_date || (r.created_at ? (typeof r.created_at === 'string' ? r.created_at.slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10)) : r.effective_date) || '2026-02-15'
+          lastUpdateDate: r.last_update_date || r.modified_at || (r.created_at ? (typeof r.created_at === 'string' ? r.created_at.slice(0, 10) : new Date(r.created_at).toISOString().slice(0, 10)) : r.effective_date) || '2026-02-15'
         }));
         setDoaRecords(mapped);
       }
@@ -923,45 +925,59 @@ export default function App() {
 
   // Cascading Filter Logic for DoA Matrix Table
   const filteredRecords = useMemo(() => {
-    return doaRecords.filter(record => {
-      // Filter 1: Parent Function (Risk / Finance / All)
-      if (filterParentFunction !== 'All') {
-        const recParent = (record.parentFunction || record.function || '').toLowerCase();
-        if (!recParent.includes(filterParentFunction.toLowerCase())) {
-          return false;
+    return doaRecords
+      .filter(record => {
+        // Filter 1: Parent Function (Risk / Finance / All)
+        if (filterParentFunction !== 'All') {
+          const recParent = (record.parentFunction || record.function || '').toLowerCase();
+          if (!recParent.includes(filterParentFunction.toLowerCase())) {
+            return false;
+          }
         }
-      }
 
-      // Filter 2: Child Business Line / Process
-      if (filterChildBusinessLine !== '') {
-        const recCat = record.category || record.businessLine || '';
-        const recBLine = record.businessLine || record.category || '';
-        if (recCat !== filterChildBusinessLine && recBLine !== filterChildBusinessLine) {
-          return false;
+        // Filter 2: Child Business Line / Process
+        if (filterChildBusinessLine !== '') {
+          const recCat = record.category || record.businessLine || '';
+          const recBLine = record.businessLine || record.category || '';
+          if (recCat !== filterChildBusinessLine && recBLine !== filterChildBusinessLine) {
+            return false;
+          }
         }
-      }
 
-      // Filter 3: Key / Non-Key
-      if (filterKeyNonKey !== 'All') {
-        if ((record.keyNonKey || '').toLowerCase() !== filterKeyNonKey.toLowerCase()) {
-          return false;
+        // Filter 3: Key / Non-Key
+        if (filterKeyNonKey !== 'All') {
+          if ((record.keyNonKey || '').toLowerCase() !== filterKeyNonKey.toLowerCase()) {
+            return false;
+          }
         }
-      }
 
-      // Filter 4: Free-text search across decision area, ID, and authority
-      const q = searchQuery.toLowerCase().trim();
-      if (q === '') return true;
+        // Filter 4: Last Updated Date Range
+        if (filterLastUpdated !== 'All') {
+          const recDate = record.lastUpdateDate || record.effective_date;
+          if (!matchesLastUpdatedFilter(recDate, filterLastUpdated)) {
+            return false;
+          }
+        }
 
-      const matchText = (record.decisionArea || '').toLowerCase().includes(q) ||
-                        (record.shareholders || '').toLowerCase().includes(q) ||
-                        (record.boardOfDirectors || '').toLowerCase().includes(q) ||
-                        (record.compositeAuthority || '').toLowerCase().includes(q) ||
-                        (record.id || '').toLowerCase().includes(q) ||
-                        (record.comments || '').toLowerCase().includes(q);
+        // Filter 5: Free-text search across decision area, ID, and authority
+        const q = searchQuery.toLowerCase().trim();
+        if (q === '') return true;
 
-      return matchText;
-    });
-  }, [doaRecords, filterParentFunction, filterChildBusinessLine, filterKeyNonKey, searchQuery]);
+        const matchText = (record.decisionArea || '').toLowerCase().includes(q) ||
+                          (record.shareholders || '').toLowerCase().includes(q) ||
+                          (record.boardOfDirectors || '').toLowerCase().includes(q) ||
+                          (record.compositeAuthority || '').toLowerCase().includes(q) ||
+                          (record.id || '').toLowerCase().includes(q) ||
+                          (record.comments || '').toLowerCase().includes(q);
+
+        return matchText;
+      })
+      .sort((a, b) => {
+        const dateA = parseRecordDate(a.lastUpdateDate || a.effective_date)?.getTime() || 0;
+        const dateB = parseRecordDate(b.lastUpdateDate || b.effective_date)?.getTime() || 0;
+        return dateB - dateA; // Descending order (newest first)
+      });
+  }, [doaRecords, filterParentFunction, filterChildBusinessLine, filterKeyNonKey, filterLastUpdated, searchQuery]);
 
   // Group records by category / business line for hierarchical rendering
   const groupedRecords = useMemo(() => {
@@ -981,6 +997,7 @@ export default function App() {
     setFilterParentFunction('All');
     setFilterChildBusinessLine('');
     setFilterKeyNonKey('All');
+    setFilterLastUpdated('All');
     setSearchQuery('');
     addToast('Filters reset to authorized scope', 'info');
   };
@@ -1747,7 +1764,7 @@ export default function App() {
                   <Filter className="h-4 w-4 text-slate-400" />
                   Filters
                 </span>
-                {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || filterKeyNonKey !== 'All' || searchQuery !== '') && (
+                {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || filterKeyNonKey !== 'All' || filterLastUpdated !== 'All' || searchQuery !== '') && (
                   <button 
                     onClick={handleClearFilters}
                     className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
@@ -1757,7 +1774,7 @@ export default function App() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
                 {/* Function Dropdown (All Business Line Functions Visible for Read-Only Exploration) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
@@ -1808,6 +1825,24 @@ export default function App() {
                     <option value="All">All Types</option>
                     <option value="Key">Key</option>
                     <option value="Non-Key">Non-Key</option>
+                  </select>
+                </div>
+
+                {/* Last Updated Date Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600">
+                    Last Updated Date
+                  </label>
+                  <select
+                    value={filterLastUpdated}
+                    onChange={(e) => setFilterLastUpdated(e.target.value)}
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
+                  >
+                    <option value="All">All Update Dates</option>
+                    <option value="yesterday">Last updated yesterday</option>
+                    <option value="7days">Last 7 days prior update</option>
+                    <option value="15days">Last 15 days prior update</option>
+                    <option value="30days">Last 30 days prior update</option>
                   </select>
                 </div>
 
@@ -2043,7 +2078,7 @@ export default function App() {
                                       <td className="py-3 px-4 text-center whitespace-nowrap">
                                         <span className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold text-slate-700 bg-slate-100 border border-slate-200/90 px-2.5 py-1 rounded-md" title="Last Update Date">
                                           <Clock className="h-3 w-3 text-slate-400 shrink-0" />
-                                          <span>{record.lastUpdateDate || record.effective_date || '2026-02-15'}</span>
+                                          <span>{formatDateDDMMYY(record.lastUpdateDate || record.effective_date || '2026-02-15')}</span>
                                         </span>
                                       </td>
                                     </tr>
@@ -2345,7 +2380,7 @@ export default function App() {
                   <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Paperclip className="h-3.5 w-3.5 text-teal-600" />
-                      Attach Governance Evidence / Policy Document <span className="text-rose-500 font-bold">*</span>
+                      Attach Governance Evidence / Policy Document
                     </span>
                     <span className="text-[10px] text-slate-400 font-normal">PDF / Board Resolution / Charter Excerpt</span>
                   </label>
@@ -2772,7 +2807,7 @@ export default function App() {
                             {log.comment || 'System mutation record'}
                           </td>
                           <td className="py-3 px-4 text-xs text-slate-400 text-right font-mono">
-                            {log.timestamp ? new Date(log.timestamp).toLocaleString() : 'Just now'}
+                            {log.timestamp ? formatDateDDMMYY(log.timestamp, true) : 'Just now'}
                           </td>
                         </tr>
                       ))
@@ -2853,7 +2888,7 @@ export default function App() {
                       <Clock className="h-2.5 w-2.5 text-slate-400" /> Last Update Date (LUD)
                     </h5>
                     <span className="text-xs font-mono font-bold text-slate-800">
-                      {selectedRecord.lastUpdateDate || selectedRecord.effective_date || '2026-02-15'}
+                      {formatDateDDMMYY(selectedRecord.lastUpdateDate || selectedRecord.effective_date || '2026-02-15')}
                     </span>
                   </div>
                 </div>
@@ -2966,7 +3001,7 @@ export default function App() {
                               </span>
                             </div>
                             <div className="text-[10px] text-slate-400 mt-0.5">
-                              By {v.created_by || 'Admin'} &bull; Effective: {v.effective_date || '2026-01-01'}
+                              By {v.created_by || 'Admin'} &bull; Effective: {formatDateDDMMYY(v.effective_date || '2026-01-01')}
                             </div>
                           </div>
                           {v.change_request_id && (
@@ -3110,7 +3145,7 @@ export default function App() {
                 </p>
                 <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
                   <span>Author: {activeDiffCR.requester_email} ({activeDiffCR.department || 'Governance'})</span>
-                  <span>Effective Date: <strong>2026-01-01</strong></span>
+                  <span>Effective Date: <strong>{formatDateDDMMYY('2026-01-01')}</strong></span>
                 </div>
               </div>
 

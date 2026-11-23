@@ -53,42 +53,42 @@ const DEMO_LATEST_AMENDMENTS = [
     decisionArea: 'Approval of Bank mandates',
     updateType: 'New/Amended',
     department: 'Finance',
-    lastUpdateDate: '10-Nov-26'
+    lastUpdateDate: '10-11-26'
   },
   {
     id: '#341',
     decisionArea: 'Capital Expenditure & Asset Disposal Authority',
     updateType: 'Modified',
     department: 'Finance & Treasury',
-    lastUpdateDate: '08-Nov-26'
+    lastUpdateDate: '08-11-26'
   },
   {
     id: '#340',
     decisionArea: 'Credit Facility & Wholesale Lending Approvals (> $5M)',
     updateType: 'New/Amended',
     department: 'Credit Risk',
-    lastUpdateDate: '05-Nov-26'
+    lastUpdateDate: '05-11-26'
   },
   {
     id: '#339',
     decisionArea: 'Procurement of Enterprise Cloud & IT Infrastructure',
     updateType: 'Threshold Revision',
     department: 'Procurement & IT',
-    lastUpdateDate: '02-Nov-26'
+    lastUpdateDate: '02-11-26'
   },
   {
     id: '#338',
     decisionArea: 'Executive Remuneration & Incentive Structure Sign-off',
     updateType: 'Modified',
     department: 'Human Resources',
-    lastUpdateDate: '29-Oct-26'
+    lastUpdateDate: '29-10-26'
   },
   {
     id: '#337',
     decisionArea: 'Legal Settlement Endorsement & Regulatory Representation',
     updateType: 'New/Amended',
     department: 'Legal & Compliance',
-    lastUpdateDate: '25-Oct-26'
+    lastUpdateDate: '25-10-26'
   }
 ];
 
@@ -99,42 +99,42 @@ const DEMO_FREQUENTLY_VISITED_AREAS = [
     decisionArea: 'Approve increase or reduction of share capital',
     function: 'Finance',
     authorityChain: 'Shareholders (A) ← BoD (E2) ← AC (E1) ← ExCom (E) ← GCEO (R2) ← CEO (R1)',
-    lastUpdateDate: '10-Nov-26'
+    lastUpdateDate: '10-11-26'
   },
   {
     no: '#243',
     decisionArea: 'Approve annual budget and five-year financial plan',
     function: 'Finance',
     authorityChain: 'BoD (A) ← ExCom (E2) ← GCEO (E1) ← CEO (E) ← GCFO (R) ← CFO (P)',
-    lastUpdateDate: '08-Nov-26'
+    lastUpdateDate: '08-11-26'
   },
   {
     no: '#301',
     decisionArea: 'Approve wholesale single obligor credit limit above USD 50 million up to regulatory cap',
     function: 'Risk',
     authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (R1)',
-    lastUpdateDate: '05-Nov-26'
+    lastUpdateDate: '05-11-26'
   },
   {
     no: '#305',
     decisionArea: 'Approve Value-at-Risk (VaR) limits, Stressed VaR limits, and Stop-Loss thresholds for Trading Book',
     function: 'Risk',
     authorityChain: 'BoD (A) ← BRPC (E1) ← GRC (E) ← ALCO(G) (R1) ← GCRO (R)',
-    lastUpdateDate: '01-Nov-26'
+    lastUpdateDate: '01-11-26'
   },
   {
     no: '#251',
     decisionArea: 'Approve tier one (1) or tier two (2) capital issue',
     function: 'Finance',
     authorityChain: 'Shareholders (Y, A1) ← BoD (A) ← AC (E1) ← BRPC (E) ← GCCO (R) ← GCFO (P)',
-    lastUpdateDate: '28-Oct-26'
+    lastUpdateDate: '28-10-26'
   },
   {
     no: '#308',
     decisionArea: 'Approve Group Risk Appetite Statement (RAS) and Group Risk Tolerance Matrix',
     function: 'Risk',
     authorityChain: 'BoD (A) ← BRPC (E1) ← ExCom (E) ← GRC (E) ← GCRO (P)',
-    lastUpdateDate: '22-Oct-26'
+    lastUpdateDate: '22-10-26'
   }
 ];
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { formatDateDDMMYY } from '../../utils/dateUtils';
 import {
   Layers,
   Building2,
@@ -804,7 +805,7 @@ export default function GovernanceKpiCardsView({
                           <td className="py-3.5 px-2 text-center whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
                               <Clock className="h-2.5 w-2.5 text-slate-400 shrink-0" />
-                              <span>{item.last_update_date || item.effective_date || '2026-02-15'}</span>
+                              <span>{formatDateDDMMYY(item.last_update_date || item.effective_date || '2026-02-15')}</span>
                             </span>
                           </td>
                         </tr>
@@ -941,7 +942,7 @@ export default function GovernanceKpiCardsView({
                     Last Update Date (LUD)
                   </span>
                   <span className="font-mono font-bold text-slate-800 text-[11px] mt-0.5 block">
-                    {selectedLinkageItem.last_update_date || selectedLinkageItem.effective_date || '2026-02-15'}
+                    {formatDateDDMMYY(selectedLinkageItem.last_update_date || selectedLinkageItem.effective_date || '2026-02-15')}
                   </span>
                 </div>
                 <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl">

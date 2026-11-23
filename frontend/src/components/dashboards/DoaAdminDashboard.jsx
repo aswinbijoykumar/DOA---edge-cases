@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { formatDateDDMMYY } from '../../utils/dateUtils';
 import { 
   Menu,
   Check, 
@@ -1316,7 +1317,7 @@ export default function DoaAdminDashboard({
                             <span>&bull;</span>
                             <span>Target Base: <strong className="text-slate-900">v{cr.base_version || 1}</strong></span>
                             <span>&bull;</span>
-                            <span>Submitted: {new Date(cr.created_at).toLocaleDateString()}</span>
+                            <span>Submitted: {formatDateDDMMYY(cr.created_at)}</span>
                           </div>
                         </div>
 
@@ -1759,7 +1760,7 @@ export default function DoaAdminDashboard({
                         <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-900">{hist.action}</span>
-                            <span className="text-[10px] text-slate-700 font-medium">{new Date(hist.timestamp).toLocaleString()}</span>
+                            <span className="text-[10px] text-slate-700 font-medium">{formatDateDDMMYY(hist.timestamp, true)}</span>
                           </div>
                           <p className="text-slate-800 text-[11px] font-medium">By: <span className="font-bold text-slate-900">{hist.user_email}</span></p>
                         </div>
@@ -1810,7 +1811,7 @@ export default function DoaAdminDashboard({
                         auditLogs.map(log => (
                           <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
                             <td className="py-3 px-4 font-mono text-[11px] text-slate-800 font-semibold">
-                              {new Date(log.timestamp).toLocaleString()}
+                              {formatDateDDMMYY(log.timestamp, true)}
                             </td>
                             <td className="py-3 px-4 font-bold text-slate-900">{log.user_email}</td>
                             <td className="py-3 px-4">
