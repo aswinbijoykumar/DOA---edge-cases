@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import {
   CheckCircle2,
   Clock,
   XCircle,
+  ChevronLeft,
   ChevronRight,
   ShieldCheck,
   FileText,
@@ -10,6 +11,95 @@ import {
   Send,
   Layers,
 } from 'lucide-react';
+
+/**
+ * Reusable dynamic horizontal scroller with auto-detected overflow arrows,
+ * subtle edge fade indicators, and mouse-wheel horizontal scrolling.
+ */
+function DynamicHorizontalScroller({ children, className = '', arrowTheme = 'light' }) {
+  const scrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 2);
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+    const el = scrollRef.current;
+    if (!el) return;
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateScrollState) : null;
+    if (ro) ro.observe(el);
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [updateScrollState, children]);
+
+  const scrollByAmount = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(180, el.clientWidth * 0.6), behavior: 'smooth' });
+  };
+
+  const handleWheel = (e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      el.scrollLeft += e.deltaY;
+    }
+  };
+
+  const btnClass =
+    arrowTheme === 'dark'
+      ? 'bg-slate-800/95 hover:bg-slate-700 text-teal-300 border-slate-600 shadow-md'
+      : 'bg-white/95 hover:bg-slate-100 text-slate-700 border-slate-200 shadow-md';
+
+  return (
+    <div className="relative group flex items-center min-w-0 w-full">
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(-1)}
+          aria-label="Scroll left"
+          className={`absolute left-0 z-10 w-6 h-6 rounded-full border flex items-center justify-center transition-all ${btnClass}`}
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </button>
+      )}
+
+      <div
+        ref={scrollRef}
+        onScroll={updateScrollState}
+        onWheel={handleWheel}
+        className={`flex items-center overflow-x-auto scroll-smooth w-full no-scrollbar ${
+          canScrollLeft ? 'pl-7' : ''
+        } ${canScrollRight ? 'pr-7' : ''} ${className}`}
+        style={{ scrollbarWidth: 'thin' }}
+      >
+        {children}
+      </div>
+
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(1)}
+          aria-label="Scroll right"
+          className={`absolute right-0 z-10 w-6 h-6 rounded-full border flex items-center justify-center transition-all ${btnClass}`}
+        >
+          <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 /**
  * Parse an authority chain string (e.g. "CEO (A) ← Head of Retail (R) ← Head of Risk (P)" or "CA > A > R > P")
@@ -231,56 +321,62 @@ export function ProposalWorkflowTracker({ cr }) {
 
   return (
     <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
-      {/* Top P | R | A Header Boxes */}
-      <div className="grid grid-cols-3 gap-3 p-3.5 bg-slate-50/90 border-b border-slate-200">
-        {[
-          { code: 'P', title: 'Propose', role: proposerRole, style: pStyle },
-          { code: 'R', title: 'Review', role: reviewerRole, style: rStyle },
-          { code: 'A', title: 'Approve', role: approverRole, style: aStyle },
-        ].map((box) => (
-          <div
-            key={box.code}
-            className={`rounded-xl border px-3 py-2 flex items-center justify-between gap-2 bg-white shadow-2xs ${
-              box.style.card.includes('amber')
-                ? 'border-amber-300 ring-1 ring-amber-200'
-                : box.style.card.includes('emerald')
-                ? 'border-emerald-200'
-                : box.style.card.includes('rose')
-                ? 'border-rose-200'
-                : 'border-slate-200'
-            }`}
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="w-7 h-7 rounded-lg bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
-                {box.code}
-              </span>
-              <div className="min-w-0">
-                <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                  {box.title}
-                </div>
-                <div className="text-xs font-bold text-slate-800 truncate" title={box.role}>
-                  {box.role}
+      {/* Top P | R | A Header Boxes (Dynamically Scrollable) */}
+      <div className="p-3.5 bg-slate-50/90 border-b border-slate-200">
+        <DynamicHorizontalScroller className="gap-3">
+          {[
+            { code: 'P', title: 'Propose', role: proposerRole, style: pStyle },
+            { code: 'R', title: 'Review', role: reviewerRole, style: rStyle },
+            { code: 'A', title: 'Approve', role: approverRole, style: aStyle },
+          ].map((box) => (
+            <div
+              key={box.code}
+              className={`min-w-[190px] flex-1 shrink-0 rounded-xl border px-3 py-2 flex items-center justify-between gap-2 bg-white shadow-2xs ${
+                box.style.card.includes('amber')
+                  ? 'border-amber-300 ring-1 ring-amber-200'
+                  : box.style.card.includes('emerald')
+                  ? 'border-emerald-200'
+                  : box.style.card.includes('rose')
+                  ? 'border-rose-200'
+                  : 'border-slate-200'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
+                  {box.code}
+                </span>
+                <div>
+                  <div className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    {box.title}
+                  </div>
+                  <div className="text-xs font-bold text-slate-800 whitespace-nowrap" title={box.role}>
+                    {box.role}
+                  </div>
                 </div>
               </div>
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${box.style.dot}`} title={box.style.label} />
             </div>
-            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${box.style.dot}`} title={box.style.label} />
-          </div>
-        ))}
+          ))}
+        </DynamicHorizontalScroller>
       </div>
 
       {/* Authority Chain & Rationale / Supporting Information */}
       <div className="p-4 space-y-3 border-b border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-slate-900 text-white rounded-xl">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center justify-between gap-3 px-3 py-2 bg-slate-900 text-white rounded-xl">
+          <div className="flex items-center gap-2 shrink-0">
             <Layers className="h-3.5 w-3.5 text-teal-400 shrink-0" />
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 shrink-0">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
               Authority Chain
             </span>
-            <span className="text-xs font-bold text-teal-300 truncate" title={displayChain}>
-              {displayChain}
-            </span>
           </div>
-          <span className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold text-slate-200">
+          <div className="flex-1 min-w-0">
+            <DynamicHorizontalScroller arrowTheme="dark">
+              <span className="text-xs font-bold text-teal-300 whitespace-nowrap" title={displayChain}>
+                {displayChain}
+              </span>
+            </DynamicHorizontalScroller>
+          </div>
+          <span className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold text-slate-200 shrink-0 whitespace-nowrap">
             {cr.department || 'Governance'} &bull; {cr.process || 'DOA Matrix'}
           </span>
         </div>
@@ -309,7 +405,7 @@ export function ProposalWorkflowTracker({ cr }) {
         </div>
       </div>
 
-      {/* Layer 1: Authority Chain Sign-Off Progression */}
+      {/* Layer 1: Authority Chain Sign-Off Progression (Dynamically Scrollable) */}
       <div className="p-3.5 bg-slate-50/60 border-b border-slate-200 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
@@ -320,7 +416,7 @@ export function ProposalWorkflowTracker({ cr }) {
           </span>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <DynamicHorizontalScroller className="gap-2 pb-1">
           {[
             {
               step: `Propose - ${proposerRole}`,
@@ -339,11 +435,11 @@ export function ProposalWorkflowTracker({ cr }) {
             return (
               <React.Fragment key={idx}>
                 <div
-                  className={`flex-1 px-3 py-2 rounded-xl border text-xs flex items-center justify-between gap-2 ${item.style.card}`}
+                  className={`min-w-[205px] shrink-0 px-3 py-2 rounded-xl border text-xs flex items-center justify-between gap-2 ${item.style.card}`}
                 >
-                  <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="flex items-center gap-1.5">
                     <StepIcon className={`h-3.5 w-3.5 shrink-0 ${item.style.iconColor}`} />
-                    <span className="font-bold truncate" title={item.step}>
+                    <span className="font-bold whitespace-nowrap" title={item.step}>
                       {item.step}
                     </span>
                   </div>
@@ -354,12 +450,12 @@ export function ProposalWorkflowTracker({ cr }) {
                   </span>
                 </div>
                 {idx < 2 && (
-                  <ChevronRight className="h-4 w-4 text-slate-300 hidden sm:block shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
                 )}
               </React.Fragment>
             );
           })}
-        </div>
+        </DynamicHorizontalScroller>
       </div>
 
       {/* Layer 2: Governance & Published */}
