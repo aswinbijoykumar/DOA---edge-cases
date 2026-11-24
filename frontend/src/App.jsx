@@ -17,7 +17,7 @@ import AuthorityChainBuilder from './components/AuthorityChainBuilder';
 import UserProfilePill from './components/common/UserProfilePill';
 import OrgChartModal from './components/common/OrgChartModal';
 import CompanyEmailModal from './components/common/CompanyEmailModal';
-import { ProposalWorkflowTracker, ProposalQueueMiniTracker } from './components/common/ProposalWorkflowTracker';
+import { ProposalWorkflowTracker } from './components/common/ProposalWorkflowTracker';
 import nexusLogo from './assets/nexus-logo.jpg';
 import proNexusBrand from './assets/pro-nexus-brand.png';
 import { 
@@ -2563,27 +2563,24 @@ export default function App() {
                               </div>
                             </td>
                             <td className="py-3.5 px-4 text-center">
-                              <div className="flex flex-col items-center">
-                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
-                                  cr.status === 'PENDING_PROCESS_OWNER' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                  cr.status === 'PENDING_DEPT_OWNER' ? 'bg-teal-50 text-teal-700 border-teal-200' :
-                                  cr.status === 'PENDING_2LOD_REVIEW' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
-                                  cr.status === 'UNDER_REVIEW' ? 'bg-slate-100 text-slate-800 border-slate-300' :
-                                  isSubmitted ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
-                                  isApproved ? 'bg-sky-50 text-sky-700 border-sky-200' :
-                                  isPublished ? 'bg-teal-50 text-teal-800 border-teal-200' :
-                                  'bg-rose-50 text-rose-700 border-rose-200'
-                                }`}>
-                                  <span className={`w-1.5 h-1.5 rounded-full ${
-                                    isPublished ? 'bg-teal-600' :
-                                    isApproved ? 'bg-sky-600' :
-                                    isRejected ? 'bg-rose-500' :
-                                    'bg-indigo-600'
-                                  }`} />
-                                  {cr.status?.replace(/_/g, ' ')}
-                                </span>
-                                <ProposalQueueMiniTracker status={cr.status} />
-                              </div>
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
+                                cr.status === 'PENDING_PROCESS_OWNER' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                cr.status === 'PENDING_DEPT_OWNER' ? 'bg-teal-50 text-teal-700 border-teal-200' :
+                                cr.status === 'PENDING_2LOD_REVIEW' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
+                                cr.status === 'UNDER_REVIEW' ? 'bg-slate-100 text-slate-800 border-slate-300' :
+                                isSubmitted ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
+                                isApproved ? 'bg-sky-50 text-sky-700 border-sky-200' :
+                                isPublished ? 'bg-teal-50 text-teal-800 border-teal-200' :
+                                'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${
+                                  isPublished ? 'bg-teal-600' :
+                                  isApproved ? 'bg-sky-600' :
+                                  isRejected ? 'bg-rose-500' :
+                                  'bg-indigo-600'
+                                }`} />
+                                {cr.status?.replace(/_/g, ' ')}
+                              </span>
                             </td>
                             <td className="py-3 px-4 text-center">
                               <div className="flex items-center justify-center gap-1.5">
