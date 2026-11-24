@@ -251,6 +251,7 @@ function getStepStyle(state) {
 
 /**
  * Compact 2-Layer mini tracker for the Change Queue table Status column.
+ * Styled in the cohesive DOAtools slate / indigo / teal palette.
  */
 export function ProposalQueueMiniTracker({ status }) {
   const states = getWorkflowStates(status);
@@ -262,26 +263,36 @@ export function ProposalQueueMiniTracker({ status }) {
     { key: 'Pub', state: states.published, title: 'Layer 2: Published' },
   ];
 
+  const getMiniStateLabel = (state) => {
+    if (state === 'approved') return 'Completed';
+    if (state === 'active') return 'Current Stage';
+    if (state === 'rejected') return 'Rejected';
+    return 'Pending';
+  };
+
   return (
-    <div className="flex items-center justify-center gap-1 mt-1.5" title="Workflow Position: P → R → A | Gov → Pub">
+    <div
+      className="inline-flex items-center justify-center gap-1 mt-1.5 px-2 py-1 rounded-lg bg-slate-50/90 border border-slate-200/80 shadow-2xs"
+      title="Workflow Position: Layer 1 (P → R → A) | Layer 2 (Gov → Pub)"
+    >
       {steps.map((step, idx) => {
         const pillColor =
           step.state === 'approved'
-            ? 'bg-emerald-500 text-white border-emerald-600'
+            ? 'bg-teal-50 text-teal-700 border-teal-200/90'
             : step.state === 'active'
-            ? 'bg-amber-400 text-amber-950 border-amber-500 ring-2 ring-amber-200'
+            ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-100 shadow-2xs'
             : step.state === 'rejected'
-            ? 'bg-rose-500 text-white border-rose-600'
-            : 'bg-slate-100 text-slate-400 border-slate-200';
+            ? 'bg-rose-50 text-rose-700 border-rose-200'
+            : 'bg-white text-slate-400 border-slate-200/80';
 
         return (
           <React.Fragment key={step.key}>
             {idx === 3 && (
-              <span className="text-[9px] text-slate-300 font-bold mx-0.5">|</span>
+              <span className="h-3 w-px bg-slate-300 mx-0.5" aria-hidden="true" />
             )}
             <span
-              title={`${step.title}: ${getStepStyle(step.state).label}`}
-              className={`px-1.5 py-0.5 rounded text-[9px] font-extrabold border leading-none ${pillColor}`}
+              title={`${step.title}: ${getMiniStateLabel(step.state)}`}
+              className={`px-1.5 py-0.5 rounded text-[9px] font-bold border leading-none transition-colors ${pillColor}`}
             >
               {step.key}
             </span>
