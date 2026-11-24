@@ -17,6 +17,7 @@ import AuthorityChainBuilder from './components/AuthorityChainBuilder';
 import UserProfilePill from './components/common/UserProfilePill';
 import OrgChartModal from './components/common/OrgChartModal';
 import CompanyEmailModal from './components/common/CompanyEmailModal';
+import { ProposalWorkflowTracker, ProposalQueueMiniTracker } from './components/common/ProposalWorkflowTracker';
 import nexusLogo from './assets/nexus-logo.jpg';
 import proNexusBrand from './assets/pro-nexus-brand.png';
 import { 
@@ -2574,6 +2575,7 @@ export default function App() {
                               }`}>
                                 {cr.status?.replace(/_/g, ' ')}
                               </span>
+                              <ProposalQueueMiniTracker status={cr.status} />
                             </td>
                             <td className="py-3 px-4 text-center">
                               <div className="flex items-center justify-center gap-1.5">
@@ -3075,7 +3077,7 @@ export default function App() {
       {/* DIFF COMPARISON MODAL */}
       {activeDiffCR && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -3134,6 +3136,9 @@ export default function App() {
                   Lifecycle: {activeDiffCR.status}
                 </span>
               </div>
+
+              {/* 2-Layer Proposal Status & Authority Chain Tracker (P | R | A -> Layer 1 -> Layer 2) */}
+              <ProposalWorkflowTracker cr={activeDiffCR} />
 
               {/* Mandatory Business Justification Card (Requirement 1) */}
               <div className="p-3.5 bg-white border border-slate-200 rounded-xl space-y-1 shadow-2xs">
