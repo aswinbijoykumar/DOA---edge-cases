@@ -126,7 +126,7 @@ export default function AuthorityChainBuilder({
   }, [initialChain]);
 
   const [selectedBody, setSelectedBody] = useState('Board Committees');
-  const [selectedEntityCodes, setSelectedEntityCodes] = useState(['AC']);
+  const [selectedEntityCodes, setSelectedEntityCodes] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [selectedOperator, setSelectedOperator] = useState('P');
@@ -163,13 +163,9 @@ export default function AuthorityChainBuilder({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Whenever body changes, reset selected entities to first available item
+  // Whenever body changes, reset selected entities to empty so user chooses
   useEffect(() => {
-    if (availableEntities.length > 0) {
-      setSelectedEntityCodes([availableEntities[0].code]);
-    } else {
-      setSelectedEntityCodes([]);
-    }
+    setSelectedEntityCodes([]);
     setIsDropdownOpen(false);
   }, [selectedBody]);
 
@@ -528,22 +524,30 @@ export default function AuthorityChainBuilder({
                 <button
                   type="button"
                   onClick={() => setIsDropdownOpen(prev => !prev)}
-                  className="w-full text-xs sm:text-sm font-semibold border border-slate-300 rounded-xl p-2.5 bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer flex items-center justify-between text-left"
+                  className={`w-full text-xs sm:text-sm font-semibold border rounded-xl p-2.5 bg-white text-slate-800 focus:outline-none transition-all cursor-pointer flex items-center justify-between text-left pr-8 ${
+                    isDropdownOpen 
+                      ? 'border-teal-500 ring-2 ring-teal-500/20' 
+                      : 'border-slate-300 hover:border-slate-400'
+                  }`}
                 >
-                  <span className="truncate pr-2">{triggerDisplayText}</span>
-                  <ChevronDown className={`h-4 w-4 text-slate-400 shrink-0 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <span className={`truncate ${selectedEntityCodes.length === 0 ? 'text-slate-700 font-medium' : 'text-slate-800 font-semibold'}`}>
+                    {triggerDisplayText}
+                  </span>
                 </button>
+                <ChevronDown className={`h-4 w-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
 
                 {isDropdownOpen && (
-                  <div className="absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 py-1 max-h-64 overflow-y-auto animate-fade-in divide-y divide-slate-100">
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto animate-fade-in divide-y divide-slate-100">
                     {/* List of Committee Entities with Checkboxes */}
-                    <div className="py-1">
+                    <div className="py-0.5">
                       {availableEntities.map(ent => {
                         const isChecked = selectedEntityCodes.includes(ent.code);
                         return (
                           <label
                             key={ent.code}
-                            className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-50 cursor-pointer text-xs font-semibold text-slate-800 transition-colors"
+                            className={`flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-100 cursor-pointer text-xs sm:text-sm transition-colors ${
+                              isChecked ? 'bg-teal-50/60 font-semibold text-slate-900' : 'text-slate-700 font-normal'
+                            }`}
                           >
                             <input
                               type="checkbox"
@@ -558,15 +562,17 @@ export default function AuthorityChainBuilder({
                     </div>
 
                     {/* Final Option at the Last: All Committee Members */}
-                    <div className="pt-1">
-                      <label className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-teal-50/70 bg-slate-50/60 cursor-pointer text-xs font-bold text-slate-900 transition-colors">
+                    <div className="pt-0.5">
+                      <label className={`flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-100 cursor-pointer text-xs sm:text-sm transition-colors ${
+                        selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS') ? 'bg-teal-50 font-bold text-teal-950' : 'text-slate-900 font-semibold'
+                      }`}>
                         <input
                           type="checkbox"
                           checked={selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS')}
                           onChange={handleToggleAllCommitteeMembers}
                           className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300 cursor-pointer accent-teal-600"
                         />
-                        <span className="truncate text-teal-950 font-bold">All Committee Members</span>
+                        <span className="truncate font-bold">All Committee Members</span>
                       </label>
                     </div>
                   </div>
