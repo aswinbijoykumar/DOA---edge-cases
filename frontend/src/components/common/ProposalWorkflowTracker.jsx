@@ -250,53 +250,49 @@ function getStepStyle(state) {
 }
 
 /**
- * Compact 2-Layer mini tracker for the Change Queue table Status column.
- * Styled in the cohesive DOAtools slate / indigo / teal palette.
+ * Sleek, uncongested 2-Layer hairline progress bar for the Change Queue table Status column.
+ * Full labeled step details live in ProposalWorkflowTracker inside the Review Proposal modal.
  */
 export function ProposalQueueMiniTracker({ status }) {
   const states = getWorkflowStates(status);
   const steps = [
-    { key: 'P', state: states.propose, title: 'Layer 1: Propose' },
-    { key: 'R', state: states.review, title: 'Layer 1: Review' },
-    { key: 'A', state: states.approve, title: 'Layer 1: Approve' },
-    { key: 'G', state: states.governance, title: 'Layer 2: Governance' },
-    { key: 'Pub', state: states.published, title: 'Layer 2: Published' },
+    { key: 'P', state: states.propose, title: 'Layer 1 · Propose' },
+    { key: 'R', state: states.review, title: 'Layer 1 · Review' },
+    { key: 'A', state: states.approve, title: 'Layer 1 · Approve' },
+    { key: 'G', state: states.governance, title: 'Layer 2 · Governance' },
+    { key: 'Pub', state: states.published, title: 'Layer 2 · Published' },
   ];
 
   const getMiniStateLabel = (state) => {
     if (state === 'approved') return 'Completed';
-    if (state === 'active') return 'Current Stage';
+    if (state === 'active') return 'In Progress';
     if (state === 'rejected') return 'Rejected';
     return 'Pending';
   };
 
   return (
     <div
-      className="inline-flex items-center justify-center gap-1 mt-1.5 px-2 py-1 rounded-lg bg-slate-50/90 border border-slate-200/80 shadow-2xs"
-      title="Workflow Position: Layer 1 (P → R → A) | Layer 2 (Gov → Pub)"
+      className="flex items-center justify-center gap-1 w-28 mt-2"
+      title="Queue Progress: Layer 1 (Propose, Review, Approve) · Layer 2 (Governance, Published)"
     >
       {steps.map((step, idx) => {
-        const pillColor =
+        const barColor =
           step.state === 'approved'
-            ? 'bg-teal-50 text-teal-700 border-teal-200/90'
+            ? 'bg-teal-500'
             : step.state === 'active'
-            ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-100 shadow-2xs'
+            ? 'bg-indigo-600'
             : step.state === 'rejected'
-            ? 'bg-rose-50 text-rose-700 border-rose-200'
-            : 'bg-white text-slate-400 border-slate-200/80';
+            ? 'bg-rose-400'
+            : 'bg-slate-200';
 
         return (
-          <React.Fragment key={step.key}>
-            {idx === 3 && (
-              <span className="h-3 w-px bg-slate-300 mx-0.5" aria-hidden="true" />
-            )}
-            <span
-              title={`${step.title}: ${getMiniStateLabel(step.state)}`}
-              className={`px-1.5 py-0.5 rounded text-[9px] font-bold border leading-none transition-colors ${pillColor}`}
-            >
-              {step.key}
-            </span>
-          </React.Fragment>
+          <div
+            key={step.key}
+            title={`${step.title}: ${getMiniStateLabel(step.state)}`}
+            className={`h-1.5 flex-1 rounded-full transition-colors ${barColor} ${
+              idx === 3 ? 'ml-1' : ''
+            }`}
+          />
         );
       })}
     </div>
