@@ -433,7 +433,7 @@ export default function App() {
     decisionArea: '',
     keyNonKey: 'Key',
     regulatory: 'N',
-    authority: 'Shareholders (A)',
+    authority: '',
     rationale: ''
   });
 
@@ -442,10 +442,7 @@ export default function App() {
   const [selectedAuthChild, setSelectedAuthChild] = useState('AC'); // child 1 (e.g. Committee or Executive)
   const [selectedAuthOperator, setSelectedAuthOperator] = useState('E1'); // child 2 (operator code)
   const [isChildOpen, setIsChildOpen] = useState(true); // round button expands child dropdowns
-  const [authorityChain, setAuthorityChain] = useState([
-    { parentName: 'Board of Directors (BoD)', childName: '', operator: 'A', display: 'BoD (A)' },
-    { parentName: 'Board Committees', childName: 'AC - Audit Committee', operator: 'E1', display: 'AC (E1)' }
-  ]);
+  const [authorityChain, setAuthorityChain] = useState([]);
 
   // Toasts Notification State
   const [toasts, setToasts] = useState([]);
@@ -1113,9 +1110,11 @@ export default function App() {
       }
 
       // Reset form fields
+      setAuthorityChain([]);
       setFormData(prev => ({
         ...prev,
         decisionArea: '',
+        authority: '',
         rationale: ''
       }));
       
@@ -2152,6 +2151,7 @@ export default function App() {
                       setActionMode(mode.id);
                       setSelectedModifyId('');
                       if (mode.id === 'Add') {
+                        setAuthorityChain([]);
                         const defFunc = allowedDomains[0] || 'Finance';
                         setFormData({
                           parentFunction: defFunc,
@@ -2159,7 +2159,7 @@ export default function App() {
                           decisionArea: '',
                           keyNonKey: 'Key',
                           regulatory: 'N',
-                          authority: 'Shareholders (A)',
+                          authority: '',
                           rationale: ''
                         });
                       }

@@ -129,3 +129,4 @@ export function matchesLastUpdatedFilter(dateVal, filterOption) {
       return true;
   }
 }
+
