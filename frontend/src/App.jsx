@@ -3076,7 +3076,7 @@ export default function App() {
       {/* DIFF COMPARISON MODAL */}
       {activeDiffCR && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -3130,9 +3130,6 @@ export default function App() {
                   {currentUser?.persona_type === 'FRONTEND_USER' ? 'Requestor Simple Status Tracker' :
                    currentUser?.persona_type === 'APPROVER' || currentUser?.role === 'DOA_ADMINISTRATOR' ? 'Executive Threshold & Policy Decision Card' :
                    'Risk & Compliance Technical Comparison (Current vs Proposed)'}
-                </span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-white border border-slate-200 text-teal-800">
-                  Lifecycle: {activeDiffCR.status}
                 </span>
               </div>
 
@@ -3267,7 +3264,7 @@ export default function App() {
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-500 italic">
-                    Your proposal is currently routed through the 2LoD Risk &amp; Governance review sequence.
+                    Your proposal is currently routed through the Risk &amp; Governance review sequence.
                   </p>
                 </div>
               ) : currentUser?.persona_type === 'APPROVER' || currentUser?.role === 'DOA_ADMINISTRATOR' ? (
@@ -3321,7 +3318,7 @@ export default function App() {
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-300">
                         <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />
-                        <span>2LoD Risk &amp; Governance vetted</span>
+                        <span>Risk &amp; Governance vetted</span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-300">
                         <CheckCircle className="h-3 w-3 text-emerald-400 flex-shrink-0" />
