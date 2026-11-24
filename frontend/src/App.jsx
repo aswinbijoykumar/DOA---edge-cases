@@ -2563,7 +2563,7 @@ export default function App() {
                               </div>
                             </td>
                             <td className="py-3.5 px-4 text-center">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
                                 cr.status === 'PENDING_PROCESS_OWNER' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' :
                                 cr.status === 'PENDING_DEPT_OWNER' ? 'bg-teal-50 text-teal-700 border-teal-200' :
                                 cr.status === 'PENDING_2LOD_REVIEW' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
@@ -2573,13 +2573,7 @@ export default function App() {
                                 isPublished ? 'bg-teal-50 text-teal-800 border-teal-200' :
                                 'bg-rose-50 text-rose-700 border-rose-200'
                               }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${
-                                  isPublished ? 'bg-teal-600' :
-                                  isApproved ? 'bg-sky-600' :
-                                  isRejected ? 'bg-rose-500' :
-                                  'bg-indigo-600'
-                                }`} />
-                                {cr.status?.replace(/_/g, ' ')}
+                                {cr.status === 'PENDING_2LOD_REVIEW' ? 'PENDING REVIEW' : cr.status?.replace(/_/g, ' ')}
                               </span>
                             </td>
                             <td className="py-3 px-4 text-center">
