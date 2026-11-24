@@ -469,9 +469,9 @@ export default function AuthorityChainBuilder({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Authority Builder */}
-      <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-white">
+      <div className="rounded-2xl border border-slate-200 shadow-sm bg-white relative z-20">
         {/* Navy Header (Status feedback renders inline inside fixed-height header to prevent scroll twitching) */}
-        <div className="bg-slate-900 px-5 py-3.5 min-h-[52px] flex items-center justify-between gap-3 text-white">
+        <div className="bg-slate-900 rounded-t-2xl px-5 py-3.5 min-h-[52px] flex items-center justify-between gap-3 text-white">
           <h4 className="text-sm font-bold text-white tracking-tight shrink-0">
             Authority Builder
           </h4>
@@ -537,7 +537,7 @@ export default function AuthorityChainBuilder({
                 <ChevronDown className={`h-4 w-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
 
                 {isDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-300 rounded-xl shadow-xl z-50 py-1 max-h-60 overflow-y-auto animate-fade-in divide-y divide-slate-100">
+                  <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-300 rounded-xl shadow-2xl z-[100] py-1 max-h-64 overflow-y-auto animate-fade-in divide-y divide-slate-100">
                     {/* List of Committee Entities with Checkboxes */}
                     <div className="py-0.5">
                       {availableEntities.map(ent => {
