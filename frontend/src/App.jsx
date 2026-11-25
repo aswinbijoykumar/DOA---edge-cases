@@ -347,6 +347,8 @@ export default function App() {
   const [filterParentFunction, setFilterParentFunction] = useState('All'); // 'All' | 'Finance' | 'Risk'
   const [filterChildBusinessLine, setFilterChildBusinessLine] = useState('');
   const [filterKeyNonKey, setFilterKeyNonKey] = useState('All'); // 'All' | 'Key' | 'Non-Key'
+  const [filterRegulatory, setFilterRegulatory] = useState('All'); // 'All' | 'Y' | 'N'
+  const [filterFinancial, setFilterFinancial] = useState('All'); // 'All' | 'Financial' | 'Non-Financial'
   const [filterLastUpdated, setFilterLastUpdated] = useState('All'); // 'All' | 'yesterday' | '7days' | '15days' | '30days'
   const [searchQuery, setSearchQuery] = useState('');
   const searchTableBodyRef = useRef(null);
@@ -780,6 +782,29 @@ export default function App() {
     return regulatoryKeywords.some(k => descLower.includes(k));
   };
 
+  // Helper to check if a record represents a Financial vs Non-Financial decision
+  const isFinancialDecision = (record) => {
+    if (!record) return false;
+    if (typeof record.is_financial === 'boolean') return record.is_financial;
+    if (typeof record.isFinancial === 'boolean') return record.isFinancial;
+    if (record.financial_type) return record.financial_type.toLowerCase() === 'financial';
+    if (record.financialType) return record.financialType.toLowerCase() === 'financial';
+    
+    const desc = (record.decisionArea || record.decision_area || '').toLowerCase();
+    
+    // 1. Explicit currency and monetary threshold patterns
+    if (/\b(usd|bhd|sar|\$|million|billion|thousand|cap limit|thresholds?|liability above|liability below|assets above|write-offs? above)\b/i.test(desc)) {
+      return true;
+    }
+    
+    // 2. Direct financial operations, capital allocation, loans, budgets, provisioning
+    if (/\b(share capital|shares|dividend|reserves for the bank|disposal of more than 50%|annual budget|regulatory capital|funding programmes|tier one|tier two|capital increase in subsidiary|capital allocated to branches|syndicated loan|single obligor credit limit|loan underwriting|var limits|stop-loss|ecl specific provisioning|npl write-offs|acquisition of non-financial assets|funds transfer pricing)\b/i.test(desc)) {
+      return true;
+    }
+    
+    return false;
+  };
+
   // KPI calculations with backend synchronization
   const kpis = useMemo(() => {
     if (backendSummary) {
@@ -949,7 +974,29 @@ export default function App() {
           }
         }
 
-        // Filter 4: Last Updated Date Range
+        // Filter 4: Regulatory Mandated
+        if (filterRegulatory !== 'All') {
+          const isReg = record.regulatory === 'Y' || isRegulatoryMandated(record.decisionArea);
+          if (filterRegulatory === 'Y' && !isReg) {
+            return false;
+          }
+          if (filterRegulatory === 'N' && isReg) {
+            return false;
+          }
+        }
+
+        // Filter 5: Financial / Non-Financial
+        if (filterFinancial !== 'All') {
+          const isFin = isFinancialDecision(record);
+          if (filterFinancial === 'Financial' && !isFin) {
+            return false;
+          }
+          if (filterFinancial === 'Non-Financial' && isFin) {
+            return false;
+          }
+        }
+
+        // Filter 6: Last Updated Date Range
         if (filterLastUpdated !== 'All') {
           const recDate = record.lastUpdateDate || record.effective_date;
           if (!matchesLastUpdatedFilter(recDate, filterLastUpdated)) {
@@ -957,7 +1004,7 @@ export default function App() {
           }
         }
 
-        // Filter 5: Free-text search across decision area, ID, and authority
+        // Filter 7: Free-text search across decision area, ID, and authority
         const q = searchQuery.toLowerCase().trim();
         if (q === '') return true;
 
@@ -975,7 +1022,7 @@ export default function App() {
         const dateB = parseRecordDate(b.lastUpdateDate || b.effective_date)?.getTime() || 0;
         return dateB - dateA; // Descending order (newest first)
       });
-  }, [doaRecords, filterParentFunction, filterChildBusinessLine, filterKeyNonKey, filterLastUpdated, searchQuery]);
+  }, [doaRecords, filterParentFunction, filterChildBusinessLine, filterKeyNonKey, filterRegulatory, filterFinancial, filterLastUpdated, searchQuery]);
 
   // Group records by category / business line for hierarchical rendering
   const groupedRecords = useMemo(() => {
@@ -995,6 +1042,8 @@ export default function App() {
     setFilterParentFunction('All');
     setFilterChildBusinessLine('');
     setFilterKeyNonKey('All');
+    setFilterRegulatory('All');
+    setFilterFinancial('All');
     setFilterLastUpdated('All');
     setSearchQuery('');
     addToast('Filters reset to authorized scope', 'info');
@@ -1764,7 +1813,7 @@ export default function App() {
                   <Filter className="h-4 w-4 text-slate-400" />
                   Filters
                 </span>
-                {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || filterKeyNonKey !== 'All' || filterLastUpdated !== 'All' || searchQuery !== '') && (
+                {(filterParentFunction !== 'All' || filterChildBusinessLine !== '' || filterKeyNonKey !== 'All' || filterRegulatory !== 'All' || filterFinancial !== 'All' || filterLastUpdated !== 'All' || searchQuery !== '') && (
                   <button 
                     onClick={handleClearFilters}
                     className="text-xs font-bold text-rose-500 hover:text-rose-600 transition-colors"
@@ -1774,8 +1823,8 @@ export default function App() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-                {/* Function Dropdown (All Business Line Functions Visible for Read-Only Exploration) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+                {/* 1. Function Dropdown (All Business Line Functions Visible for Read-Only Exploration) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Function
@@ -1795,7 +1844,7 @@ export default function App() {
                   </select>
                 </div>
 
-                {/* Business Line / Process Dropdown Mapped to Function */}
+                {/* 2. Business Line / Process Dropdown Mapped to Function */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Business Line / Process
@@ -1803,7 +1852,7 @@ export default function App() {
                   <select 
                     value={filterChildBusinessLine}
                     onChange={(e) => setFilterChildBusinessLine(e.target.value)}
-                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer"
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all cursor-pointer font-medium text-slate-700"
                   >
                     <option value="">{filterParentFunction === 'All' ? 'All Processes / Business Lines' : `All Processes under ${filterParentFunction}`}</option>
                     {availableChildCategoriesForFilter.map(cat => (
@@ -1812,7 +1861,7 @@ export default function App() {
                   </select>
                 </div>
 
-                {/* Key / Non-Key Filter */}
+                {/* 3. Key / Non-Key Filter */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Key / Non-Key
@@ -1823,12 +1872,44 @@ export default function App() {
                     className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
                   >
                     <option value="All">All Types</option>
-                    <option value="Key">Key</option>
-                    <option value="Non-Key">Non-Key</option>
+                    <option value="Key">Key Decision</option>
+                    <option value="Non-Key">Non-Key Decision</option>
                   </select>
                 </div>
 
-                {/* Last Updated Date Filter */}
+                {/* 4. Regulatory Mandated Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600">
+                    Regulatory Mandated
+                  </label>
+                  <select
+                    value={filterRegulatory}
+                    onChange={(e) => setFilterRegulatory(e.target.value)}
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
+                  >
+                    <option value="All">All Mandates</option>
+                    <option value="Y">Regulatory Mandated (Yes)</option>
+                    <option value="N">Internal Governance (No)</option>
+                  </select>
+                </div>
+
+                {/* 5. Financial / Non-Financial Filter */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-600">
+                    Financial / Non-Financial
+                  </label>
+                  <select
+                    value={filterFinancial}
+                    onChange={(e) => setFilterFinancial(e.target.value)}
+                    className="w-full text-sm border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-semibold text-slate-700 cursor-pointer"
+                  >
+                    <option value="All">All (Financial & Non-Financial)</option>
+                    <option value="Financial">Financial Decision</option>
+                    <option value="Non-Financial">Non-Financial Decision</option>
+                  </select>
+                </div>
+
+                {/* 6. Last Updated Date Filter */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-600">
                     Last Updated Date
@@ -1846,8 +1927,8 @@ export default function App() {
                   </select>
                 </div>
 
-                {/* Sub-Decision Search Query */}
-                <div className="space-y-1">
+                {/* 7. Sub-Decision Search Query */}
+                <div className="space-y-1 sm:col-span-2 md:col-span-3 lg:col-span-2">
                   <label className="text-xs font-bold text-slate-600">Search Specific Decision Area</label>
                   <div className="relative">
                     <input 

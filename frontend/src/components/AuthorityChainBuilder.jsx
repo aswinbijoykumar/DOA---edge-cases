@@ -172,7 +172,7 @@ export default function AuthorityChainBuilder({
   // Handle individual entity checkbox toggle
   const handleToggleEntity = (code) => {
     setSelectedEntityCodes(prev => {
-      const withoutAll = prev.filter(c => c !== 'ALL_COMMITTEE_MEMBERS');
+      const withoutAll = prev.filter(c => c !== 'ALL_COMMITTEES' && c !== 'ALL_COMMITTEE_MEMBERS');
       let updated;
       if (withoutAll.includes(code)) {
         updated = withoutAll.filter(c => c !== code);
@@ -180,33 +180,34 @@ export default function AuthorityChainBuilder({
         updated = [...withoutAll, code];
       }
       if (availableEntities.length > 0 && availableEntities.every(e => updated.includes(e.code))) {
-        return [...updated, 'ALL_COMMITTEE_MEMBERS'];
+        return [...updated, 'ALL_COMMITTEES'];
       }
       return updated;
     });
   };
 
-  // Handle "All Committee Members" final checkbox toggle
-  const handleToggleAllCommitteeMembers = () => {
-    const isCurrentlyAll = selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS');
+  // Handle "All Committees" final checkbox toggle
+  const handleToggleAllCommittees = () => {
+    const isCurrentlyAll = selectedEntityCodes.includes('ALL_COMMITTEES') || selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS');
     if (isCurrentlyAll) {
       setSelectedEntityCodes([]);
     } else {
-      setSelectedEntityCodes(['ALL_COMMITTEE_MEMBERS', ...availableEntities.map(e => e.code)]);
+      setSelectedEntityCodes(['ALL_COMMITTEES', ...availableEntities.map(e => e.code)]);
     }
   };
 
-  const isAllSelected = selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS') || 
+  const isAllSelected = selectedEntityCodes.includes('ALL_COMMITTEES') || 
+    selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS') || 
     (availableEntities.length > 0 && availableEntities.every(e => selectedEntityCodes.includes(e.code)));
 
   let triggerDisplayText = 'Select Committee / Entity';
   if (isAllSelected) {
-    triggerDisplayText = 'All Committee Members';
+    triggerDisplayText = 'All Committees';
   } else if (selectedEntityCodes.length === 1) {
     const ent = availableEntities.find(e => e.code === selectedEntityCodes[0]);
     triggerDisplayText = ent ? ent.name : selectedEntityCodes[0];
   } else if (selectedEntityCodes.length > 1) {
-    const codes = selectedEntityCodes.filter(c => c !== 'ALL_COMMITTEE_MEMBERS');
+    const codes = selectedEntityCodes.filter(c => c !== 'ALL_COMMITTEES' && c !== 'ALL_COMMITTEE_MEMBERS');
     if (codes.length <= 2) {
       triggerDisplayText = codes.map(c => {
         const found = availableEntities.find(e => e.code === c);
@@ -291,20 +292,20 @@ export default function AuthorityChainBuilder({
     }
 
     const opObj = OPERATOR_DEFINITIONS.find(o => o.code === selectedOperator) || OPERATOR_DEFINITIONS[0];
-    const isAllCommitteeMembers = selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS');
+    const isAllCommittees = selectedEntityCodes.includes('ALL_COMMITTEES') || selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS');
 
     let newNodes = [];
 
-    if (isAllCommitteeMembers) {
+    if (isAllCommittees) {
       newNodes.push({
         id: `node-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
         authorityBody: selectedBody,
-        entity: 'All Committee Members',
-        code: 'All Committee Members',
+        entity: 'All Committees',
+        code: 'All Committees',
         operator: opObj.code,
         operatorLabel: opObj.label,
         roleType: opObj.roleType,
-        display: `All Committee Members (${opObj.code})`
+        display: `All Committees (${opObj.code})`
       });
     } else {
       availableEntities
@@ -561,18 +562,18 @@ export default function AuthorityChainBuilder({
                       })}
                     </div>
 
-                    {/* Final Option at the Last: All Committee Members */}
+                    {/* Final Option at the Last: All Committees */}
                     <div className="pt-0.5">
                       <label className={`flex items-center gap-2.5 px-3.5 py-2 hover:bg-slate-100 cursor-pointer text-xs sm:text-sm transition-colors ${
-                        selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS') ? 'bg-teal-50 font-bold text-teal-950' : 'text-slate-900 font-semibold'
+                        (selectedEntityCodes.includes('ALL_COMMITTEES') || selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS')) ? 'bg-teal-50 font-bold text-teal-950' : 'text-slate-900 font-semibold'
                       }`}>
                         <input
                           type="checkbox"
-                          checked={selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS')}
-                          onChange={handleToggleAllCommitteeMembers}
+                          checked={selectedEntityCodes.includes('ALL_COMMITTEES') || selectedEntityCodes.includes('ALL_COMMITTEE_MEMBERS')}
+                          onChange={handleToggleAllCommittees}
                           className="w-4 h-4 rounded text-teal-600 focus:ring-teal-500 border-slate-300 cursor-pointer accent-teal-600"
                         />
-                        <span className="truncate font-bold">All Committee Members</span>
+                        <span className="truncate font-bold">All Committees</span>
                       </label>
                     </div>
                   </div>

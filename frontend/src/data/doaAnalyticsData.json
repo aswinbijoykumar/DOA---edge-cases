@@ -1,0 +1,2879 @@
+{
+  "acronyms": {
+    "BoD": "Board of Directors",
+    "AC": "Audit Committee",
+    "BRPC": "Board Risk Policy Committee",
+    "BSCCC": "Sustainability & Climate Change Committee",
+    "ExCom": "Executive Committee",
+    "GNRC": "Governance, Nomination and Remuneration Committee",
+    "GRTC": "Group Corporate Restructuring Committee (ad hoc Committee)",
+    "IC": "Innovation Committee",
+    "RBC": "Respective Board Committees",
+    "SSB": "Shariah Supervisory Board",
+    "BS&CGO": "Board Secretary & Corporate Governance Officer",
+    "CEO": "Chief Executive Officer",
+    "CEO(E)": "Chief Executive Officer (Entity)",
+    "CFO": "Chief Financial Officer",
+    "CHRO": "Chief Human Resources Officer",
+    "CIO": "Chief Information Officer",
+    "CSO": "Chief Sustainability Officer",
+    "GCA": "Group Chief Auditor",
+    "GCCO": "Group Chief Compliance Officer",
+    "GCEO": "Group Chief Executive Officer",
+    "GCFO": "Group Chief Financial Officer",
+    "GCHRO": "Group Chief Human Resources Officer",
+    "GCISO": "B.S.C Head of Information Security",
+    "GCI&TO": "Group Chief Investment and Treasury Officer",
+    "GCOO": "Group Chief Operating Officer",
+    "GCRO": "Group Chief Risk Officer",
+    "GCTO": "Group Chief Transformation Officer",
+    "GCWBO": "Group Chief Wholesale Banking Officer",
+    "GHSAU": "Group Head of Special Assets Unit",
+    "GHSCB": "Group Head of Sharia Compliant Banking",
+    "HCPQM": "Head of Consumer Protection and Quality Management",
+    "HoAWM": "Head of Asset and Wealth Management",
+    "HOC": "Head of Compliance",
+    "HOC & MLRO": "Head of Compliance & Money Laundering Reporting Officer- Bahrain",
+    "HOD": "Respective Head of Department (C-1)",
+    "HOL": "Head of Legal",
+    "HoP": "Head of Procurement",
+    "HOT": "Head of Treasury",
+    "HRB": "Head of Retail Banking - Bahrain",
+    "PO": "Policy Owner",
+    "RBM": "Respective Branch Manager (Oman, UAE, UK and US)",
+    "SAU-AAS": "SAU Approval Authorized Signatories (comprise of the Group CRO, CRO-KSA, CCTO, CCTO KSA and GHSAU)",
+    "RCS": "Relevant Committee Secretary",
+    "ALCO(B)": "Branch Asset Liability Committee",
+    "ALCO(G)": "Group Asset and Liability Committee",
+    "ALCO(UAE)": "UAE Branch Asset Liability Committee",
+    "AWMIC": "Asset and Wealth Management Investment Committee",
+    "BCCMSC": "Business Continuity and Crisis Management Steering Committee",
+    "B.S.CALCO": "Asset Liability Committee",
+    "B.S.CManCom": "Management Committee",
+    "CC(B.S.C)": "Credit Committee",
+    "GIC": "Investment Committee",
+    "GOR&NFRC": "Group Operational Risk and Non-financial Risk Committee",
+    "GRC": "Group Risk Committee",
+    "GSC": "Group Sustainability Committee",
+    "ISMC": "Information Security Management Committee",
+    "ITSC": "IT Steering Committee",
+    "ManCom(G)": "Group Management Council",
+    "ManCom(UAE)": "UAE Branch Management Committee",
+    "PC": "Provisioning Committee",
+    "Relevant MC": "Relevant Management Committee",
+    "SAUCC": "Special Assets Unit Credit Committee",
+    "SEAC": "Sustainability Evaluation and Assessment Committee",
+    "SPC": "Strategy and Performance Council",
+    "TRG": "Tender Review Group",
+    "TSC": "Transformation Steering Committee",
+    "AWM-JPF": "AWM Joint Partnership Forum",
+    "Financial": "Decisions that have a United States Dollar (USD) value or financial implication",
+    "Non financial": "Decisions that do not have a United States Dollar (USD) value or financial implication",
+    "Propose (P)": "Authority refers to initiating and leading development of content. This authority level also represents ownership of managing the end-to-end process from development to approval.",
+    "Review and / or Recommend (R)": "Authority is a non-blocking authority that requires the authority owner to provide its review/ recommendation/feedback on the case. This authority is exercised prior to the approve authority.",
+    "Endorse": "Authority confirms its support for the proposal before final approval. Endorsement demonstrates agreement with the recommendation but does not constitute the final decision.",
+    "Approve (A)": "Is the highest level of authority that concludes the process of decision taking and is followed by implementation of the decision.",
+    "Ratify (Y)": "Authority formally confirms and validates a decision that has already been approved or taken. Ratification provides official governance recognition and does not reopen the underlying decision unless specifically required.",
+    "Notify (N)": "Authority requires the concerned entity of this authority to receive post-approval decision briefing."
+  },
+  "roles": {
+    "P": "Propose",
+    "P1": "Propose",
+    "P2": "Propose",
+    "R": "Review and/or Recommend",
+    "R1": "Review and/or Recommend",
+    "R2": "Review and/or Recommend",
+    "R3": "Review and/or Recommend",
+    "R4": "Review and/or Recommend",
+    "R5": "Review and/or Recommend",
+    "E": "Endorse",
+    "E1": "Endorse",
+    "E2": "Endorse",
+    "E3": "Endorse",
+    "E4": "Endorse",
+    "E5": "Endorse",
+    "E6": "Endorse",
+    "A": "Approve",
+    "A1": "Approve",
+    "A2": "Approve",
+    "A3": "Approve",
+    "A4": "Approve",
+    "A5": "Approve",
+    "A6": "Approve",
+    "Y": "Ratify",
+    "Y1": "Ratify",
+    "Y2": "Ratify",
+    "Y3": "Ratify",
+    "N": "Notify",
+    "N1": "Notify",
+    "N2": "Notify"
+  },
+  "technical_terms": {
+    "AGM": "Annual General Meeting",
+    "AML": "Anti-Money Laundering",
+    "AoA": "Articles of Association",
+    "AUP": "Agreed Upon Procedure",
+    "B.S.C": "Bahraini Shareholding Company",
+    "BC": "Business Continuity",
+    "BCP": "Business Continuity Plan",
+    "BIA": "Business Impact Analysis",
+    "CA": "Credit Application(s)",
+    "CAPEX": "Capital Expenditure",
+    "CBB": "Central Bank of Bahrain",
+    "CF": "Counter Fraud",
+    "CFP": "Contingency Funding Plan",
+    "CFT": "Counter Financing of Terrorism",
+    "CIF": "Customer Information File",
+    "CIU": "Collective Investment Undertaking",
+    "CMA": "Capital Market Authority",
+    "CRM": "Credit Risk Management",
+    "CRS": "Common Reporting Standard",
+    "CRSA": "Compliance Risk Self-Assessment",
+    "CSR": "Corporate Social Responsibility",
+    "DoA": "Delegation of Authority",
+    "ECL": "Expected Credit Loss",
+    "EGM": "Extraordinary General Meeting",
+    "EPM": "Engagement Planning Memorandum",
+    "EQA": "External Quality Assessment",
+    "ERMA": "Enterprise Risk Management & Analytics",
+    "EWI": "Early Warning Indicator(s)",
+    "FATCA": "Foreign Account Tax Compliance Act",
+    "FCA": "Financial Conduct Authority",
+    "FCC": "Financial Crime Compliance",
+    "FI": "Financial Institution(s)",
+    "FIG": "Financial Institution Group",
+    "FTP": "Funds Transfer Pricing",
+    "FX": "Foreign Exchange",
+    "GCC": "Gulf Cooperation Council",
+    "HR": "Human Resources",
+    "IA": "Internal Audit",
+    "IAD": "Internal Audit Division",
+    "ICAAP": "Internal Capital Adequacy Assessment Process",
+    "IPS": "Investment Policy Statement",
+    "IRRBB": "Interest Rate Risk in the Banking Book",
+    "IRS": "Interest Rate Swap",
+    "IT": "Information Technology",
+    "ITRS": "Internal Transaction Report Statement",
+    "KPI": "Key Performance Indicator"
+  },
+  "records": [
+    {
+      "unique_no": 225,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve increase or reduction of share capital",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "A",
+          "body_full": "Shareholders",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BoD",
+          "op": "E2",
+          "body_full": "Board of Directors",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ExCom",
+          "op": "E",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "R2",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "R1",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (A) ➔ BoD (E2) ➔ AC (E1) ➔ ExCom (E) ➔ GCEO (R2) ➔ CEO (R1) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 226,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Amend or cancel obligations or restrictions on shares",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "A",
+          "body_full": "Shareholders",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BoD",
+          "op": "E4",
+          "body_full": "Board of Directors",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "AC",
+          "op": "E3",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ExCom",
+          "op": "E2",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "E1",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CEO",
+          "op": "E",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (A) ➔ BoD (E4) ➔ AC (E3) ➔ ExCom (E2) ➔ GCEO (E1) ➔ CEO (E) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 227,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve conversion of share classes",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "A",
+          "body_full": "Shareholders",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BoD",
+          "op": "E4",
+          "body_full": "Board of Directors",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "AC",
+          "op": "E3",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ExCom",
+          "op": "E2",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "E1",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CEO",
+          "op": "E",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (A) ➔ BoD (E4) ➔ AC (E3) ➔ ExCom (E2) ➔ GCEO (E1) ➔ CEO (E) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 229,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve formation of reserves for the Bank",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "A",
+          "body_full": "Shareholders",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BoD",
+          "op": "E2",
+          "body_full": "Board of Directors",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ExCom",
+          "op": "E",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "R2",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "R1",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (A) ➔ BoD (E2) ➔ AC (E1) ➔ ExCom (E) ➔ GCEO (R2) ➔ CEO (R1) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 230,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve disposal of more than 50% of assets",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "A",
+          "body_full": "Shareholders",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BoD",
+          "op": "E3",
+          "body_full": "Board of Directors",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "AC\nBRPC",
+          "op": "E1\nE2",
+          "body_full": "AC\nBRPC",
+          "op_label": "E1\nE2"
+        },
+        {
+          "body": "ExCom",
+          "op": "E",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "R2",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "R1",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (A) ➔ BoD (E3) ➔ AC\nBRPC (E1\nE2) ➔ ExCom (E) ➔ GCEO (R2) ➔ CEO (R1) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 231,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve dividend distribution",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.\n\nTo be proposed by the Finance Team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ B.S.CManCom (E) ➔ GCFO (R1) ➔ CFO (R)"
+    },
+    {
+      "unique_no": 232,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve Capital Management Policy including appendices and amendments, if any",
+      "regulated": "Y",
+      "comments": "To be proposed by the Finance Team.\n\nTo be reviewed by the Head of Balance Sheet Management. \n\nAs per regulatory requirement, Board of Directors (BOD) shall approve.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E2",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E1",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R2",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R1",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GHSCB",
+          "op": "R",
+          "body_full": "Group Head of Sharia Compliant Banking",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E2) ➔ B.S.CManCom (E1) ➔ GRC (E) ➔ GCFO (R2) ➔ GCCO (R1) ➔ GHSCB (R)"
+    },
+    {
+      "unique_no": 995,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve waivers of Group Capital Management Policy on account of local circumstances*",
+      "regulated": "N",
+      "comments": "*If a Group entity is unable to fully comply with this Group policy on account of a specific local circumstance, such entity must obtain a waiver from the GCFO. Any such waiver shall be based on an appropriate equivalent framework for capital management at the entity. \n\nTo be proposed by the Entity seeking the waiver.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E2",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E1",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E2) ➔ B.S.CManCom (E1) ➔ GRC (E) ➔ GCFO (R)"
+    },
+    {
+      "unique_no": 236,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve Internal Capital Adequacy Assessment Process (ICAAP) Framework",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall be notified.\n\nTo be proposed by the Finance Team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E2",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E1",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E2) ➔ B.S.CManCom (E1) ➔ GRC (E) ➔ GCFO (R1) ➔ GCRO (R)"
+    },
+    {
+      "unique_no": 237,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve design of Internal Capital Adequacy Assessment Process (ICAAP) stress test scenarios and assumptions",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Board of Directors (BOD) shall approve.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCRO",
+          "op": "P",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ GRC (E) ➔ GCFO (R) ➔ GCRO (P)"
+    },
+    {
+      "unique_no": 238,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve capital restoration measures (in case of drop below minimum target level or contingency situation)",
+      "regulated": "N",
+      "comments": "Risk Management Function shall prepare a Recovery Plan that identifies possible recovery measures, recovery options and necessary steps and time needed to implement such measures.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E2",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E1",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC and B.S.C. ALCO",
+          "op": "E",
+          "body_full": "GRC and B.S.C. ALCO",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P1",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        },
+        {
+          "body": "GCRO",
+          "op": "P",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E2) ➔ B.S.CManCom (E1) ➔ GRC and B.S.C. ALCO (E) ➔ GCFO (R) ➔ CFO (P1) ➔ GCRO (P)"
+    },
+    {
+      "unique_no": 239,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve year-end financial statements and disclosures",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, the Central Bank of Bahrain (CBB) shall review, the Audit Committee (AC) shall review/approve, the Board of Directors (BOD) shall approve and shareholders shall ratify.\n\nGNRC shall only endorse the relevant disclosures within the annual report.\n\n*CFO proposes for BSC only.",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "N",
+          "body_full": "Shareholders",
+          "op_label": "Notify"
+        },
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GNRC",
+          "op": "E",
+          "body_full": "Governance, Nomination and Remuneration Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO*",
+          "op": "P",
+          "body_full": "CFO*",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (N) ➔ BoD (A) ➔ AC (E1) ➔ GNRC (E) ➔ GCFO (R) ➔ CFO* (P)"
+    },
+    {
+      "unique_no": 240,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve quarterly financial statements (including restatements) and disclosures",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Audit Committee (AC) shall review.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 241,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve Internal Capital Adequacy Assessment Process (ICAAP) Report",
+      "regulated": "N",
+      "comments": "CFO reviews for BSC only.\n\nTo be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "R3",
+          "body_full": "Group Risk Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R2",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCRO",
+          "op": "R1",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO*",
+          "op": "R",
+          "body_full": "CFO*",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ B.S.CManCom (E) ➔ GRC (R3) ➔ GCFO (R2) ➔ GCRO (R1) ➔ CFO* (R)"
+    },
+    {
+      "unique_no": 242,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve internal capital risk appetite",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "R3",
+          "body_full": "Management Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GRC",
+          "op": "R2",
+          "body_full": "Group Risk Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCRO",
+          "op": "P",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E) ➔ B.S.CManCom (R3) ➔ GRC (R2) ➔ GCFO (R1) ➔ CFO (R) ➔ GCRO (P)"
+    },
+    {
+      "unique_no": 996,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Approve RAROC Hurdle rates",
+      "regulated": "N",
+      "comments": "To be recommended by Risk Management team.",
+      "authority_chain": [
+        {
+          "body": "B.S.CManCom",
+          "op": "A",
+          "body_full": "Management Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GRC",
+          "op": "E2",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "E1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "E",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "B.S.CManCom (A) ➔ GRC (E2) ➔ GCFO (E1) ➔ GCRO (E) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 982,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Issuance of instruments qualifying as regulatory capital*",
+      "regulated": "N",
+      "comments": "*Covers the issuance of equity shares and any capital instruments qualifying as Additional Tier 1 or Tier 2 regulatory capital.",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "A",
+          "body_full": "Shareholders",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BoD",
+          "op": "E4",
+          "body_full": "Board of Directors",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "AC",
+          "op": "E3",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ExCom",
+          "op": "E2",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "E1",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CEO",
+          "op": "E",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCI&TO",
+          "op": "R",
+          "body_full": "Group Chief Investment and Treasury Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (A) ➔ BoD (E4) ➔ AC (E3) ➔ ExCom (E2) ➔ GCEO (E1) ➔ CEO (E) ➔ GCFO (R1) ➔ GCI&TO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 983,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Bank Capital and Capital Management",
+      "decision_area": "Establishment, renewal, material amendment, suspension, or termination of funding programmes*",
+      "regulated": "N",
+      "comments": "*Limited to funding programmes approved by the Board (e.g., the Bank's EMTN Programme and similar funding programmes)\n\n*The endorsement of the Shariah Supervisory Board (SSB) shall also be required for the establishment, renewal, material amendment, suspension, or termination of any funding Programme that involves Shariah-compliant products or has Shariah-related implications.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "ExCom",
+          "op": "E3",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "BRPC",
+          "op": "E2",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "E1",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CEO",
+          "op": "E",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCI&TO",
+          "op": "R",
+          "body_full": "Group Chief Investment and Treasury Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ ExCom (E3) ➔ BRPC (E2) ➔ GCEO (E1) ➔ CEO (E) ➔ GCFO (R1) ➔ GCI&TO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 243,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Budgeting Processes and Financial Disclosures",
+      "decision_area": "Approve annual budget",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Board of Directors (BOD) shall approve.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "ExCom",
+          "op": "E2",
+          "body_full": "Executive Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCEO",
+          "op": "E1",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CEO",
+          "op": "E",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ ExCom (E2) ➔ GCEO (E1) ➔ CEO (E) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 245,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Budgeting Processes and Financial Disclosures",
+      "decision_area": "Approve Public Disclosure Policy and amendments, if any",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Board of Directors (BOD) shall approve.\n\nTo be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R3",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "R2",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R1",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GHSCB",
+          "op": "R",
+          "body_full": "Group Head of Sharia Compliant Banking",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ B.S.CManCom (E) ➔ GCFO (R3) ➔ CFO (R2) ➔ GCCO (R1) ➔ GHSCB (R)"
+    },
+    {
+      "unique_no": 246,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Budgeting Processes and Financial Disclosures",
+      "decision_area": "Approve Basel III disclosures",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 247,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Budgeting Processes and Financial Disclosures",
+      "decision_area": "Approve issuance of press releases regarding interim or annual financial statements",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.\n\nTo be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "GCEO",
+          "op": "A1",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "A",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "CFO",
+          "op": "R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "GCEO (A1) ➔ GCFO (A) ➔ CFO (R)"
+    },
+    {
+      "unique_no": 248,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Appoint Chief Financial Officer (CFO)",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Board shall approve.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GNRC",
+          "op": "R1",
+          "body_full": "Governance, Nomination and Remuneration Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "R",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CHRO",
+          "op": "P",
+          "body_full": "Chief Human Resources Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ GNRC (R1) ➔ CEO (R) ➔ CHRO (P)"
+    },
+    {
+      "unique_no": 249,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve engagement of external auditors for non-audit services",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "AC",
+          "op": "A",
+          "body_full": "Audit Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "AC (A) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 251,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve tier one (1) or tier two (2) capital issue",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "Y, A1",
+          "body_full": "Shareholders",
+          "op_label": "Y, A1"
+        },
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "P",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (Y, A1) ➔ BoD (A) ➔ AC (E1) ➔ BRPC (E) ➔ GCCO (R) ➔ GCFO (P)"
+    },
+    {
+      "unique_no": 252,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve proposed capital increase in subsidiary from parent",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.",
+      "authority_chain": [
+        {
+          "body": "Shareholders",
+          "op": "Y, A1",
+          "body_full": "Shareholders",
+          "op_label": "Y, A1"
+        },
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "P",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "Shareholders (Y, A1) ➔ BoD (A) ➔ AC (E1) ➔ BRPC (E) ➔ GCCO (R) ➔ GCFO (P)"
+    },
+    {
+      "unique_no": 994,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve increases, reductions or other changes to capital allocated to branches, subject to applicable regulatory approvals",
+      "regulated": "Y",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "GCEO",
+          "op": "N",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Notify"
+        },
+        {
+          "body": "B.S.CALCO",
+          "op": "A",
+          "body_full": "Asset Liability Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "ALCO(B)",
+          "op": "R2",
+          "body_full": "Branch Asset Liability Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "GCEO (N) ➔ B.S.CALCO (A) ➔ ALCO(B) (R2) ➔ GCFO (R1) ➔ GCCO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 253,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve changes or amendments to Special Purpose Vehicle (SPV) ownership, capital, or control",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.\n\nRelevant Board Committee to endorse where required.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "BS&CGO",
+          "op": "P, R",
+          "body_full": "Board Secretary & Corporate Governance Officer",
+          "op_label": "P, R"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E) ➔ GCFO (R1) ➔ BS&CGO (P, R)"
+    },
+    {
+      "unique_no": 254,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve Finance Policy and amendments, if any",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R2",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R1",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GHSCB",
+          "op": "R",
+          "body_full": "Group Head of Sharia Compliant Banking",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ B.S.CManCom (E) ➔ GCFO (R2) ➔ GCCO (R1) ➔ GHSCB (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 255,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve Non-Audit Services Policy and amendments, if any",
+      "regulated": "N",
+      "comments": "To be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCFO",
+          "op": "R3",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "R2",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R1",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GHSCB",
+          "op": "R",
+          "body_full": "Group Head of Sharia Compliant Banking",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ B.S.CManCom (E) ➔ GCFO (R3) ➔ CFO (R2) ➔ GCCO (R1) ➔ GHSCB (R)"
+    },
+    {
+      "unique_no": 256,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve unbudgeted acquisition of non-financial assets above USD 200,000 up to USD 500,000 with a total CAP limit of USD 3 million in a financial year",
+      "regulated": "N",
+      "comments": "To be proposed by the Finance team.\n\nTo be reviewed by Chief Credit Officer (COO).",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "Y",
+          "body_full": "Board of Directors",
+          "op_label": "Ratify"
+        },
+        {
+          "body": "GCEO",
+          "op": "N",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Notify"
+        },
+        {
+          "body": "CEO",
+          "op": "A",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCOO",
+          "op": "R",
+          "body_full": "Group Chief Operating Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (Y) ➔ GCEO (N) ➔ CEO (A) ➔ GCFO (R1) ➔ GCOO (R)"
+    },
+    {
+      "unique_no": 257,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve third-party liability above USD 50,000 up to USD 500,000",
+      "regulated": "N",
+      "comments": "To be endorsed by Chief Credit Officer (CCO).\n\nTo be proposed by Head of Group Tax & Insurance (HTX&I).",
+      "authority_chain": [
+        {
+          "body": "CEO",
+          "op": "A1",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "A",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCOO",
+          "op": "E",
+          "body_full": "Group Chief Operating Officer",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CFO",
+          "op": "R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "CEO (A1) ➔ GCFO (A) ➔ GCOO (E) ➔ CFO (R)"
+    },
+    {
+      "unique_no": 258,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve third-party liability below USD 50,000",
+      "regulated": "N",
+      "comments": "To be approved by Chief Credit Officer (CCO).\n\nTo be proposed by Head of Group Tax & Insurance (HTX&I).",
+      "authority_chain": [
+        {
+          "body": "GCFO",
+          "op": "A2",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCOO",
+          "op": "A",
+          "body_full": "Group Chief Operating Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "CFO",
+          "op": "R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "GCFO (A2) ➔ GCOO (A) ➔ CFO (R)"
+    },
+    {
+      "unique_no": 260,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve methodology for allocating indirect costs to business units",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "B.S.CManCom",
+          "op": "A",
+          "body_full": "Management Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "B.S.CManCom (A) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 261,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve methodology for allocating direct and indirect costs to customer level",
+      "regulated": "N",
+      "comments": "To be proposed by the Business Units and to be prepared by the Finance Department.",
+      "authority_chain": [
+        {
+          "body": "B.S.CManCom",
+          "op": "A",
+          "body_full": "Management Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "B.S.CManCom (A) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 263,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve risk-adjusted return on capital (RAROC) methodology",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "GRC",
+          "op": "A",
+          "body_full": "Group Risk Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCRO",
+          "op": "R1",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "GRC (A) ➔ GCRO (R1) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 264,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Notify Central Bank of Bahrain (CBB) when Liquidity Coverage Ratio (LCR) falls below 100%",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall be notified.\n\nThis decision area relates to notifying the Central Bank of Bahrain (CBB) of a breach, no separate approval authority is required.\n\n*CFO reviews for BSC only.\n\n*GCFO reviews for Group\n\nTo be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "N3",
+          "body_full": "Board of Directors",
+          "op_label": "N3"
+        },
+        {
+          "body": "BRPC",
+          "op": "N2",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Notify"
+        },
+        {
+          "body": "CEO",
+          "op": "N1",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Notify"
+        },
+        {
+          "body": "B.S.CALCO",
+          "op": "N",
+          "body_full": "Asset Liability Committee",
+          "op_label": "Notify"
+        },
+        {
+          "body": "GCFO*",
+          "op": "R3",
+          "body_full": "GCFO*",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCRO",
+          "op": "R2",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R1",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO*",
+          "op": "R",
+          "body_full": "CFO*",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (N3) ➔ BRPC (N2) ➔ CEO (N1) ➔ B.S.CALCO (N) ➔ GCFO* (R3) ➔ GCRO (R2) ➔ GCCO (R1) ➔ CFO* (R)"
+    },
+    {
+      "unique_no": 266,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Notify breach of minimum regulatory ratios",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall be notified.\n\nThis is a notification related decision area; therefore, no approver is required.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "N1",
+          "body_full": "Board of Directors",
+          "op_label": "Notify"
+        },
+        {
+          "body": "BRPC",
+          "op": "N",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Notify"
+        },
+        {
+          "body": "GCFO",
+          "op": "A",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCRO",
+          "op": "R1",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P, R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "P, R"
+        }
+      ],
+      "composite_authority": "BoD (N1) ➔ BRPC (N) ➔ GCFO (A) ➔ GCRO (R1) ➔ CFO (P, R)"
+    },
+    {
+      "unique_no": 267,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Approve reversion from standardized to basic indicator approach in respect of capital calculation",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.\n\nTo be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CALCO",
+          "op": "R1",
+          "body_full": "Asset Liability Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ GRC (E) ➔ B.S.CALCO (R1) ➔ GCFO (R)"
+    },
+    {
+      "unique_no": 268,
+      "function": "Finance",
+      "key_status": "Key",
+      "subprocess": "Other Finance Processes",
+      "decision_area": "Propose alternative approaches for calculating derivative position risk under CA-9.7.7",
+      "regulated": "Y",
+      "comments": "As per regulatory requirement, Central Bank of Bahrain (CBB) shall approve.\n\nTo be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CALCO",
+          "op": "R2",
+          "body_full": "Asset Liability Committee",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "R1",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ GRC (E) ➔ B.S.CALCO (R2) ➔ GCFO (R1) ➔ GCRO (R)"
+    },
+    {
+      "unique_no": 270,
+      "function": "Finance",
+      "key_status": "Non-Key",
+      "subprocess": "Non-Key Decision Areas",
+      "decision_area": "Approve Funds Transfer Pricing (FTP) Framework (including appendices) and amendments, if any",
+      "regulated": "N",
+      "comments": "To be proposed by the Finance team.",
+      "authority_chain": [
+        {
+          "body": "B.S.CManCom",
+          "op": "A",
+          "body_full": "Management Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "B.S.CALCO",
+          "op": "E",
+          "body_full": "Asset Liability Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "CFO",
+          "op": "R",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "B.S.CManCom (A) ➔ B.S.CALCO (E) ➔ CFO (R)"
+    },
+    {
+      "unique_no": 271,
+      "function": "Finance",
+      "key_status": "Non-Key",
+      "subprocess": "Non-Key Decision Areas",
+      "decision_area": "Approve disclosure of Finance Policy to third parties, and amendments if any",
+      "regulated": "N",
+      "comments": "",
+      "authority_chain": [
+        {
+          "body": "GCEO",
+          "op": "A",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCFO",
+          "op": "R",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CFO",
+          "op": "P",
+          "body_full": "Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "GCEO (A) ➔ GCFO (R) ➔ CFO (P)"
+    },
+    {
+      "unique_no": 301,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Enterprise & Credit Risk Management",
+      "decision_area": "Approve wholesale single obligor credit limit above USD 50 million up to regulatory cap",
+      "regulated": "Y",
+      "comments": "Central Bank of Bahrain (CBB) single obligor concentration ceiling and large exposure limit rules apply.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "B.S.CManCom",
+          "op": "E",
+          "body_full": "Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R1",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "P",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ B.S.CManCom (E) ➔ GCRO (R1) ➔ GCCO (R) ➔ GCFO (P)"
+    },
+    {
+      "unique_no": 302,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Enterprise & Credit Risk Management",
+      "decision_area": "Approve syndicated loan underwriting and underwriting risk limits",
+      "regulated": "N",
+      "comments": "Internal wholesale underwriting threshold governance policy.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "P",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E) ➔ GCRO (R) ➔ CEO (P)"
+    },
+    {
+      "unique_no": 303,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Enterprise & Credit Risk Management",
+      "decision_area": "Approve retail product credit policy and maximum debt-service burden ratio (DBR) criteria",
+      "regulated": "Y",
+      "comments": "Regulatory consumer protection standard and maximum 50% DBR mandate.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "P",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ GCRO (R) ➔ CEO (P)"
+    },
+    {
+      "unique_no": 304,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Enterprise & Credit Risk Management",
+      "decision_area": "Approve retail loan underwriting scorecards and automated credit approval cutoff points",
+      "regulated": "N",
+      "comments": "Annual statistical scorecard performance recalibration.",
+      "authority_chain": [
+        {
+          "body": "B.S.CManCom",
+          "op": "A",
+          "body_full": "Management Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "HoAWM",
+          "op": "P",
+          "body_full": "Head of Asset and Wealth Management",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "B.S.CManCom (A) ➔ GCRO (R) ➔ HoAWM (P)"
+    },
+    {
+      "unique_no": 308,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Enterprise & Credit Risk Management",
+      "decision_area": "Approve Group Risk Appetite Statement (RAS) and Group Risk Tolerance Matrix",
+      "regulated": "Y",
+      "comments": "Mandatory Board approval required under Basel Pillar II Supervisory Review and CBB High-level Controls.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCEO",
+          "op": "P",
+          "body_full": "Group Chief Executive Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ GRC (E) ➔ GCRO (R) ➔ GCEO (P)"
+    },
+    {
+      "unique_no": 311,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Enterprise & Credit Risk Management",
+      "decision_area": "Approve Stage 3 Expected Credit Loss (ECL) specific provisioning and non-performing loan (NPL) write-offs above USD 10 million",
+      "regulated": "Y",
+      "comments": "IFRS 9 impairment governance and Central Bank provisioning audit compliance.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "P",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ BRPC (E) ➔ GCRO (R) ➔ GCFO (P)"
+    },
+    {
+      "unique_no": 305,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Liquidity & Market Risk Governance",
+      "decision_area": "Approve Value-at-Risk (VaR) limits, Stressed VaR limits, and Stop-Loss thresholds for Trading Book",
+      "regulated": "Y",
+      "comments": "Market risk capital requirements directive and statutory trading book risk appetite.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ALCO",
+          "op": "E",
+          "body_full": "ALCO",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCI&TO",
+          "op": "P",
+          "body_full": "Group Chief Investment and Treasury Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ ALCO (E) ➔ GCRO (R) ➔ GCI&TO (P)"
+    },
+    {
+      "unique_no": 307,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Liquidity & Market Risk Governance",
+      "decision_area": "Approve Contingency Funding Plan (CFP) triggers and minimum Liquidity Coverage Ratio (LCR) buffers",
+      "regulated": "Y",
+      "comments": "Basel III liquidity framework and CBB emergency liquidity facility compliance.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ALCO",
+          "op": "E",
+          "body_full": "ALCO",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "P",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ ALCO (E) ➔ GCRO (R) ➔ GCFO (P)"
+    },
+    {
+      "unique_no": 312,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Liquidity & Market Risk Governance",
+      "decision_area": "Approve Net Stable Funding Ratio (NSFR) management strategy and stress testing assumptions",
+      "regulated": "Y",
+      "comments": "CBB Rulebook Volume 1 NSFR guidelines and quarterly disclosure reporting.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "ALCO",
+          "op": "E",
+          "body_full": "ALCO",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCFO",
+          "op": "P",
+          "body_full": "Group Chief Financial Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ ALCO (E) ➔ GCRO (R) ➔ GCFO (P)"
+    },
+    {
+      "unique_no": 313,
+      "function": "Risk",
+      "key_status": "Non-Key",
+      "subprocess": "Liquidity & Market Risk Governance",
+      "decision_area": "Approve Interest Rate Risk in the Banking Book (IRRBB) sensitivity limits and basis risk thresholds",
+      "regulated": "N",
+      "comments": "Internal ALCO mandate on 200 bps interest rate shock simulation.",
+      "authority_chain": [
+        {
+          "body": "ALCO",
+          "op": "A",
+          "body_full": "ALCO",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCI&TO",
+          "op": "P",
+          "body_full": "Group Chief Investment and Treasury Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "ALCO (A) ➔ GCRO (R) ➔ GCI&TO (P)"
+    },
+    {
+      "unique_no": 314,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Liquidity & Market Risk Governance",
+      "decision_area": "Approve Treasury counterparty credit limits and FX settlement exposure caps",
+      "regulated": "N",
+      "comments": "Internal corporate bank counterparty risk evaluation.",
+      "authority_chain": [
+        {
+          "body": "B.S.CManCom",
+          "op": "A",
+          "body_full": "Management Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCI&TO",
+          "op": "P",
+          "body_full": "Group Chief Investment and Treasury Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "B.S.CManCom (A) ➔ GCRO (R) ➔ GCI&TO (P)"
+    },
+    {
+      "unique_no": 306,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Operational & Cyber Resilience",
+      "decision_area": "Approve Enterprise Operational Risk Management Framework and Key Risk Indicator (KRI) escalation matrix",
+      "regulated": "Y",
+      "comments": "Central Bank operational risk supervisory guidance and loss incident reporting norms.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "P",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E) ➔ GRC (E) ➔ GCRO (R) ➔ CEO (P)"
+    },
+    {
+      "unique_no": 310,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Operational & Cyber Resilience",
+      "decision_area": "Approve Cyber Incident Response Plan and Information Security Management System (ISMS) ISO 27001 policies",
+      "regulated": "Y",
+      "comments": "CBB Cyber Security Module and national critical infrastructure notification rules.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "ISMC",
+          "op": "E",
+          "body_full": "Information Security Management Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCISO",
+          "op": "P",
+          "body_full": "B.S.C Head of Information Security",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ BRPC (E) ➔ ISMC (E) ➔ GCISO (P)"
+    },
+    {
+      "unique_no": 315,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Operational & Cyber Resilience",
+      "decision_area": "Approve Business Continuity Management (BCM) and Disaster Recovery (DR) testing schedule",
+      "regulated": "Y",
+      "comments": "Annual mandatory DR switchover exercise and regulatory attestation.",
+      "authority_chain": [
+        {
+          "body": "BRPC",
+          "op": "A",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCOO",
+          "op": "P",
+          "body_full": "Group Chief Operating Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BRPC (A) ➔ GRC (E) ➔ GCRO (R) ➔ GCOO (P)"
+    },
+    {
+      "unique_no": 316,
+      "function": "Risk",
+      "key_status": "Non-Key",
+      "subprocess": "Operational & Cyber Resilience",
+      "decision_area": "Approve third-party vendor risk assessment methodology and critical service provider tiers",
+      "regulated": "N",
+      "comments": "Procurement outsourcing risk screening procedures.",
+      "authority_chain": [
+        {
+          "body": "GRC",
+          "op": "A",
+          "body_full": "Group Risk Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "GCOO",
+          "op": "P",
+          "body_full": "Group Chief Operating Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "GRC (A) ➔ GCRO (R) ➔ GCOO (P)"
+    },
+    {
+      "unique_no": 317,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Operational & Cyber Resilience",
+      "decision_area": "Approve Model Risk Governance Framework and annual validation plan for internal models",
+      "regulated": "Y",
+      "comments": "SR 11-7 model risk management guidance compliance.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "BRPC",
+          "op": "E1",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCRO",
+          "op": "R",
+          "body_full": "Group Chief Risk Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "P",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ BRPC (E1) ➔ GCRO (R) ➔ CEO (P)"
+    },
+    {
+      "unique_no": 309,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Regulatory Compliance & AML",
+      "decision_area": "Approve Anti-Money Laundering (AML) / Counter Financing of Terrorism (CFT) Policy and Sanctions Screening standards",
+      "regulated": "Y",
+      "comments": "FATF Recommendations, CBB Financial Crime Module FC-4, and UN Sanctions compliance.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "BRPC",
+          "op": "E",
+          "body_full": "Board Risk Policy Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GRC",
+          "op": "E",
+          "body_full": "Group Risk Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCCO",
+          "op": "P",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ BRPC (E) ➔ GRC (E) ➔ GCCO (P)"
+    },
+    {
+      "unique_no": 318,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Regulatory Compliance & AML",
+      "decision_area": "Approve Annual Compliance Monitoring Plan and Regulatory Reporting schedule",
+      "regulated": "Y",
+      "comments": "Mandatory audit committee submission under corporate governance code.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCCO",
+          "op": "P",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ GCCO (P)"
+    },
+    {
+      "unique_no": 319,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Regulatory Compliance & AML",
+      "decision_area": "Approve Politically Exposed Persons (PEP) high-risk customer onboarding thresholds and escalation path",
+      "regulated": "Y",
+      "comments": "Enhanced Due Diligence (EDD) standards and senior compliance sign-off requirements.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCCO",
+          "op": "A",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Approve"
+        },
+        {
+          "body": "HOC",
+          "op": "R",
+          "body_full": "Head of Compliance",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "CEO",
+          "op": "P",
+          "body_full": "Chief Executive Officer",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ GCCO (A) ➔ HOC (R) ➔ CEO (P)"
+    },
+    {
+      "unique_no": 320,
+      "function": "Risk",
+      "key_status": "Key",
+      "subprocess": "Regulatory Compliance & AML",
+      "decision_area": "Approve Whistleblowing Policy and independent reporting channel procedures",
+      "regulated": "Y",
+      "comments": "Independent board oversight of anonymous speak-up channels.",
+      "authority_chain": [
+        {
+          "body": "BoD",
+          "op": "A",
+          "body_full": "Board of Directors",
+          "op_label": "Approve"
+        },
+        {
+          "body": "AC",
+          "op": "E1",
+          "body_full": "Audit Committee",
+          "op_label": "Endorse"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        }
+      ],
+      "composite_authority": "BoD (A) ➔ AC (E1) ➔ GCCO (R)"
+    },
+    {
+      "unique_no": 321,
+      "function": "Risk",
+      "key_status": "Non-Key",
+      "subprocess": "Regulatory Compliance & AML",
+      "decision_area": "Approve Common Reporting Standard (CRS) and FATCA governance procedures",
+      "regulated": "N",
+      "comments": "Cross-border tax information exchange operating instructions.",
+      "authority_chain": [
+        {
+          "body": "GRC",
+          "op": "A",
+          "body_full": "Group Risk Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "HOC",
+          "op": "P",
+          "body_full": "Head of Compliance",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "GRC (A) ➔ GCCO (R) ➔ HOC (P)"
+    },
+    {
+      "unique_no": 322,
+      "function": "Risk",
+      "key_status": "Non-Key",
+      "subprocess": "Regulatory Compliance & AML",
+      "decision_area": "Approve Customer Due Diligence (CDD) operational guidelines and beneficial ownership verification rules",
+      "regulated": "N",
+      "comments": "Ultimate Beneficial Owner (UBO) 10% threshold verification standard.",
+      "authority_chain": [
+        {
+          "body": "GRC",
+          "op": "A",
+          "body_full": "Group Risk Committee",
+          "op_label": "Approve"
+        },
+        {
+          "body": "GCCO",
+          "op": "R",
+          "body_full": "Group Chief Compliance Officer",
+          "op_label": "Review and/or Recommend"
+        },
+        {
+          "body": "HOC",
+          "op": "P",
+          "body_full": "Head of Compliance",
+          "op_label": "Propose"
+        }
+      ],
+      "composite_authority": "GRC (A) ➔ GCCO (R) ➔ HOC (P)"
+    }
+  ]
+}
